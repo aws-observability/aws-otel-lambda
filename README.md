@@ -1,11 +1,9 @@
-## My Project
+## AOT in AWS Lambda
 
-TODO: Fill this README out!
+[AOT Python3.8 Lambda sample](sample-apps/python-lambda/README.md)
 
-Be sure to:
+[AOC Lambda layer](extensions/aoc-extension//README.md)
 
-* Change the title in this README
-* Edit your repository description on GitHub
 
 ## Security
 
