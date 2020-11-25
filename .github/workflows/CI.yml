@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python: [3.8]
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Tox and any other packages
+        run: pip install tox
+      - name: Run Tox
+        run: |
+          echo tox...
+          cd sample-apps/python-lambda && tox
+
+  build:
+    needs: unit
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{matrix.region}}
+    
+    strategy:
+      matrix:
+        region: [us-west-2]
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{matrix.region}}
+          
+      - name: init
+        run: |
+          echo $AWS_REGION
+      
+      - name: build
+        run: |
+          cd sample-apps/python-lambda
+          chmod +x run.sh
+          ./run.sh -b
+      
+      - name: deploy
+        if: ${{ success() }}
+        run: |
+          cd sample-apps/python-lambda
+          ./run.sh -d -r $AWS_REGION
+          
+      - name: invoke Lambda
+        if: ${{ success() }}
+        run: |
+          cd sample-apps/python-lambda
+          ./run.sh -i
+          
+      - name: layer arn
+        if: ${{ success() }}
+        run: |
+          cd sample-apps/python-lambda
+          ./run.sh -l
+
+#       - name: package sar
+#         if: ${{ success() }}
+#         run: |
+#           cd sample-apps/python-lambda
+#           ./sar.sh -p
+
+#       - name: publish sar
+#         if: ${{ success() }}
+#         run: |
+#           cd sample-apps/python-lambda
+#           ./sar.sh -p
