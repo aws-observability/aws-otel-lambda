@@ -75,15 +75,3 @@ jobs:
         run: |
           cd sample-apps/python-lambda
           ./run.sh -l
-
-#       - name: package sar
-#         if: ${{ success() }}
-#         run: |
-#           cd sample-apps/python-lambda
-#           ./sar.sh -p
-
-#       - name: publish sar
-#         if: ${{ success() }}
-#         run: |
-#           cd sample-apps/python-lambda
-#           ./sar.sh -p
