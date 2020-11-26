@@ -82,3 +82,4 @@ def test_lambda_instrument():
 
     attributs = span.attributes
     assert attributs["faas.execution"] == "mock_aws_request_id"
+    assert attributs["faas.id"] == "arn://mock-lambda-function-arn"
