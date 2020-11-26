@@ -41,6 +41,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
 
+
 class MockLambdaContext:
     pass
 
@@ -52,6 +53,7 @@ lambdaContext.aws_request_id = "mock_aws_request_id"
 in_memory_exporter = InMemorySpanExporter()
 span_processor = SimpleExportSpanProcessor(in_memory_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
+
 
 def test_lambda_instrument():
     in_memory_exporter.clear()

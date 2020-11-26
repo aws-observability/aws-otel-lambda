@@ -3,10 +3,7 @@ import logging
 from opentelemetry import trace
 from importlib import import_module
 
-# TODO: aws propagator
-from opentelemetry.instrumentation.aws_lambda.tmp.propagator.xray_id_generator import (
-    AWSXRayIdsGenerator,
-)
+from opentelemetry.sdk.extension.aws.trace import AwsXRayIdsGenerator
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -27,7 +24,7 @@ logger = logging.getLogger(__name__)
 resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
 trace.set_tracer_provider(
     TracerProvider(
-        ids_generator=AWSXRayIdsGenerator(),
+        ids_generator=AwsXRayIdsGenerator(),
         resource=resource,
     )
 )

@@ -49,7 +49,7 @@ Metadata:
   AWS::ServerlessRepo::Application:
     Name: sar-aot-py38
     Description: Internal test
-    Author: wangzl
+    Author: aws
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE
     ReadmeUrl: README.md
