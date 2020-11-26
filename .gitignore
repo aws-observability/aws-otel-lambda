@@ -1,0 +1,14 @@
+#IDE
+.idea
+
+#build folder
+build/
+bin/
+
+#resports
+coverage.txt
+
+# swp file
+*.swp
+
+.DS_Store
