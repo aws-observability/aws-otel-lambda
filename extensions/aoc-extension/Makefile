@@ -9,7 +9,7 @@ clean:
 build: clean
 	@echo Building AOC extension
 	mkdir -p $(BUILD_SPACE)/extensions
-	GOOS=linux GOARCH=amd64 go build -o $(BUILD_SPACE)/extensions *.go
+	GOOS=linux GOARCH=amd64 go build -o $(BUILD_SPACE)/extensions ./cmd/aoc-lambda-extension
 
 package:
 	@echo Package zip file for aoc extension layer
@@ -29,6 +29,6 @@ build-AwsObservabilityCollector:
 	rpm --rebuilddb
 	yum install -y go
 	mkdir -p $(ARTIFACTS_DIR)/extensions
-	go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension *.go
+	go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension ./cmd/aoc-lambda-extension
 	mkdir -p $(ARTIFACTS_DIR)/otelcol
 	cp config* $(ARTIFACTS_DIR)/otelcol
