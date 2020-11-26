@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"aws-lambda-extensions/aoc-extension/defaultcomponents"
-	"aws-lambda-extensions/aoc-extension/extension"
+	"aws-lambda-extensions/aoc-extension/pkg/defaultcomponents"
+	"aws-lambda-extensions/aoc-extension/pkg/extension"
 )
 
 var (
