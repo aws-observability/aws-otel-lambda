@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  AwsObservability:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: aws-observability-python38-beta
+      Description: Lambda AWS Observability Python38 layer.
+      ContentUri: ./aws_observability
+      CompatibleRuntimes:
+        - python3.8
+    Metadata:
+      BuildMethod: makefile
