@@ -9,7 +9,7 @@ echo_usage () {
     echo " -t <cloudformation template>"
     echo " -b <sam build>"
     echo " -d <sam deploy>"
-    echo " -i <invoke lambda>"
+    echo " -n <invoke lambda 1 times>"
     echo " -l <show layer arn>"
     echo " -s <stack name>"
 }
@@ -17,20 +17,16 @@ echo_usage () {
 main () {
     echo "running..."
     saved_args="$@"
-    stack='aot-py38-sample'
     template='template.yml'
     build=false
     deploy=false
     debug=false
     invoke=false
     layer=false
-    if [[ $AWS_REGION ]]; then
-        region=$AWS_REGION
-    else
-        region=$(aws configure get region)
-    fi
+    stack=${STACK-"aot-py38-sample"}
+    region=${AWS_REGION-$(aws configure get region)}
 
-    while getopts "hbdxilr:t:s:" opt; do
+    while getopts "hbdxnlr:t:s:" opt; do
         case "${opt}" in
             h) echo_usage
                 exit 0
@@ -41,7 +37,7 @@ main () {
                 ;;
             d) deploy=true
                 ;;
-            i) invoke=true
+            n) invoke=true
                 ;;
             l) layer=true
                 ;;
@@ -91,7 +87,7 @@ main () {
 
     if [[ $deploy == true ]]; then
         echo "sam deploying..."
-        sam deploy --stack-name $stack --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region $region
+        sam deploy --stack-name $stack --region $region --capabilities CAPABILITY_NAMED_IAM --resolve-s3
         rm -rf aws_observability/aws_observability_collector
     fi
 
@@ -102,7 +98,7 @@ main () {
 
     if [[ $layer == true ]]; then
         function=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
-        layer=$(aws lambda get-function --function-name $function --query 'Configuration.Layers[0].Arn' --output text)
+        layer=$(aws lambda get-function --function-name $function --region $region --query 'Configuration.Layers[0].Arn' --output text)
         echo -e "\nAOT Python3.8 Lambda layer ARN:"
         echo $layer
     fi
