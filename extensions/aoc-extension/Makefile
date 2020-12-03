@@ -19,9 +19,8 @@ package:
 
 publish-layer: build package
 	@echo Publish aoc extension layer
-	@aws s3 mb s3://$(BUCKET_NAME) >/dev/null
-	@aws s3 cp $(BUILD_SPACE)/aoc-extension.zip s3://$(BUCKET_NAME) >/dev/null
-	@echo $(shell aws lambda publish-layer-version --layer-name my-aoc-layer --content S3Bucket=lambda-artifacts-113a2245a128f349,S3Key=aoc-extension.zip --compatible-runtimes java8.al2 java11 python3.8 python3.7 --query 'LayerVersionArn' --output text)
-	@aws s3 rm s3://$(BUCKET_NAME)/aoc-extension.zip >/dev/null
-	@aws s3 rb s3://$(BUCKET_NAME) >/dev/null
-
+	aws s3 mb s3://$(BUCKET_NAME)
+	aws s3 cp $(BUILD_SPACE)/aoc-extension.zip s3://$(BUCKET_NAME)
+	aws lambda publish-layer-version --layer-name my-aoc-layer --content S3Bucket=$(BUCKET_NAME),S3Key=aoc-extension.zip --compatible-runtimes nodejs12.x nodejs10.x java11 python3.8 python3.7 --query 'LayerVersionArn' --output text
+	aws s3 rm s3://$(BUCKET_NAME)/aoc-extension.zip
+	aws s3 rb s3://$(BUCKET_NAME)

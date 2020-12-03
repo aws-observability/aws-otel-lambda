@@ -106,5 +106,5 @@ jobs:
       - name: clean
         run: |
           cd $WORK_DIR
-          aws cloudformation delete-stack --stack-name $stack --region $region
-          aws cloudformation wait stack-delete-complete --stack-name $stack --region $region
+          aws cloudformation delete-stack --stack-name $stack --region $AWS_REGION
+          aws cloudformation wait stack-delete-complete --stack-name $stack --region $AWS_REGION
