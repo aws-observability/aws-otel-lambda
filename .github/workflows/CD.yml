@@ -1,8 +1,9 @@
-name: CI
+name: CD
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - v*
 
 jobs:
   tox:
@@ -96,19 +97,6 @@ jobs:
           path: $WORK_DIR/.aws-sam
           key: py38-sample-${{ github.run_id }}
 
-      # - name: build layer
-      #   run: |
-      #     cd $WORK_DIR
-      #     chmod +x run.sh
-      #     ./run.sh -b -t layer.yml
-
-      # - name: Cache layer
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: $WORK_DIR/.aws-sam
-      #     key: py38-layer-${{ github.run_id }}
-
-  # move to CD
   deploy-global:
     needs: build
     runs-on: ubuntu-latest

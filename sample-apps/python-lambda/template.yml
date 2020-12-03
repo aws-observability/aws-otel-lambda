@@ -38,7 +38,7 @@ Resources:
   AwsObservability:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: aws-observability-python38-beta
+      LayerName: aws-distro-for-opentelemetry-python-38-preview
       Description: Lambda AWS Observability Python38 layer.
       ContentUri: ./aws_observability
       CompatibleRuntimes:
@@ -47,13 +47,13 @@ Resources:
       BuildMethod: makefile
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: sar-aot-py38
-    Description: Internal test
-    Author: aws
+    Name: AWS-Distro-for-OpenTelemetry-Python-38-Sample
+    Description: AWS Distro for Opentelemetry Python38 Sample
+    Author: aws-observability
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE
     ReadmeUrl: README.md
-    Labels: ['layer', 'python38', 'lambda', 'aot']
+    Labels: ['opentelemetry', 'python38', 'sample']
     HomePageUrl: https://aws.amazon.com/products/management-and-governance/use-cases/monitoring-and-observability/
-    SemanticVersion: 0.0.1
+    SemanticVersion: 0.1.0
     SourceCodeUrl: https://github.com/aws-observability/aws-otel-lambda/sample-apps/python-lambda

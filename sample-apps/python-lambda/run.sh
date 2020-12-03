@@ -61,7 +61,6 @@ main () {
     if [[ $build == false && $deploy == false && $invoke == false && $layer == false ]]; then
         build=true
         deploy=true
-        invoke=true
         layer=true
     fi
 
@@ -73,16 +72,6 @@ main () {
         cp -r ../../extensions/aoc-extension/* aws_observability/aws_observability_collector
         sam build -u -t $template
         # find . -name __pycache__ -exec rm -rf  {} \; &>/dev/null
-    fi
-
-    if [[ $debug == true ]]; then
-        echo "debug mode, show code in lambda console"
-        mkdir -p .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/auto_instrumentation/__init__.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/auto_instrumentation/sitecustomize.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        cp .aws-sam/build/AwsObservability/python/bin/opentelemetry-instrument .aws-sam/build/function
-        mv .aws-sam/build/AwsObservability/python/aws_observability.py .aws-sam/build/function/
-        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/aws_lambda .aws-sam/build/function/opentelemetry/instrumentation/
     fi
 
     if [[ $deploy == true ]]; then
@@ -97,10 +86,14 @@ main () {
     fi
 
     if [[ $layer == true ]]; then
-        function=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
-        layer=$(aws lambda get-function --function-name $function --region $region --query 'Configuration.Layers[0].Arn' --output text)
+        if [[ $template == "layer.yml" ]]; then
+            layerArn=$(aws cloudformation describe-stack-resources --stack-name $stack --region $region --query 'StackResources[0].PhysicalResourceId' --output text)
+        else
+            function=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
+            layerArn=$(aws lambda get-function --function-name $function --region $region --query 'Configuration.Layers[0].Arn' --output text)
+        fi
         echo -e "\nAOT Python3.8 Lambda layer ARN:"
-        echo $layer
+        echo $layerArn
     fi
 }
 

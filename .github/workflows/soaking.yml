@@ -1,0 +1,110 @@
+name: soaking
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime:
+        description: 'soaking'
+        required: false
+        default: 'Python3.8'
+  schedule:
+    - cron: '0 10 * * *' # every Saturday at 10 am UTC: pst 2am
+
+jobs:
+  tox:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python: [3.8]
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Tox and any other packages
+        run: pip install tox
+      - name: Run tox
+        run: |
+          echo tox...
+          cd sample-apps/python-lambda && tox
+
+  build:
+    needs: tox
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{matrix.region}}
+      WORK_DIR: "sample-apps/python-lambda"
+      ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+      ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
+      STACK: soaking-aot-py38-${{ github.run_id }}
+    
+    strategy:
+      matrix:
+        region: [us-west-2]
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          mask-aws-account-id: true
+          aws-region: ${{matrix.region}}
+          
+      - name: init
+        run: |
+          echo $AWS_REGION
+          echo $STACK
+          cd $WORK_DIR
+          chmod -R +x tools
+          cp tools/* .
+      
+      - name: build sample
+        run: |
+          cd $WORK_DIR
+          chmod +x run.sh
+          ./run.sh -b
+      
+      - name: deploy sample
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./run.sh -d
+          
+      - name: invoke Lambda
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./run.sh -n
+          
+      - name: sample layer arn
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./run.sh -l
+
+      - name: turn on Lambda Insight
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./updateFunction.sh -a "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:10"
+          sleep 30
+
+      - name: soaking test
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./distribute.sh -n 100 -i 5
+          echo "pull metrics..."
+
+      - name: clean
+        run: |
+          cd $WORK_DIR
+          aws cloudformation delete-stack --stack-name $stack --region $region
+          aws cloudformation wait stack-delete-complete --stack-name $stack --region $region

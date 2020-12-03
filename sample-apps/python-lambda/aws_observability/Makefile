@@ -15,5 +15,5 @@ build-AwsObservability:
 	yum install -y go
 	mkdir -p $(ARTIFACTS_DIR)/extensions
 	cd $(AOC) && go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension ./cmd/aoc-lambda-extension
-	mkdir -p $(ARTIFACTS_DIR)/otelcol
-	cp $(AOC)/config* $(ARTIFACTS_DIR)/otelcol
+	mkdir -p $(ARTIFACTS_DIR)/aoc
+	cp $(AOC)/config* $(ARTIFACTS_DIR)/aoc

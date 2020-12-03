@@ -13,9 +13,9 @@ build: clean
 
 package:
 	@echo Package zip file for aoc extension layer
-	mkdir -p $(BUILD_SPACE)/otelcol
-	cp config.yaml $(BUILD_SPACE)/otelcol
-	cd $(BUILD_SPACE) && zip -r aoc-extension.zip otelcol extensions
+	mkdir -p $(BUILD_SPACE)/aoc
+	cp config* $(BUILD_SPACE)/aoc
+	cd $(BUILD_SPACE) && zip -r aoc-extension.zip aoc extensions
 
 publish-layer: build package
 	@echo Publish aoc extension layer
@@ -25,10 +25,3 @@ publish-layer: build package
 	@aws s3 rm s3://$(BUCKET_NAME)/aoc-extension.zip >/dev/null
 	@aws s3 rb s3://$(BUCKET_NAME) >/dev/null
 
-build-AwsObservabilityCollector:
-	rpm --rebuilddb
-	yum install -y go
-	mkdir -p $(ARTIFACTS_DIR)/extensions
-	go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension ./cmd/aoc-lambda-extension
-	mkdir -p $(ARTIFACTS_DIR)/otelcol
-	cp config* $(ARTIFACTS_DIR)/otelcol

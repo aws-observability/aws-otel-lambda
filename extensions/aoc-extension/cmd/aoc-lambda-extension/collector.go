@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/collector/component"
@@ -28,13 +30,13 @@ var (
 )
 
 func getConfig() string {
-	val, ex := os.LookupEnv("AOC_CONFIG")
+	val, ex := os.LookupEnv("AOT_CONFIG")
 	if !ex {
-		_, ex2 := os.LookupEnv("AOC_DEBUG")
+		_, ex2 := os.LookupEnv("AOT_DEBUG")
 		if !ex2 {
-			return "/opt/otelcol/config.yaml"
+			return "/opt/aoc/config.yaml"
 		}
-		return "/opt/otelcol/config-log.yaml"
+		return "/opt/aoc/config-log.yaml"
 	}
 	return val
 }
@@ -46,9 +48,19 @@ func NewInProcessCollector(factories component.Factories) *InProcessCollector {
 	}
 }
 
-// envFileLoaderConfigFactory implements ConfigFactory and it creates configuration from file.
-func envFileLoaderConfigFactory(v *viper.Viper, factories component.Factories) (*configmodels.Config, error) {
-	println("Loading config file:", configFile)
+func envLoaderConfigFactory(v *viper.Viper, factories component.Factories) (*configmodels.Config, error) {
+	if configContent, ok := os.LookupEnv("AOT_CONFIG_CONTENT"); ok {
+		println("Reading config from environment: ", configContent)
+		configContent = strings.Replace(configContent, "\\n", "\n", -1)
+		var configBytes = []byte(configContent)
+		err := v.ReadConfig(bytes.NewBuffer(configBytes))
+		if err != nil {
+			return nil, fmt.Errorf("error loading config %v", err)
+		}
+		return config.Load(v, factories)
+	}
+
+	println("Reading config from file: ", configFile)
 	file := configFile
 	if file == "" {
 		return nil, errors.New("config file not specified")
@@ -64,7 +76,7 @@ func envFileLoaderConfigFactory(v *viper.Viper, factories component.Factories) (
 func (ipp *InProcessCollector) prepareConfig() (err error) {
 	v := config.NewViper()
 	v.SetConfigType("yaml")
-	cfg, err := envFileLoaderConfigFactory(v, ipp.factories)
+	cfg, err := envLoaderConfigFactory(v, ipp.factories)
 	if err != nil {
 		return err
 	}
