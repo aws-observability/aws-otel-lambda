@@ -1,4 +1,4 @@
-![CI](https://github.com/wangzlei/bonjour/workflows/CI/badge.svg?branch=master)
+![CI](https://github.com/aws-observability/aws-otel-lambda/workflows/CI/badge.svg)
 # AOT Python3.8 Lambda
 AOT Python Lambda layer provides a plug and play user experience of automatically instrument Lambda function, users can onload and offload AOT from their Lambda function without changing code. 
 
@@ -129,7 +129,7 @@ Tips:
 
 
 ### Offload AOT from your lambda function
-Similar with Enable AOT in Lambda function. To offload AOT just need to remove AOT layer and remove the environment variable `AWS_LAMBDA_EXEC_WRAPPER`.
+Contrary to enable AOT in Lambda function, offloading AOT needs to remove AOT layer and remove the environment variable `AWS_LAMBDA_EXEC_WRAPPER`.
 
 ***
 
