@@ -1,9 +1,10 @@
 ![CI](https://github.com/aws-observability/aws-otel-lambda/workflows/CI/badge.svg)
-# AOT Python3.8 Lambda
+# OpenTelemetry Python3.8 for AWS Lambda (preview)
 AOT Python Lambda layer provides a plug and play user experience of automatically instrument Lambda function, users can onload and offload AOT from their Lambda function without changing code. 
 
 ## Sample
-- Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+- Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html). For users have trouble in SAM CLI, see [doc](docs/misc/sam.md).
+- Run `aws configure` to set aws credential([with administrator permissions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html#serverless-sam-cli-install-mac-iam-permissions)) and default region.
 - Download this repo
 - Run command: `cd sample-apps/python-lambda && ./run.sh -r us-west-2`
 - Open Lambda console in us-west-2, find the new Lambda function `aot-py38-sample-function-...`
@@ -58,14 +59,15 @@ To play AOT auto-instrumentation in Python3.8 Lambda Runtime, user needs 2 steps
 ### Step 1. Get AOT layer
 Lambda layer is regionalized resource, make sure the AOT layer is at the same region with your Lambda function.
 
-~~**Option #1 Public Lambda layer(Not ready in Dec preview)**~~
+~~**Option #1 Public Lambda layer(Not ready in preview)**~~
 
 ~~Find public layer ARN in [release note](docs/release-notes/py38.md)~~
 
 #### Option #2 Build AOT Lambda layer from scratch. 
 
 As a contributor you may want to build everything from scratch
-1. Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+1. Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html). For users have trouble in SAM CLI, see [doc](docs/misc/sam.md).
+2. Run `aws configure` to set aws credential([with administrator permissions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html#serverless-sam-cli-install-mac-iam-permissions)) and default region.
 2. Download this repo
 3. cd sample-apps/python-lambda && ./run.sh 
 
@@ -73,6 +75,8 @@ Tips:
 - `run.sh` will compile AOT layer in local and publish both AOT layer and Sample app to personal account. If no need Sample app, use `./run.sh -t layer.yml`
 - To publish AOT layer to other regions use `-r`, for example `./run.sh -r us-west-2`
 - Query the layer ARN by `./run.sh -l`. If want to query the layer ARN in region us-east-1, use `./run.sh -l -r us-east-1`(suppose you have built and published AOT layer in this region)
+- Once AOT layer is obtained, no need to redo step #1 unless you want to upgrade AOT to the latest version.
+- Lambda layer is regionalized, cannot consume layer across region.
 
 
 ### Step 2. Enable AOT auto-instrumentation for your lambda function
@@ -123,7 +127,8 @@ Now you have the AOT layer ARN in previous step. To enable AOT in Lambda functio
 aws lambda update-function-configuration --function-name <your lambda function name> --layers <AOT layer ARN> --environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}" --tracing-config "Mode=Active"
 ```
 Tips:
-- Lambda layer is reginalized artifact, make sure pick up the correct layer ARN.
+- By default AOT layer export traces to AWS X-Ray, make sure your Lambda role has xray write permission, Ref [code](template.yml#L23).
+- Lambda layer is regionalized asset, make sure pick up the correct layer ARN.
 - Command `aws lambda update-function-configuration` would override Lambda layer and environment variables in existing function. If your function already has other layers and environment variables, need to add them in upper command. For example, if your function already has an environment variable `A=a`, the command should become `--environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument,A=a}"`. Ref [AWS Doc](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
 
 

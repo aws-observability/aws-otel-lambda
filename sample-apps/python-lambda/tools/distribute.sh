@@ -27,7 +27,7 @@ main () {
     deployApp=false
     layer=false
     deleteResources=false
-    stack=${STACK-"aot-py38"}
+    stack=${STACK-"aot-py38-sample"}
     accountid=$ACCOUNT_ID
     accountid2=$ACCOUNT_ID_2
     sarApp=${SAR-"AWS-Distro-for-OpenTelemetry-Python-38-Sample"}
@@ -80,7 +80,7 @@ main () {
         sleep 120
 
         aws serverlessrepo put-application-policy --application-id arn:aws:serverlessrepo:$region:$accountid:applications/$sarApp \
-		    --region $region --statements Principals=$accountid2,Actions=Deploy
+		    --region $region --statements Principals='*',Actions=Deploy
         sleep 60
     fi
 

@@ -7,6 +7,10 @@ on:
         description: 'Clean resources'
         required: false
         default: 'Python3.8'
+      target:
+        description: 'stacks to be deleted'
+        required: true
+        default: 'cd-aot*'
 
 jobs:
   clean-resources:
@@ -35,8 +39,8 @@ jobs:
           mask-aws-account-id: false
           aws-region: ${{matrix.region}}
 
-
       - name: clean stacks
         run: |
-          ./cleanStacks.sh
+          echo ${{ github.event.inputs.target }}
+          ./cleanStacks.sh ${{ github.event.inputs.target }}
 

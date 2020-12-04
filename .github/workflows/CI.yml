@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   tox:
@@ -58,6 +58,11 @@ jobs:
           cd $WORK_DIR
           chmod -R +x tools
           cp tools/* .
+
+      - name: load test asset # remove from CD
+        run: |
+          cd extensions/aoc-extension
+          cp tst/resources/* .
       
       - name: build sample
         run: |
@@ -89,6 +94,15 @@ jobs:
           cd $WORK_DIR
           ./distribute.sh -n 1 -i 0
           echo "call validator..."
+
+      - name: integration test for grpc # remove from CD
+        if: ${{ success() }}
+        run: |
+          cd $WORK_DIR
+          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc/config-grpc.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}"
+          ./distribute.sh -n 3 -i 10 &
+          echo "call validator..."
+          ./distribute.sh -n 1 -i 0
 
       - name: Cache sample
         uses: actions/cache@v2

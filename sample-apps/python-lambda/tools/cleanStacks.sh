@@ -10,7 +10,7 @@ echo $stacks
 for stack in $stacks
 do
     echo $stack
-    if [[ $stack == cd-aot* ]]; then
+    if [[ $stack == $1 ]]; then
         echo "clean stack ..."
         $(aws cloudformation delete-stack --stack-name $stack --region $region)
     fi

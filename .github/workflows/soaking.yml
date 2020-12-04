@@ -8,7 +8,7 @@ on:
         required: false
         default: 'Python3.8'
   schedule:
-    - cron: '0 10 * * *' # every Saturday at 10 am UTC: pst 2am
+    - cron: '0 10 * * *' # every day at 10 am UTC: pst 2am
 
 jobs:
   tox:
@@ -106,5 +106,5 @@ jobs:
       - name: clean
         run: |
           cd $WORK_DIR
-          aws cloudformation delete-stack --stack-name $stack --region $AWS_REGION
-          aws cloudformation wait stack-delete-complete --stack-name $stack --region $AWS_REGION
+          # aws cloudformation delete-stack --stack-name $stack --region $AWS_REGION || true
+          # aws cloudformation wait stack-delete-complete --stack-name $stack --region $AWS_REGION || true
