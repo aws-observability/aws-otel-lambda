@@ -69,10 +69,10 @@ As a contributor you may want to build everything from scratch
 1. Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html). For users have trouble in SAM CLI, see [doc](docs/misc/sam.md).
 2. Run `aws configure` to set aws credential([with administrator permissions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html#serverless-sam-cli-install-mac-iam-permissions)) and default region.
 2. Download this repo
-3. cd sample-apps/python-lambda && ./run.sh 
+3. cd sample-apps/python-lambda && ./run.sh -t layer.yml
 
 Tips:
-- `run.sh` will compile AOT layer in local and publish both AOT layer and Sample app to personal account. If no need Sample app, use `./run.sh -t layer.yml`
+- `run.sh -t layer.yml` will compile AOT layer in local and publish it to personal account. If need both AOT layer and Sample app, use `./run.sh`
 - To publish AOT layer to other regions use `-r`, for example `./run.sh -r us-west-2`
 - Query the layer ARN by `./run.sh -l`. If want to query the layer ARN in region us-east-1, use `./run.sh -l -r us-east-1`(suppose you have built and published AOT layer in this region)
 - Once AOT layer is obtained, no need to redo step #1 unless you want to upgrade AOT to the latest version.
@@ -151,7 +151,7 @@ AOT Python Lambda layer combines both SDK and [Collector](https://github.com/aws
     1. Bring customized config file(and ca/cert/key files) into Lambda sandbox by Lambda layer, then set the Collector config by environment variable `AOT_CONFIG=<your config file path>` 
     2. Add environment variable `AOT_CONFIG_CONTENT=<Full content of your config file>`.
     
-    For some cases need ca/cert/key files like OTLP gRPC/HTTP exporter secure mode, user has to bring files into Lambda by his layer. Ref [blog](https://dev.to/leading-edje/aws-lambda-layer-for-private-certificates-465j).
+    For some cases need ca/cert/key files like OTLP gRPC/HTTP exporter secure mode, user has to bring files into Lambda by his layer.
     
 ***
 

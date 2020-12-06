@@ -7,32 +7,15 @@ on:
         description: 'soaking'
         required: false
         default: 'Python3.8'
+      args:
+        description: 'soaking test args'
+        required: true
+        default: '600 5'
   schedule:
     - cron: '0 10 * * *' # every day at 10 am UTC: pst 2am
 
 jobs:
-  tox:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        python: [3.8]
-    
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Install Tox and any other packages
-        run: pip install tox
-      - name: Run tox
-        run: |
-          echo tox...
-          cd sample-apps/python-lambda && tox
-
-  build:
-    needs: tox
+  soaking:
     runs-on: ubuntu-latest
 
     env:
@@ -48,6 +31,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -58,53 +44,78 @@ jobs:
           aws-region: ${{matrix.region}}
           
       - name: init
+        working-directory: ${{ env.WORK_DIR }}
         run: |
           echo $AWS_REGION
           echo $STACK
-          cd $WORK_DIR
           chmod -R +x tools
           cp tools/* .
       
-      - name: build sample
+      - name: show git SHA
+        if: ${{ success() }}
         run: |
-          cd $WORK_DIR
+          echo ${{ github.sha }} 
+      
+      - name: Cache build
+        uses: actions/cache@v2
+        id: cache-build
+        with:
+          path: sample-apps/python-lambda/.aws-sam
+          key: py38-build-${{ github.sha }}
+      
+      - name: build
+        working-directory: ${{ env.WORK_DIR }}
+        if: steps.cache-build.outputs.cache-hit != 'true'
+        run: |
           chmod +x run.sh
           ./run.sh -b
       
       - name: deploy sample
+        working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          cd $WORK_DIR
           ./run.sh -d
           
       - name: invoke Lambda
+        working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          cd $WORK_DIR
           ./run.sh -n
           
       - name: sample layer arn
+        working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          cd $WORK_DIR
           ./run.sh -l
 
       - name: turn on Lambda Insight
+        working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          cd $WORK_DIR
           ./updateFunction.sh -a "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:10"
           sleep 30
 
-      - name: soaking test
-        if: ${{ success() }}
+      - name: manually soaking test
+        working-directory: ${{ env.WORK_DIR }}
+        if: ${{ success() && github.event_name == 'workflow_dispatch' }}
         run: |
-          cd $WORK_DIR
-          ./distribute.sh -n 100 -i 5
-          echo "pull metrics..."
+          pip install boto3
+          functionName=$(./distribute.sh -f)
+          python3 soaking.py $functionName ${{ github.event.inputs.args }}
+          echo "Soaking test done."
+      
+      - name: nightly soaking test
+        working-directory: ${{ env.WORK_DIR }}
+        if: ${{ success() && github.event_name != 'workflow_dispatch' }}
+        run: |
+          pip install boto3
+          functionName=$(./distribute.sh -f)
+          python3 soaking.py $functionName 1800 5
+          echo "Soaking test done." 
 
-      - name: clean
-        run: |
-          cd $WORK_DIR
-          # aws cloudformation delete-stack --stack-name $stack --region $AWS_REGION || true
-          # aws cloudformation wait stack-delete-complete --stack-name $stack --region $AWS_REGION || true
+      # - name: clean
+      #   working-directory: ${{ env.WORK_DIR }}
+      #   if: ${{ success() }}
+      #   run: |
+      #     aws cloudformation delete-stack --stack-name $STACK
+      #     aws cloudformation wait stack-delete-complete --stack-name $STACK

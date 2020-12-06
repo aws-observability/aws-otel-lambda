@@ -3,11 +3,11 @@ name: CleanResources
 on:
   workflow_dispatch:
     inputs:
-      runtime:
+      account:
         description: 'Clean resources'
-        required: false
-        default: 'Python3.8'
-      target:
+        required: true
+        default: 'test'
+      stacks:
         description: 'stacks to be deleted'
         required: true
         default: 'cd-aot*'
@@ -22,7 +22,7 @@ jobs:
 
     strategy:
       matrix:
-        region: [us-west-2, us-east-2, eu-west-1, eu-west-2]
+        region: [us-west-2, us-west-1, us-east-2, eu-west-1, eu-west-2]
     steps:
       - uses: actions/checkout@v2
 
@@ -30,17 +30,27 @@ jobs:
         run: |
           chmod -R +x sample-apps/python-lambda/tools
           cp sample-apps/python-lambda/tools/* .
+
+      - name: Configure AWS Credentials
+        if: ${{ github.event.inputs.account == 'test' }}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          mask-aws-account-id: true
+          aws-region: ${{matrix.region}}
       
       - name: Configure AWS Credentials
+        if: ${{ github.event.inputs.account != 'test' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_2 }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_2 }}
-          mask-aws-account-id: false
+          mask-aws-account-id: true
           aws-region: ${{matrix.region}}
 
       - name: clean stacks
         run: |
-          echo ${{ github.event.inputs.target }}
-          ./cleanStacks.sh ${{ github.event.inputs.target }}
+          echo ${{ github.event.inputs.stacks }}
+          ./cleanStacks.sh ${{ github.event.inputs.stacks }}
 

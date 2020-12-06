@@ -26,14 +26,16 @@ main () {
     publishSar=false
     deployApp=false
     layer=false
+    function=false
     deleteResources=false
+    endpoint=false
     stack=${STACK-"aot-py38-sample"}
-    accountid=$ACCOUNT_ID
-    accountid2=$ACCOUNT_ID_2
+    accountid=${ACCOUNT_ID-""}
+    accountid2=${ACCOUNT_ID_2-""}
     sarApp=${SAR-"AWS-Distro-for-OpenTelemetry-Python-38-Sample"}
     region=${AWS_REGION-$(aws configure get region)}
 
-    while getopts "epdlr:s:n:i:a:t:" opt; do
+    while getopts "epdlfcr:s:n:i:a:t:" opt; do
         case "${opt}" in
             h) echo_usage
                 exit 0
@@ -55,6 +57,10 @@ main () {
             d) deployApp=true
                 ;;
             l) layer=true
+                ;;
+            f) function=true
+                ;;
+            c) endpoint=true
                 ;;
             e) deleteResources=true
                 ;;
@@ -111,16 +117,26 @@ main () {
         if [[ $template == "layer.yml" ]]; then
             layerArn=$(aws cloudformation describe-stack-resources --stack-name $stack --region $region --query 'StackResources[0].PhysicalResourceId' --output text)
         else
-            function=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
-            layerArn=$(aws lambda get-function --function-name $function --region $region --query 'Configuration.Layers[0].Arn' --output text)
+            functionName=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
+            layerArn=$(aws lambda get-function --function-name $functionName --region $region --query 'Configuration.Layers[0].Arn' --output text)
         fi
         echo $layerArn
     fi
 
+    if [[ $function == true ]]; then
+        functionName=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
+        echo $functionName
+    fi
+
     if [[ $deleteResources == true ]]; then
-        aws cloudformation delete-stack --stack-name $stack --region $region
-        aws cloudformation wait stack-delete-complete --stack-name $stack --region $region
+        aws cloudformation delete-stack --stack-name $stack || true
+        aws cloudformation wait stack-delete-complete --stack-name $stack || true
         aws serverlessrepo delete-application --region $region --application-id arn:aws:serverlessrepo:$region:$accountid:applications/$sarApp || true
+    fi
+
+    if [[ $endpoint == true ]]; then
+        apiid=$(aws cloudformation describe-stack-resource --stack-name $stack --region $region --logical-resource-id api --query 'StackResourceDetail.PhysicalResourceId' --output text)
+        echo https://$apiid.execute-api.$region.amazonaws.com/api/
     fi
 }
 
