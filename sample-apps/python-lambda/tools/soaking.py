@@ -39,27 +39,6 @@ def alarm_puller(function_name):
         TreatMissingData='notBreaching'
     )
 
-    # running alarm, if memory less than xx, means Lambda is not running
-    cloudwatch.put_metric_alarm(
-        AlarmName=running_alarm,
-        ActionsEnabled=True, OKActions=[], AlarmActions=[], InsufficientDataActions=[],
-        MetricName='memory_utilization',
-        Namespace='LambdaInsights',
-        Statistic='Maximum',
-        Dimensions=[
-            {
-                'Name': 'function_name',
-                'Value': function_name
-            },
-        ],
-        Period=60,
-        EvaluationPeriods=5,
-        DatapointsToAlarm=5,
-        Threshold=5,
-        ComparisonOperator='LessThanThreshold',
-        TreatMissingData='missing'
-    )
-
     # CPU alarm
     cloudwatch.put_metric_alarm(
         AlarmName=cpu_alarm,
@@ -84,7 +63,7 @@ def alarm_puller(function_name):
     paginator = cloudwatch.get_paginator('describe_alarms')
 
     while True:
-        for response in paginator.paginate(AlarmNames=[memory_alarm, cpu_alarm, running_alarm]):
+        for response in paginator.paginate(AlarmNames=[memory_alarm, cpu_alarm]):
             for alarm in response['MetricAlarms']:
                 print('{} state {}'.format(alarm['AlarmName'], alarm['StateValue']))
                 if alarm['StateValue'] == 'ALARM':
@@ -107,12 +86,8 @@ if __name__ == '__main__':
     # alarms
     memory_alarm='aot_lambda_py38_memory-'+function_name
     cpu_alarm='aot_lambda_py38_cpu-'+function_name
-    running_alarm='aot_lambda_py38_running-'+function_name
 
     cloudwatch = boto3.client('cloudwatch')
-
-    # re-create running alarm
-    cloudwatch.delete_alarms(AlarmNames=[running_alarm,])
 
     # emitter thread
     Thread(target=invoke_lambda, name='emitter', args=(emitter_interval,), daemon=True).start()
@@ -128,5 +103,5 @@ if __name__ == '__main__':
     else:
         print('Soaking test succeed!')
         # If no problem, delete alarm
-        cloudwatch.delete_alarms(AlarmNames=[running_alarm, memory_alarm, cpu_alarm])
+        cloudwatch.delete_alarms(AlarmNames=[memory_alarm, cpu_alarm])
         exit(0)
