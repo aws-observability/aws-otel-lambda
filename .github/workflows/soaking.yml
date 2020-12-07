@@ -88,6 +88,36 @@ jobs:
         run: |
           ./run.sh -l
 
+      # smoking test
+      - name: get endpoint
+        working-directory: ${{ env.WORK_DIR }}
+        if: ${{ success() }}
+        run: |
+          ./distribute.sh -n 1 -i 0
+          ./distribute.sh -c > ../../endpoint_file
+          cd ../..
+          cat endpoint_file
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        if: ${{ success() }}
+        with:
+          java-version: 1.8
+
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        if: ${{ success() }}
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+
+      - name: run integration test 1
+        if: ${{ success() }}
+        run: |
+          endpoint=$(cat endpoint_file)
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+
       - name: turn on Lambda Insight
         working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
@@ -112,10 +142,17 @@ jobs:
           functionName=$(./distribute.sh -f)
           python3 soaking.py $functionName 18000 5
           echo "Soaking test done." 
+      
+      - name: run integration test 2
+        if: ${{ success() }}
+        run: |
+          endpoint=$(cat endpoint_file)
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
 
-      # - name: clean
-      #   working-directory: ${{ env.WORK_DIR }}
-      #   if: ${{ success() }}
-      #   run: |
-      #     aws cloudformation delete-stack --stack-name $STACK
-      #     aws cloudformation wait stack-delete-complete --stack-name $STACK
+      - name: clean
+        working-directory: ${{ env.WORK_DIR }}
+        if: ${{ success() }}
+        run: |
+          aws cloudformation delete-stack --stack-name $STACK
+          aws cloudformation wait stack-delete-complete --stack-name $STACK
