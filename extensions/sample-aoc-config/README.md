@@ -1,12 +1,11 @@
 ## Customize AOC config in Lambda
 AOT Lambda layer contains a default config file which exports data to AWS X-Ray. But users can use customized config file and related private ca/cert/key files in Lambda to export data to 3rd party backend service in secure mode. 
 
-This sample is demoing how to do that with a simple config [config-test.yaml](aoc-config/config-test.yaml), you can re-use this sample as a tool for your customized AOC config file. Here suppose users have installed AWS CLI and configed AWS credential.
-
 
 ### Getting started
 
 #### Option 1# Bring files into Lambda function by Lambda layer
+This sample is demoing how to do that with a simple config [config-test.yaml](aoc-config/config-test.yaml), you can re-use it as a tool for your customized AOC config file. Here suppose users have installed [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) and configed [AWS credential](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
 
 1. Publish your config files and ca/cert/key files to a Lambda layer:
     - download a local copy of this repo
