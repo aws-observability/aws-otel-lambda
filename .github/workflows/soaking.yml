@@ -143,12 +143,12 @@ jobs:
           python3 soaking.py $functionName 18000 5
           echo "Soaking test done." 
       
-      - name: run integration test 2
-        if: ${{ success() }}
-        run: |
-          endpoint=$(cat endpoint_file)
-          cd test-framework
-          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+      # - name: run integration test 2
+      #   if: ${{ success() }}
+      #   run: |
+      #     endpoint=$(cat endpoint_file)
+      #     cd test-framework
+      #     ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
 
       - name: clean
         working-directory: ${{ env.WORK_DIR }}

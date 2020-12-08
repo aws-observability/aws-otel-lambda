@@ -5,7 +5,7 @@ awsLambdaEnvDict = {
     "AWS_EXECUTION_ENV": "AWS_Lambda_python3.8",
     "AWS_LAMBDA_FUNCTION_MEMORY_SIZE": "128",
     "AWS_LAMBDA_FUNCTION_NAME": "python-lambda-function-YI0MC6JQ4BMR",
-    "AWS_LAMBDA_FUNCTION_VERSION": "$LATEST",
+    "AWS_LAMBDA_FUNCTION_VERSION": "2",
     "AWS_LAMBDA_LOG_GROUP_NAME": "/aws/lambda/python-lambda-function-YI0MC6JQ4BMR",
     "AWS_LAMBDA_LOG_STREAM_NAME": "2020/10/06/[$LATEST]33f5c2beeb3a46dda4e9712885809a22",
     "AWS_LAMBDA_RUNTIME_API": "127.0.0.1:9001",
@@ -77,6 +77,7 @@ def test_lambda_instrument():
     assert resource_atts["faas.name"] == "mock_lambda.handler"
     assert resource_atts["cloud.region"] == "us-east-1"
     assert resource_atts["cloud.provider"] == "aws"
+    assert resource_atts["faas.version"] == "2"
     assert resource_atts["telemetry.sdk.language"] == "python"
     assert resource_atts["telemetry.sdk.name"] == "opentelemetry"
 

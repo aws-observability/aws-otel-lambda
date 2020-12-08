@@ -48,8 +48,8 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          mask-aws-account-id: false
           aws-region: ${{matrix.region}}
+          mask-aws-account-id: false
           
       - name: init
         working-directory: ${{ env.WORK_DIR }}
@@ -59,11 +59,6 @@ jobs:
           chmod -R +x tools
           cp tools/* .
 
-      - name: load test asset # TODO: create a test layer.
-        run: |
-          cd extensions/aoc-extension
-          cp tst/resources/* .
-
       - name: Cache build
         uses: actions/cache@v2
         id: cache-build
@@ -71,14 +66,14 @@ jobs:
           path: ${{ env.WORK_DIR }}/.aws-sam
           key: py38-build-${{ github.sha }}
       
-      - name: build sample
+      - name: build
         working-directory: ${{ env.WORK_DIR }}
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
           chmod +x run.sh
           ./run.sh -b  
       
-      - name: deploy sample
+      - name: deploy
         working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
@@ -118,21 +113,30 @@ jobs:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework
 
-      - name: run integration test
+      - name: integration test
         if: ${{ success() }}
         run: |
           endpoint=$(cat endpoint_file)
           cd test-framework
           ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
 
-      - name: update aoc config to grpc exporter # remove from CD
+      - name: publish customized aoc-config layer # remove from CD
+        if: ${{ success() }}
+        working-directory: extensions/sample-aoc-config
+        run: |
+          make publish-config-layer
+          customized=$(aws lambda list-layer-versions --layer-name aoc-config-layer --query 'LayerVersions[0].LayerVersionArn')
+          echo $customized
+
+      - name: update aoc config to grpc exporter # account id is masked even mask-aws-account-id is false.
         working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc/config-grpc.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}"
+          ./updateFunction.sh -a "arn:aws:lambda:us-west-1:886273918189:layer:aoc-config-layer:5"
+          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc-config/config-test.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}"
           ./distribute.sh -n 1 -i 0
 
-      - name: run integration test for grpc exporter
+      - name: integration test for grpc exporter
         if: ${{ success() }}
         run: |
           ./distribute.sh -n 6 -i 10 &
@@ -140,7 +144,6 @@ jobs:
           cd test-framework
           ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
 
-      # clean
       - name: clean
         working-directory: ${{ env.WORK_DIR }}
         run: |
@@ -170,8 +173,8 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_2 }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_2 }}
-          mask-aws-account-id: false
           aws-region: ${{matrix.region}}
+          mask-aws-account-id: false
           
       - name: init
         working-directory: ${{ env.WORK_DIR }}
