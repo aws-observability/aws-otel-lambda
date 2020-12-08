@@ -6,6 +6,8 @@ This sample is demoing how to do that with a simple config [config-test.yaml](ao
 
 ### Getting started
 
+#### Option 1# Bring files into Lambda function by Lambda layer
+
 1. Publish your config files and ca/cert/key files to a Lambda layer:
     - download a local copy of this repo
     - cd extensions/sample-aoc-config && make publish-config-layer
@@ -23,3 +25,22 @@ This sample is demoing how to do that with a simple config [config-test.yaml](ao
 3. Set AOC config file to `config-test.yaml`
     - Add the environment variable `AOT_CONFIG = /opt/aoc-config/config-test.yaml` to your Lambda function.
     
+#### Option 2# By adding environment variable `AOT_CONFIG_CONTENT` in AWS Lambda console
+
+This option is not recommanded but can be a shortcut if the AOC config is simple and no need additional ca/cert/key files. You can set environment variable  `AOT_CONFIG_CONTENG` in AWS Lambda console and value is the content of AOC config file. For example, if the AOC config is:
+```yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:55680
+exporters:
+  awsxray:
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [awsxray]
+```
+
+Add the environment variable `AOT_CONFIG_CONTENT = "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:55680\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"`.
