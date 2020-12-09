@@ -34,7 +34,7 @@ jobs:
       WORK_DIR: "sample-apps/python-lambda"
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
-      STACK: ci-aot-py38-${{ github.run_id }}
+      STACK: ci-adot-py38-${{ github.run_id }}
     
     strategy:
       matrix:
@@ -125,18 +125,33 @@ jobs:
         working-directory: extensions/sample-aoc-config
         run: |
           make publish-config-layer
-          customized=$(aws lambda list-layer-versions --layer-name aoc-config-layer --query 'LayerVersions[0].LayerVersionArn')
+          customized=$(aws lambda list-layer-versions --layer-name adoc-config-layer --query 'LayerVersions[0].LayerVersionArn')
           echo $customized
 
       - name: update aoc config to grpc exporter # account id is masked even mask-aws-account-id is false.
         working-directory: ${{ env.WORK_DIR }}
         if: ${{ success() }}
         run: |
-          ./updateFunction.sh -a "arn:aws:lambda:us-west-1:886273918189:layer:aoc-config-layer:5"
-          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc-config/config-test.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}"
+          ./updateFunction.sh -a "arn:aws:lambda:us-west-1:886273918189:layer:adoc-config-layer:1"
+          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc-config/config-grpc-loop.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument}"
           ./distribute.sh -n 1 -i 0
 
       - name: integration test for grpc exporter
+        if: ${{ success() }}
+        run: |
+          ./distribute.sh -n 6 -i 10 &
+          endpoint=$(cat endpoint_file)
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+
+      - name: update aoc config to http exporter
+        working-directory: ${{ env.WORK_DIR }}
+        if: ${{ success() }}
+        run: |
+          ./updateFunction.sh -e "Variables={AOC_CONFIG=/opt/aoc-config/config-http-loop.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument}"
+          ./distribute.sh -n 1 -i 0
+
+      - name: integration test for http exporter
         if: ${{ success() }}
         run: |
           ./distribute.sh -n 6 -i 10 &
@@ -159,7 +174,7 @@ jobs:
       WORK_DIR: "sample-apps/python-lambda"
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
-      STACK: cd-aot-py38-${{ github.run_id }}
+      STACK: cd-adot-py38-${{ github.run_id }}
     
     strategy:
       matrix:

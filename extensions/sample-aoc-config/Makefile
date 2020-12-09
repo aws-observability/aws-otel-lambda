@@ -1,7 +1,7 @@
 BASE_SPACE:=$(shell pwd)
 BUILD_SPACE:=$(BASE_SPACE)/build
 BUCKET_NAME:=aoc-config-$(shell dd if=/dev/random bs=8 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n')
-CONFIG_LAYER_NAME:=aoc-config-layer
+CONFIG_LAYER_NAME:=adoc-config-layer
 
 clean:
 	rm -rf build/

@@ -7,7 +7,7 @@ AOT Python Lambda layer provides a plug and play user experience of automaticall
 - Run `aws configure` to set aws credential([with administrator permissions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html#serverless-sam-cli-install-mac-iam-permissions)) and default region.
 - Download this repo
 - Run command: `cd sample-apps/python-lambda && ./run.sh -r us-west-2`
-- Open Lambda console in us-west-2, find the new Lambda function `aot-py38-sample-function-...`
+- Open Lambda console in us-west-2, find the new Lambda function `adot-py38-sample-function-...`
 the source code of Lambda function contains an aio http request and an AWS SDK request(S3)
     <details><summary>source code</summary>
 
@@ -49,7 +49,7 @@ the source code of Lambda function contains an aio http request and an AWS SDK r
 
     </details>
 
-- Open CloudFormation console, clean the sample resources by **Delete** stack `aot-py38-sample`.
+- Open CloudFormation console, clean the sample resources by **Delete** stack `adot-py38-sample`.
 
 ***
 
@@ -81,7 +81,7 @@ Tips:
 
 ### Step 2. Enable AOT auto-instrumentation for your lambda function
 
-Now you have the AOT layer ARN in previous step. To enable AOT in Lambda function needs: 1. Add AOT layer; 2. Add environment variable `AWS_LAMBDA_EXEC_WRAPPER = /opt/python/aot-instrument`; 3. Enable tracing. 
+Now you have the AOT layer ARN in previous step. To enable AOT in Lambda function needs: 1. Add AOT layer; 2. Add environment variable `AWS_LAMBDA_EXEC_WRAPPER = /opt/python/adot-instrument`; 3. Enable tracing. 
 
 #### Option #1 Enable AOT by Console
 
@@ -93,7 +93,7 @@ Now you have the AOT layer ARN in previous step. To enable AOT in Lambda functio
 
     </details>
 
-2. Add environment variable `AWS_LAMBDA_EXEC_WRAPPER = /opt/python/aot-instrument` in Lambda function.
+2. Add environment variable `AWS_LAMBDA_EXEC_WRAPPER = /opt/python/adot-instrument` in Lambda function.
 
     <details>
 
@@ -115,7 +115,7 @@ Now you have the AOT layer ARN in previous step. To enable AOT in Lambda functio
 ```yaml
       Environment:
         Variables:
-          AWS_LAMBDA_EXEC_WRAPPER: /opt/python/aot-instrument
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/python/adot-instrument
       Tracing: Active
       Layers:
         - <AOT layer ARN>
@@ -124,12 +124,12 @@ Now you have the AOT layer ARN in previous step. To enable AOT in Lambda functio
 #### Option #3 Enable AOT by [AWS CLI](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
 
 ```shell
-aws lambda update-function-configuration --function-name <your lambda function name> --layers <AOT layer ARN> --environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument}" --tracing-config "Mode=Active"
+aws lambda update-function-configuration --function-name <your lambda function name> --layers <AOT layer ARN> --environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument}" --tracing-config "Mode=Active"
 ```
 Tips:
 - By default AOT layer export traces to AWS X-Ray, make sure your Lambda role has xray write permission, Ref [code](template.yml#L23).
 - Lambda layer is regionalized asset, make sure pick up the correct layer ARN.
-- Command `aws lambda update-function-configuration` would override Lambda layer and environment variables in existing function. If your function already has other layers and environment variables, need to add them in upper command. For example, if your function already has an environment variable `A=a`, the command should become `--environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument,A=a}"`. Ref [AWS Doc](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
+- Command `aws lambda update-function-configuration` would override Lambda layer and environment variables in existing function. If your function already has other layers and environment variables, need to add them in upper command. For example, if your function already has an environment variable `A=a`, the command should become `--environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument,A=a}"`. Ref [AWS Doc](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
 
 
 

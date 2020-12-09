@@ -7,7 +7,7 @@ build-AwsObservability:
 	cp -r $(ARTIFACTS_DIR)/tmp/* $(ARTIFACTS_DIR)/python/
 	rm -rf $(ARTIFACTS_DIR)/tmp
 	cp -r $(SDK)/* $(ARTIFACTS_DIR)/python
-	chmod 755 $(ARTIFACTS_DIR)/python/aot-instrument
+	chmod 755 $(ARTIFACTS_DIR)/python/adot-instrument
 	rm -rf $(ARTIFACTS_DIR)/python/boto*
 	rm -rf $(ARTIFACTS_DIR)/python/urllib3*
 

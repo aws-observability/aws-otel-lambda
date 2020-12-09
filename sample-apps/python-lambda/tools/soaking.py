@@ -84,8 +84,8 @@ if __name__ == '__main__':
     print(emitter_interval)
 
     # alarms
-    memory_alarm='aot_lambda_py38_memory-'+function_name
-    cpu_alarm='aot_lambda_py38_cpu-'+function_name
+    memory_alarm='adot_lambda_py38_memory-'+function_name
+    cpu_alarm='adot_lambda_py38_cpu-'+function_name
 
     cloudwatch = boto3.client('cloudwatch')
 

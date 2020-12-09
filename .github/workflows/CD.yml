@@ -35,7 +35,7 @@ jobs:
       WORK_DIR: "sample-apps/python-lambda"
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
-      STACK: ci-aot-py38-${{ github.run_id }}
+      STACK: ci-adot-py38-${{ github.run_id }}
     
     strategy:
       matrix:
@@ -106,7 +106,7 @@ jobs:
       WORK_DIR: "sample-apps/python-lambda"
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
-      STACK: cd-aot-py38-${{ github.run_id }}
+      STACK: cd-adot-py38-${{ github.run_id }}
     
     strategy:
       matrix:

@@ -74,7 +74,7 @@ def test_lambda_instrument():
     assert span.kind == SpanKind.CONSUMER
 
     resource_atts = span.resource.attributes
-    assert resource_atts["faas.name"] == "mock_lambda.handler"
+    assert resource_atts["faas.name"] == "python-lambda-function-YI0MC6JQ4BMR"
     assert resource_atts["cloud.region"] == "us-east-1"
     assert resource_atts["cloud.provider"] == "aws"
     assert resource_atts["faas.version"] == "2"

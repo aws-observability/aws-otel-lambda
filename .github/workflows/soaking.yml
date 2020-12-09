@@ -23,7 +23,7 @@ jobs:
       WORK_DIR: "sample-apps/python-lambda"
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       ACCOUNT_ID_2: ${{ secrets.ACCOUNT_ID_2 }}
-      STACK: soaking-aot-py38-${{ github.run_id }}
+      STACK: soaking-adot-py38-${{ github.run_id }}
     
     strategy:
       matrix:

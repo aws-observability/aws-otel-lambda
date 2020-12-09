@@ -24,7 +24,7 @@ Resources:
       ReservedConcurrentExecutions: 1
       Environment:
         Variables:
-          AWS_LAMBDA_EXEC_WRAPPER: /opt/python/aot-instrument
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/python/adot-instrument
       Tracing: Active
       Layers:
         - !Ref AwsObservability

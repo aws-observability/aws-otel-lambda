@@ -29,7 +29,7 @@ main () {
     function=false
     deleteResources=false
     endpoint=false
-    stack=${STACK-"aot-py38-sample"}
+    stack=${STACK-"adot-py38-sample"}
     accountid=${ACCOUNT_ID-""}
     accountid2=${ACCOUNT_ID_2-""}
     sarApp=${SAR-"AWS-Distro-for-OpenTelemetry-Python-38-Sample"}

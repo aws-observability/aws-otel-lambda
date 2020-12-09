@@ -3,7 +3,7 @@
 set -e
 set -u
 
-stack=${STACK-"aot-py38-sample"}
+stack=${STACK-"adot-py38-sample"}
 region=${AWS_REGION-$(aws configure get region)}
 environment=''
 layers=''

@@ -10,7 +10,7 @@ on:
       stacks:
         description: 'stacks to be deleted'
         required: true
-        default: 'cd-aot*'
+        default: 'cd-adot*'
 
 jobs:
   clean-resources:

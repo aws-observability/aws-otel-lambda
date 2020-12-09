@@ -23,7 +23,7 @@ main () {
     debug=false
     invoke=false
     layer=false
-    stack=${STACK-"aot-py38-sample"}
+    stack=${STACK-"adot-py38-sample"}
     region=${AWS_REGION-$(aws configure get region)}
 
     while getopts "hbdxnlr:t:s:" opt; do

@@ -1,7 +1,7 @@
 BASE_SPACE:=$(shell pwd)
 BUILD_SPACE:=$(BASE_SPACE)/build
 BUCKET_NAME:=lambda-artifacts-$(shell dd if=/dev/random bs=8 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n')
-AOC_LAYER_NAME:=aoc-layer
+AOC_LAYER_NAME:=adoc-layer
 
 clean:
 	rm -rf build/
