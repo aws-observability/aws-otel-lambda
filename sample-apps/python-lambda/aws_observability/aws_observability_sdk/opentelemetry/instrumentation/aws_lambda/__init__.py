@@ -93,6 +93,9 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         orig_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
         xray_trace_id = os.environ.get("_X_AMZN_TRACE_ID", "")
 
+        lambda_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+        function_version = os.environ.get("AWS_LAMBDA_FUNCTION_VERSION")
+
         propagator = AwsXRayFormat()
         parent_context = propagator.extract(
             DictGetter(), {"X-Amzn-Trace-Id": xray_trace_id}
@@ -105,10 +108,9 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             span.set_attribute("faas.execution", ctx_aws_request_id)
             span.set_attribute("faas.id", ctx_invoked_function_arn)
 
-            # TODO: fix in Collector
-            resources_attrbuters = span.resource.attributes
-            span.set_attribute("faas.name", resources_attrbuters["faas.name"])
-            span.set_attribute("faas.version", resources_attrbuters["faas.version"])
+            # TODO: fix in Collector because they belong resource attrubutes
+            span.set_attribute("faas.name", lambda_name)
+            span.set_attribute("faas.version", function_version)
 
             result = original_func(*args, **kwargs)
 
