@@ -1,5 +1,17 @@
 export AOC=$(shell pwd)/aws_observability_collector
 export SDK=$(shell pwd)/aws_observability_sdk
+
+AOC_IMPORT_PATH=github.com/aws-observability/aws-otel-collector
+VERSION=$(shell cat $(AOC)/VERSION)
+GIT_SHA=$(shell git rev-parse HEAD)
+DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+GOBUILD=GO111MODULE=on CGO_ENABLED=0 installsuffix=cgo go build -trimpath
+BUILD_INFO_IMPORT_PATH=$(AOC_IMPORT_PATH)/tools/version
+
+LDFLAGS=-ldflags "-s -w -X $(BUILD_INFO_IMPORT_PATH).GitHash=$(GIT_SHA) \
+-X github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter.collectorDistribution=aws-otel-collector-lambda \
+-X $(BUILD_INFO_IMPORT_PATH).Version=$(VERSION) -X $(BUILD_INFO_IMPORT_PATH).Date=$(DATE)"
+
 build-AwsObservability:
 	mkdir -p $(ARTIFACTS_DIR)/python
 	pip3 install -r $(SDK)/requirements.txt -t $(ARTIFACTS_DIR)/python
@@ -14,6 +26,6 @@ build-AwsObservability:
 	rpm --rebuilddb
 	yum install -y go
 	mkdir -p $(ARTIFACTS_DIR)/extensions
-	cd $(AOC) && go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension ./cmd/aoc-lambda-extension
+	cd $(AOC) && $(GOBUILD) $(LDFLAGS) -o $(ARTIFACTS_DIR)/extensions/aoc-extension ./cmd/aoc-lambda-extension
 	mkdir -p $(ARTIFACTS_DIR)/aoc
 	cp $(AOC)/config* $(ARTIFACTS_DIR)/aoc

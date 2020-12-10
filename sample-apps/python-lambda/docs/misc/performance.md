@@ -37,5 +37,5 @@ The memory usage of ADOT in Lambda is around 75 MB (185 - 110 baseline). Need to
 
 CPU usage increases 2.5%, not only OpenTelemetry Python SDK but an OpenTelemetry Collector is running in Lambda through Lambda Extensions API.
 
-The duration increases 10 ms because there is a synchorous AWS SDK call at the end of every single Lambda invocation. Lambda will freeze the entire environment if no new request coming. There is no signal for freeze, to prevent traces is blocked in buffer, the current solution is call force_flush() API to flush data synchronously.
+The duration increases 10 ms because there is a synchronous AWS SDK call at the end of every single Lambda invocation. Lambda will freeze the entire environment if no new request coming. There is no signal for freeze, to prevent traces is blocked in buffer, the current solution is call force_flush() API to flush data synchronously.
 
