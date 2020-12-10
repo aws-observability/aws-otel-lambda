@@ -20,6 +20,7 @@ var (
 )
 
 func main() {
+	fmt.Println("Launching ADOT Lambda extension, version: ", Version)
 	factories, _ := defaultcomponents.Components()
 	collector := NewInProcessCollector(factories)
 	collector.prepareConfig()
