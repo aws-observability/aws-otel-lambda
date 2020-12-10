@@ -1,6 +1,7 @@
 ![CI](https://github.com/aws-observability/aws-otel-lambda/workflows/CI/badge.svg)
 # OpenTelemetry Python3.8 for AWS Lambda (preview)
-AOT Python Lambda layer provides a plug and play user experience of automatically instrument Lambda function, users can onload and offload AOT from their Lambda function without changing code. 
+The AWS Distro for OpenTelemetry Lambda layer for AWS Lambda provides a plug and play user experience by automatically instrumenting a Lambda function. Users can onload and offload OpenTelemetry from their Lambda function without changing code.
+
 
 ## Sample
 - Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html). For users have trouble in SAM CLI, see [doc](docs/misc/sam.md).
@@ -54,18 +55,11 @@ the source code of Lambda function contains an aio http request and an AWS SDK r
 ***
 
 ## Getting started
-To play AOT auto-instrumentation in Python3.8 Lambda Runtime, user needs 2 steps: 1. get the AOT layer; 2. enable AOT in Lambda function.
+To play AOT auto-instrumentation in Python3.8 Lambda Runtime, user needs 2 steps: 1. Build the Lambda layer; 2. Enable auto-instrumentation for your Lambda function.
 
-### Step 1. Get AOT layer
-Lambda layer is regionalized resource, make sure the AOT layer is at the same region with your Lambda function.
+### Build the Lambda layer
+If you have went though Sample you already have ADOT Lambda layer, skip to the next step **Enable auto-instrumentation for your Lambda function**
 
-~~**Option #1 Public Lambda layer(Not ready in preview)**~~
-
-~~Find public layer ARN in [release note](docs/release-notes/py38.md)~~
-
-#### Option #2 Build AOT Lambda layer from scratch. 
-
-As a contributor you may want to build everything from scratch
 1. Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html). For users have trouble in SAM CLI, see [doc](docs/misc/sam.md).
 2. Run `aws configure` to set aws credential([with administrator permissions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html#serverless-sam-cli-install-mac-iam-permissions)) and default region.
 2. Download this repo
@@ -73,19 +67,18 @@ As a contributor you may want to build everything from scratch
 
 Tips:
 - `run.sh -t layer.yml` will compile AOT layer in local and publish it to personal account. If need both AOT layer and Sample app, use `./run.sh`
-- To publish AOT layer to other regions use `-r`, for example `./run.sh -r us-west-2`
+- Lambda layer is regionalized. To publish AOT layer to other regions use `-r`, for example `./run.sh -r us-west-2`
 - Query the layer ARN by `./run.sh -l`. If want to query the layer ARN in region us-east-1, use `./run.sh -l -r us-east-1`(suppose you have built and published AOT layer in this region)
-- Once AOT layer is obtained, no need to redo step #1 unless you want to upgrade AOT to the latest version.
-- Lambda layer is regionalized, cannot consume layer across region.
+- After the layer is published, it can be reused across multiple Lambda functions. You don’t have to republish the layer, unless you would like to upgrade the layer to the latest version.
 
 
-### Step 2. Enable AOT auto-instrumentation for your lambda function
+### Enable auto-instrumentation for your Lambda function
 
-Now you have the AOT layer ARN in previous step. To enable AOT in Lambda function needs: 1. Add AOT layer; 2. Add environment variable `AWS_LAMBDA_EXEC_WRAPPER = /opt/python/adot-instrument`; 3. Enable tracing. 
+Now you have the layer ARN. To enable the AWS Distro for OpenTelemetry in your Lambda function, you need to add and configure the layer, and then enable tracing.
 
 #### Option #1 Enable AOT by Console
 
-1. Open Lambda function in aws console -> **Layers** in Designer-> **Add a layer** -> **Specify an ARN** -> paste the AOT layer ARN and click **Add**
+1. Open the Lambda function you intend to instrument in the in AWS console. In the **Layers in Designer** section, choose **Add a layer** Under **specify an ARN** paste the layer ARN, and then choose **Add**.
 
     <details>
 
@@ -127,31 +120,33 @@ Now you have the AOT layer ARN in previous step. To enable AOT in Lambda functio
 aws lambda update-function-configuration --function-name <your lambda function name> --layers <AOT layer ARN> --environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument}" --tracing-config "Mode=Active"
 ```
 Tips:
-- By default AOT layer export traces to AWS X-Ray, make sure your Lambda role has xray write permission, Ref [code](template.yml#L23).
-- Lambda layer is regionalized asset, make sure pick up the correct layer ARN.
-- Command `aws lambda update-function-configuration` would override Lambda layer and environment variables in existing function. If your function already has other layers and environment variables, need to add them in upper command. For example, if your function already has an environment variable `A=a`, the command should become `--environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument,A=a}"`. Ref [AWS Doc](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
+- By default, the layer is configured to export traces to AWS X-Ray, make sure your Lambda role has [the required X-Ray permissions](template.yml#L23).
+- The command `aws lambda update-function-configuration` will override Lambda layer and environment variables in existing function. If your function already has other layers and environment variables, you need to add them in the wrapper command. For example, if your function has an environment variable `A=a`, the command should be `--environment Variables="{AWS_LAMBDA_EXEC_WRAPPER=/opt/python/aot-instrument,A=a}"`. For more information, see the [AWS CLI documentation](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html).
 
 
 
-### Offload AOT from your lambda function
-Contrary to enable AOT in Lambda function, offloading AOT needs to remove AOT layer and remove the environment variable `AWS_LAMBDA_EXEC_WRAPPER`.
+### Remove OpenTelemetry from your Lambda function
+To disable OpenTelemetry from you Lambda function, remove the Lambda layer and remove the environment variable `AWS_LAMBDA_EXEC_WRAPPER`. Also, disable active tracing.
+
 
 ***
 
 ## Configuration
-AOT Python Lambda layer combines both SDK and [Collector](https://github.com/aws-observability/aws-otel-collector#overview). The configuration of Collecor follows OpenTelemetry standard.
+The AWS Distro for OpenTelemetry Python Lambda layer combines both OpenTelemetry Python SDK and the [AWS Distro for OpenTelemetry Collector](https://github.com/aws-observability/aws-otel-collector#overview). The configuration of Collector follows the OpenTelemetry standard.
 
-- By default AOT in Lambda uses [config.yaml](../../extensions/aoc-extension/config.yaml), exports telemetry data to AWS X-Ray and CloudWatch.
+By default, AWS Distro for OpenTelemetry in Lambda uses [config.yaml](https://github.com/aws-observability/aws-otel-lambda/blob/main/extensions/aoc-extension/config.yaml), which exports telemetry data to AWS X-Ray and AWS CloudWatch.
 
-    Turn on logging exporter in Collector for debug by adding environment variable `AOT_DEBUG=true` in Lambda function.
+For debugging, you can turn on the logging exporter in the Collector by adding the environment variable `AOT_DEBUG=true` in the Lambda function.
 
-- Customize Collector config
-    
-    There are 2 ways to set customized Collector configuration:
-    1. Bring customized config file(and ca/cert/key files) into Lambda sandbox by Lambda layer, then set the Collector config by environment variable `AOT_CONFIG=<your config file path>` 
-    2. Add environment variable `AOT_CONFIG_CONTENT=<Full content of your config file>`.
-    
-    For some cases need ca/cert/key files like OTLP gRPC/HTTP exporter secure mode, user has to bring files into Lambda by his layer.
+
+To customize the Collector config, there are two options:
+
+
+* Bring customized config file (and ca/cert/key files) into the Lambda function by the Lambda layer, then set the Collector config by environment variable `AOT_CONFIG=<your config file path>`
+* Add the environment variable `AOT_CONFIG_CONTENT=<Full content of your config file>`
+
+For more information about AWS Distro for OpenTelemetry Collector configuration like adding ca/cert/key files, see the Github [README.md](../../extensions/sample-aoc-config/README.md).
+
     
 ***
 
