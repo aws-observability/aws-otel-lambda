@@ -1,0 +1,21 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  awsemf:
+  logging:
+    loglevel: debug
+  otlp:
+    endpoint: 44.234.62.36:55680
+    insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlp, logging]
+    metrics:
+      receivers: [otlp]
+      exporters: [awsemf]

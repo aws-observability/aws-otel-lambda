@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: api
+      TracingEnabled: true
+      OpenApiVersion: 3.0.2
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./function
+      Description: Build AWS Observability layer
+      MemorySize: 512
+      Timeout: 15
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/python/adot-instrument
+      Tracing: Active
+      Layers:
+        - !Ref AwsObservability
+      Events:
+        getEndpoint:
+          Type: Api
+          Properties:
+            RestApiId: !Ref api
+            Path: /
+            Method: GET
+  AwsObservability:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: aws-distro-for-opentelemetry-python-38-preview
+      Description: Lambda AWS Observability Python38 layer.
+      ContentUri: ./aws_observability
+      CompatibleRuntimes:
+        - python3.8
+    Metadata:
+      BuildMethod: makefile
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: AWS-Distro-for-OpenTelemetry-Python-38-Sample
+    Description: AWS Distro for Opentelemetry Python38 Sample
+    Author: aws-observability
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['opentelemetry', 'python38', 'sample']
+    HomePageUrl: https://aws.amazon.com/products/management-and-governance/use-cases/monitoring-and-observability/
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: https://github.com/aws-observability/aws-otel-lambda/sample-apps/python-lambda
