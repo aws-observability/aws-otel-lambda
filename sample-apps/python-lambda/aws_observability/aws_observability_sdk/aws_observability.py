@@ -29,7 +29,7 @@ trace.set_tracer_provider(
     )
 )
 
-console_exporter = os.environ.get("CONSOLE_EXPORTER", None)
+console_exporter = os.environ.get("ADOT_DEBUG", None)
 if not console_exporter is None:
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 

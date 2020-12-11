@@ -1,5 +1,5 @@
-## Customize ADOT Collector config in Lambda
-ADOT Lambda layer contains a default config file which exports data to AWS X-Ray. But users can use custom config file and related private ca/cert/key files in Lambda to export data to 3rd party backend service in secure mode. 
+## Custom ADOT Collector config in Lambda
+ADOT Lambda layer contains a default config file which exports data to AWS X-Ray. But users can use custom config file and related private ca/cert/key files in Lambda to export data to other services in secure mode. 
 
 ### Getting started
 

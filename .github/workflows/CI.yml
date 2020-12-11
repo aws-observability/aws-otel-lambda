@@ -145,22 +145,6 @@ jobs:
           cd test-framework
           ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
 
-      # TODO: cannot turn on http in Lambda sandbox so have to install an AOC on EC2
-      # - name: update aoc config to http exporter
-      #   working-directory: ${{ env.WORK_DIR }}
-      #   if: ${{ success() }}
-      #   run: |
-      #     ./updateFunction.sh -e "Variables={ADOT_CONFIG=/opt/custom/config-http-loop.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/adot-instrument}"
-      #     ./distribute.sh -n 1 -i 0
-
-      # - name: integration test for http exporter
-      #   if: ${{ success() }}
-      #   run: |
-      #     sample-apps/python-lambda/distribute.sh -n 6 -i 10 &
-      #     endpoint=$(cat endpoint_file)
-      #     cd test-framework
-      #     ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
-
       - name: clean
         working-directory: ${{ env.WORK_DIR }}
         run: |
