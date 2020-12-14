@@ -141,7 +141,7 @@ jobs:
         run: |
           pip install boto3
           functionName=$(./distribute.sh -f)
-          python3 soaking.py $functionName 1800 5
+          python3 soaking.py $functionName 18000 5
           echo "Soaking test done." 
       
       - name: integration test
