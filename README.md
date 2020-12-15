@@ -1,4 +1,4 @@
-# Support OpenTelemetry in AWS Lambda
+# AWS Distro for OpenTelemetry support for AWS Lambda in Python
 
 As an event-driven, serverless computing platform, AWS Lambda runs user's code —knowns as **Lambda function**— in sandbox environment. So, launching OpenTelemetry Collector in Lambda environment needs the help of [AWS Lambda Extensions](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-extensions-in-preview/). This project provides ADOT Lambda layers user can use directly. The layers embed both ADOT Collector(as a Lambda extension) and SDK, Lambda user can onboard OpenTelemetry with this solution out-of-the-box.
 
