@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"os"
 	"strings"
 
@@ -102,7 +103,7 @@ func (ipp *InProcessCollector) start() error {
 			Version:  Version,
 			GitHash:  GitHash,
 		},
-		ConfigFactory: func(v *viper.Viper, factories component.Factories) (*configmodels.Config, error) {
+		ConfigFactory: func(v *viper.Viper, cmd *cobra.Command, factories component.Factories) (*configmodels.Config, error) {
 			return ipp.config, nil
 		},
 		Factories: ipp.factories,
