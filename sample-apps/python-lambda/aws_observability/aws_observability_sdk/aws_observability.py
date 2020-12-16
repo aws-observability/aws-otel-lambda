@@ -38,7 +38,7 @@ if not console_exporter is None:
     )
     logger.info("Console exporter initialized.")
 
-ci = os.environ.get("CI", None)
+ci = os.environ.get("_ADOT_CI", None)
 if ci is None:
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 
