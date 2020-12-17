@@ -4,8 +4,8 @@ Run `make publish-layer` to publish OpenTelemetry Collector Lambda layer to your
 
 #### To public Lambda layer, run:
 ```shell script
-aws lambda add-layer-version-permission --layer-name <your-lambda-layer-name> --version-number <version-number> \                                             ✔  12:51:19 
---principal "*" --statement-id publish --action lambda:GetLayerVersion
+aws lambda add-layer-version-permission --layer-name <your-lambda-layer-name> --version-number <version-number> \
+    --principal "*" --statement-id publish --action lambda:GetLayerVersion
 ```
 
 Be sure to:
