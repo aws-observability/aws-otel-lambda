@@ -19,7 +19,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AWSLambda_ReadOnlyAccess
         - AWSXrayWriteOnlyAccess
-        - CloudWatchFullAccess
+        - CloudWatchAgentServerPolicy
       ReservedConcurrentExecutions: 1
       Events:
         getEndpoint:
