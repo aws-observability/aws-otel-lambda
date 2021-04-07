@@ -19,7 +19,7 @@ Resources:
       Timeout: 15
       Policies:
         - AWSLambdaBasicExecutionRole
-        - AWSLambdaReadOnlyAccess
+        - AWSLambda_ReadOnlyAccess
         - AWSXrayWriteOnlyAccess
       ReservedConcurrentExecutions: 1
       Environment:
