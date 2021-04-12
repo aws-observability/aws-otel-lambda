@@ -1,0 +1,85 @@
+name: canary-python
+env:
+  STACK: py38-canary
+  UTILS: ${{ github.workspace }}/opentelemetry-lambda/utils/sam
+
+on:
+  schedule:
+    - cron: '15 * * * *' # every hour
+  workflow_dispatch:
+
+jobs:
+  canary-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        region: [ us-east-1, us-east-2, us-west-1, us-west-2, ap-south-1, ap-northeast-3, ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-north-1, eu-south-1]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+          cd opentelemetry-lambda
+          git fetch
+          git merge origin/master
+
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      - name: Configure AWS Credentials CN
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region == 'cn-north-1' ||  matrix.region == 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST_CN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST_CN }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+      - name: Configure AWS Credentials standard
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region != 'cn-north-1' &&  matrix.region != 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+
+      - name: Get git commit sha
+        run: |
+          echo "ADOT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          cd opentelemetry-lambda
+          echo "OTEL_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        if: ${{ success() }}
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+
+      - name: Set sample stack name
+        run: |
+          echo "OTEL_LAMBDA_STACK=$STACK-$OTEL_SHA-$ADOT_SHA" >> $GITHUB_ENV
+
+      - name: deploy sample
+        continue-on-error: true
+        working-directory: opentelemetry-lambda/python/sample-xray
+        run: |
+          echo $OTEL_LAMBDA_STACK
+          ./run.sh
+
+      - name: validate sample
+        run: |
+          endpoint=$(${{ env.UTILS }}/endpoint.sh)
+          curl $endpoint
+          cp opentelemetry-lambda/python/sample-xray/test/expected.mustache test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+
+      - name: clean sample
+        run: |
+          ${{ env.UTILS }}/clean.sh

@@ -1,0 +1,60 @@
+ [{
+     "origin":"AWS::ApiGateway::Stage",
+     "subsegments":[
+         {
+             "name":"Lambda",
+             "namespace":"aws"
+         }
+     ]
+ },
+{
+    "name":"py38-.*",
+    "http":{
+        "response":{
+            "status":200
+        }
+    },
+    "origin":"AWS::Lambda"
+},
+{
+    "name":"py38-.*",
+    "origin":"AWS::Lambda::Function",
+    "subsegments":[
+        {
+            "name":"Invocation",
+                         "subsegments":[
+                             {
+                                 "name":"lambda_function\\.lambda_handler",
+                                 "aws":{
+                                     "xray":{
+                                         "auto_instrumentation":false,
+                                         "sdk":"opentelemetry for python"
+                                     }
+                                 }
+                             }
+                         ]
+        },
+        {
+            "name":"Overhead"
+        }
+    ]
+
+},
+{
+    "name":"HTTP GET",
+    "inferred":true,
+    "http":{
+        "request":{
+            "url":"http://httpbin\\.org/",
+            "method":"GET"
+        }
+    }
+},
+{
+    "name":"S3",
+    "origin":"AWS::S3",
+    "inferred":true,
+    "aws":{
+        "operation":"ListBuckets"
+    }
+}]

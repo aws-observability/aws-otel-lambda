@@ -1,0 +1,288 @@
+name: release-python
+env:
+  LAYER: py38-layer
+  STACK: py38-release
+  UTILS: ${{ github.workspace }}/opentelemetry-lambda/utils/sam
+
+on:
+  workflow_dispatch:
+    inputs:
+      fromLayer:
+        description: 'Soaked layer name in test account'
+        required: false
+        default: 'py38-layer-86558a5-2fc2419'
+      toLayer:
+        description: 'Layer name publishing to Prod account'
+        required: true
+        default: 'py38-preview'
+      version:
+        description: 'the version number to release'
+        required: true
+        default: '0.1'
+      regions:
+        description: 'regions to be deployed'
+        retuired: true
+        default: "{\"region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+
+
+jobs:
+  cache-layer-from-test:
+    runs-on: ubuntu-latest
+
+    env:
+      KEY: ${{ github.event.inputs.fromLayer }}
+      AWS_REGION: us-west-2
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
+          mask-aws-account-id: false
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Cache layer
+        uses: actions/cache@v2
+        id: cache-layer
+        with:
+          path: ./layer.zip
+          key: ${{ github.event.inputs.fromLayer }}
+
+      - name: download layer
+        env:
+          OTEL_LAMBDA_LAYER: ${{ github.event.inputs.toLayer }}
+        run: |
+          layerArn=$($UTILS/layer.sh -a)
+          URL=$(aws lambda get-layer-version-by-arn --arn $layerArn --query Content.Location --output text)
+          curl $URL -o layer.zip
+
+  publish-layer:
+    needs: cache-layer-from-test
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.regions)}}
+#        region-cn: [ cn-northeast-1, cn-north-1 ]
+#        region-optin: [ af-south-1, ap-east-1, eu-south-1, me-south-1 ]
+#        region: [ us-east-1, us-east-2, us-west-1, us-west-2, ap-south-1, ap-northeast-3, ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-north-1, sa-east-1]
+    env:
+      AWS_REGION: ${{matrix.region}}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      - name: Configure AWS Credentials CN
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region == 'cn-north-1' ||  matrix.region == 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST_CN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST_CN }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+      - name: Configure AWS Credentials standard
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region != 'cn-north-1' &&  matrix.region != 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+
+      - name: Cache layer
+        uses: actions/cache@v2
+        id: cache-layer
+        with:
+          path: ./layer.zip
+          key: ${{ github.event.inputs.fromLayer }}
+
+      - name: layer missing
+        if: steps.cache-layer.outputs.cache-hit != 'true'
+        run: |
+          exit 1
+
+      - name: clone
+        run: |
+          BUCKET_NAME="lambda-artifacts"-$(dd if=/dev/random bs=8 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n')
+          aws s3 mb s3://$BUCKET_NAME
+          aws s3 cp layer.zip s3://$BUCKET_NAME
+          toLayerArn=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayer }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          aws s3 rm s3://$BUCKET_NAME/layer.zip
+          aws s3 rb s3://$BUCKET_NAME
+          echo $toLayerArn
+
+      - name: public layer
+        continue-on-error: true
+        env:
+          OTEL_LAMBDA_LAYER: ${{ github.event.inputs.toLayer }}
+        run: |
+          layerVersion=$($UTILS/layer.sh -v)
+          echo $layerVersion
+          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayer }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+
+      - name: get layerARN
+        env:
+          OTEL_LAMBDA_LAYER: ${{ github.event.inputs.toLayer }}
+        if: ${{ success() }}
+        run: |
+          mkdir ${{ github.event.inputs.toLayer }}
+          $UTILS/layer.sh -a > ${{ github.event.inputs.toLayer }}/$AWS_REGION
+          cat ${{ github.event.inputs.toLayer }}/$AWS_REGION
+
+      - name: upload layer arn artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayer }}
+          path: ${{ github.event.inputs.toLayer }}/${{matrix.region}}
+          retention-days: 15
+
+  smoke-test:
+    needs: publish-layer
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.regions)}}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+          cd opentelemetry-lambda
+          git fetch
+          git merge origin/master
+
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      - name: Configure AWS Credentials CN
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region == 'cn-north-1' ||  matrix.region == 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST_CN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST_CN }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+      - name: Configure AWS Credentials standard
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region != 'cn-north-1' &&  matrix.region != 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+
+      - name: Get git commit sha
+        run: |
+          echo "ADOT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          cd opentelemetry-lambda
+          echo "OTEL_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set layer name
+        run: |
+          echo "OTEL_LAMBDA_LAYER=${{ github.event.inputs.toLayer }}" >> $GITHUB_ENV
+
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        if: ${{ success() }}
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+
+      - name: Set sample stack name
+        run: |
+          echo "OTEL_LAMBDA_STACK=$STACK-$OTEL_SHA-$ADOT_SHA" >> $GITHUB_ENV
+
+      - name: deploy sample
+        continue-on-error: true
+        working-directory: opentelemetry-lambda/python/sample-xray
+        run: |
+          $UTILS/clean.sh
+          echo $OTEL_LAMBDA_STACK
+          ./run.sh
+
+      - name: validate sample
+        run: |
+          echo "Skip"
+
+      - name: download layerARNs
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayer }}
+          path: ${{ github.event.inputs.toLayer }}
+
+      - name: install otel layer to sample
+        run: |
+          layerArn=$(cat ${{ github.event.inputs.toLayer }}/$AWS_REGION)
+          echo $layerArn
+          ${{ env.UTILS }}/update.sh -l $layerArn
+          ${{ env.UTILS }}/update.sh -e "Variables={OPENTELEMETRY_COLLECTOR_CONFIG_FILE=/opt/collector-config/config.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/otel-instrument}"
+
+      - name: validate layer
+        run: |
+          endpoint=$(${{ env.UTILS }}/endpoint.sh)
+          curl $endpoint
+          cp opentelemetry-lambda/python/sample-xray/test/expected.mustache test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+
+      - name: clean sample
+        run: |
+          ${{ env.UTILS }}/clean.sh
+
+  release-to-github:
+    runs-on: ubuntu-latest
+    needs: [ smoke-test ]
+    steps:
+      - name: download layerARNs
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayer }}
+          path: ${{ github.event.inputs.toLayer }}
+
+      - name: show layerARNs
+        run: |
+          for file in ${{ github.event.inputs.toLayer }}/*
+          do
+          echo $file
+          cat $file
+          done
+
+      - name: Generate release-note
+        run: |
+          echo "# ADOT Lambda Layer for Python 3.8" > release-note
+          echo "| Region | Layer ARN |" >> release-note
+          echo "|  ----  | ----  |" >> release-note
+          cd ${{ github.event.inputs.toLayer }}
+          for file in *
+          do
+          read arn < $file
+          echo "| " $file " | " $arn " |" >> ../release-note
+          done
+          cd ..
+          cat release-note
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          commitish: ${{ github.sha }}
+          release_name: Release ADOT Lambda layer for Python 3.8
+          body_path: release-note
+          draft: true
+          prerelease: true

@@ -1,0 +1,45 @@
+name: "Pull Request"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  PR-Python:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python: [3.8]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+          cd opentelemetry-lambda
+          git fetch
+          git merge origin/master
+
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      - name: Tox
+        working-directory: opentelemetry-lambda/python/src
+        run: |
+          pip install tox
+          tox
+      - name: build layer
+        working-directory: opentelemetry-lambda/python/src
+        run: ./run.sh -b
+
+      - name: build sample
+        working-directory: opentelemetry-lambda/python/sample-xray
+        run: ./run.sh -b

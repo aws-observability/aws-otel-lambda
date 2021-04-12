@@ -1,0 +1,153 @@
+name: soak-python
+
+env:
+  LAYER: py38-layer
+  LAYER_PATH: 'opentelemetry-lambda/python/src'
+  STACK: py38-soak
+  UTILS: ${{ github.workspace }}/opentelemetry-lambda/utils/sam
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime:
+        description: 'soaking'
+        required: false
+        default: 'Python3.8'
+      args:
+        description: 'soaking test args'
+        required: true
+        default: '600 5'
+  schedule:
+    - cron: '0 1 * * *' # every day
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        region: [ us-west-2 ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+          cd opentelemetry-lambda
+          git fetch
+          git merge origin/master
+
+      - name: adot custom
+        run: |
+          cp -rf adot/* opentelemetry-lambda/
+
+      # set aws creds for CN regions and standard regions
+      - name: Configure AWS Credentials CN
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region == 'cn-north-1' ||  matrix.region == 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST_CN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST_CN }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+      - name: Configure AWS Credentials standard
+        uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ matrix.region != 'cn-north-1' &&  matrix.region != 'cn-northwest-1'}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
+          mask-aws-account-id: false
+          aws-region: ${{matrix.region}}
+
+      - name: Get git commit sha
+        run: |
+          echo "ADOT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          cd opentelemetry-lambda
+          echo "OTEL_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set layer name
+        run: |
+          echo "OTEL_LAMBDA_LAYER=$LAYER-$OTEL_SHA-$ADOT_SHA" >> $GITHUB_ENV
+
+      - name: deploy layer
+        run: |
+          layerArn=$(${{ env.UTILS }}/layer.sh -a)
+          echo $layerArn
+          if [[ $layerArn == "null" ]]; then
+            echo "building and deploying layer"
+            cd $LAYER_PATH
+            ./run.sh
+          else
+            echo "skip deploy layer"
+          fi
+          layerArn=$(${{ env.UTILS }}/layer.sh -a)
+          echo $layerArn
+
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        if: ${{ success() }}
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+
+      - name: Set sample stack name
+        run: |
+          echo "OTEL_LAMBDA_STACK=$STACK-$OTEL_SHA-$ADOT_SHA" >> $GITHUB_ENV
+
+      - name: deploy sample
+        continue-on-error: true
+        working-directory: opentelemetry-lambda/python/sample-xray
+        run: |
+          echo $OTEL_LAMBDA_STACK
+          ./run.sh
+
+      - name: validate sample
+        run: |
+          echo "TODO"
+
+      - name: install otel layer to sample
+        run: |
+          layerArn=$(${{ env.UTILS }}/layer.sh -a)
+          echo $layerArn
+          ${{ env.UTILS }}/update.sh -l $layerArn
+          ${{ env.UTILS }}/update.sh -e "Variables={OPENTELEMETRY_COLLECTOR_CONFIG_FILE=/opt/collector-config/config.yaml,AWS_LAMBDA_EXEC_WRAPPER=/opt/python/otel-instrument}"
+
+      - name: validate layer
+        run: |
+          endpoint=$(${{ env.UTILS }}/endpoint.sh)
+          curl $endpoint
+          cp opentelemetry-lambda/python/sample-xray/test/expected.mustache test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint $endpoint --region $AWS_REGION"
+
+      - name: Enable Lambda Insight
+        working-directory: ${{ env.UTILS }}
+        if: ${{ success() }}
+        run: |
+          ./update.sh -a "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:10"
+
+      - name: manually trigger soaking test
+        working-directory: ${{ env.UTILS }}
+        if: ${{ success() && github.event_name == 'workflow_dispatch' }}
+        run: |
+          pip install boto3
+          functionName=$(./function.sh)
+          endpoint=$(./endpoint.sh)
+          python3 ./soak.py $functionName ${{ github.event.inputs.args }} $endpoint
+          echo "Soaking test done."
+
+      - name: scheduled soaking test
+        working-directory: ${{ env.UTILS }}
+        if: ${{ success() && github.event_name != 'workflow_dispatch' }}
+        run: |
+          pip install boto3
+          functionName=$($UTILS/function.sh)
+          endpoint=$($UTILS/endpoint.sh)
+          python3 soak.py $functionName 1800 5 $endpoint
+          echo "Soaking test done."
+
+      - name: clean sample
+        run: |
+          ${{ env.UTILS }}/clean.sh
