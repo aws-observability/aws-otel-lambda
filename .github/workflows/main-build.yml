@@ -33,6 +33,15 @@ jobs:
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
+#          - name: Python
+#            language: python
+#            build_directory: opentelemetry-lambda/python
+#            build_command: |
+#              cd src
+#              ./build.sh
+#              cd ../sample-apps
+#              ./build.sh
+#            terraform_directory: opentelemetry-lambda/python/integration-tests/function
     steps:
       - uses: actions/checkout@v2
         with:
