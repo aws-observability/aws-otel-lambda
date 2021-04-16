@@ -85,6 +85,7 @@ jobs:
           aws-region: us-east-1
       - name: Initialize terraform
         run: terraform init
+        working-directory: ${{ matrix.terraform_directory }}
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
