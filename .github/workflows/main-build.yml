@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         include:
+# TODO(anuraaga): Enable after opentelemetry-lambda changes applied.
 #          - name: Java AWS SDK (Agent)
 #            language: java
 #            build_directory: opentelemetry-lambda/java
@@ -115,7 +116,6 @@ jobs:
         run: |
           echo "curl -sS ${{ steps.extract-endpoint.outputs.stdout }}"
           curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
-        working-directory: ${{ matrix.terraform_directory }}
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()
