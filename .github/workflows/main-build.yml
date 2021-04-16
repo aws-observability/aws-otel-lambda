@@ -12,21 +12,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Java AWS SDK (Agent)
-            language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
-          - name: Java AWS SDK (Wrapper)
-            language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
-          - name: Java OkHttp (Wrapper)
-            language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
-            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
+#          - name: Java AWS SDK (Agent)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+#          - name: Java AWS SDK (Wrapper)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+#          - name: Java OkHttp (Wrapper)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
           - name: NodeJS AWS SDK
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
@@ -83,6 +83,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: us-east-1
+      - name: Initialize terraform
+        run: terraform init
       - name: Apply terraform
         run: terraform apply -auto-approve
         env:
