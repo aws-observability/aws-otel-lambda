@@ -66,7 +66,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - uses: actions/setup-python@v2
@@ -108,7 +108,11 @@ jobs:
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
       - name: Send request to endpoint
-        run: curl -s -S -o /dev/null $(terraform output api-gateway-url | jq -r .)
+        run: |
+          terraform output api-gateway-url
+          terraform output api-gateway-url | jq -r .
+          echo $(terraform output api-gateway-url | jq -r .)
+          curl -s -S -o /dev/null $(terraform output api-gateway-url | jq -r .)
         working-directory: ${{ matrix.terraform_directory }}
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
