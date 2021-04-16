@@ -39,13 +39,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - name: Cache (Go)
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
@@ -56,9 +49,10 @@ jobs:
         if: ${{ matrix.language == 'java' }}
         with:
           path: |
+            ~/go/pkg/mod
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
       - uses: actions/setup-node@v2
@@ -69,8 +63,10 @@ jobs:
         uses: actions/cache@v2
         if: ${{ matrix.language == 'nodejs' }}
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - uses: actions/setup-python@v2
@@ -81,8 +77,10 @@ jobs:
         uses: actions/cache@v2
         if: ${{ matrix.language == 'python' }}
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Build layers / functions
