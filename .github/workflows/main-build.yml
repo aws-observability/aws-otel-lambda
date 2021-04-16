@@ -110,6 +110,7 @@ jobs:
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
+        working-directory: ${{ matrix.terraform_directory }}
       - name: Send request to endpoint
         run: |
           echo "curl -sS ${{ steps.extract-endpoint.outputs.stdout }}"
