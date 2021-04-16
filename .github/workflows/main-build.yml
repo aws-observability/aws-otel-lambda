@@ -39,7 +39,8 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - uses: actions/cache@v2
+      - name: Cache (Go)
+        uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -50,7 +51,8 @@ jobs:
         with:
           distribution: adopt
           java-version: '11'
-      - uses: actions/cache@v2
+      - name: Cache (Java)
+        uses: actions/cache@v2
         if: ${{ matrix.language == 'java' }}
         with:
           path: |
@@ -63,7 +65,8 @@ jobs:
         if: ${{ matrix.language == 'nodejs' }}
         with:
           node-version: '14'
-      - uses: actions/cache@v2
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
         if: ${{ matrix.language == 'nodejs' }}
         with:
           path: ~/.npm
@@ -74,7 +77,8 @@ jobs:
         if: ${{ matrix.language == 'python' }}
         with:
           python-version: '3.x'
-      - uses: actions/cache@v2
+      - name: Cache (Python)
+        uses: actions/cache@v2
         if: ${{ matrix.language == 'python' }}
         with:
           path: ~/.cache/pip
@@ -99,7 +103,8 @@ jobs:
         run: terraform init
         working-directory: ${{ matrix.terraform_directory }}
       - name: Apply terraform
-        run: terraform apply -auto-approve
+        #run: terraform apply -auto-approve
+        run: terraform plan
         working-directory: ${{ matrix.terraform_directory }}
         env:
           TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
