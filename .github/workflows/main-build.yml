@@ -107,10 +107,13 @@ jobs:
           TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
       - name: Send request to endpoint
         run: |
-          echo "curl -sS $(terraform output -raw api-gateway-url)"
-          curl -sS $(terraform output -raw api-gateway-url)
+          echo "curl -sS ${{ steps.extract-endpoint.outputs.stdout }}"
+          curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
         working-directory: ${{ matrix.terraform_directory }}
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
