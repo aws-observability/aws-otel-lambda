@@ -51,11 +51,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - uses: actions/setup-node@v2
-        if: ${{ matrix.language == 'node' }}
+        if: ${{ matrix.language == 'nodejs' }}
         with:
           node-version: '14'
       - uses: actions/cache@v2
-        if: ${{ matrix.language == 'node' }}
+        if: ${{ matrix.language == 'nodejs' }}
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -87,6 +87,7 @@ jobs:
         run: terraform init
       - name: Apply terraform
         run: terraform apply -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
         env:
           TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
@@ -97,3 +98,4 @@ jobs:
       - name: Destroy terraform
         if: always()
         run: terraform destroy
+        working-directory: ${{ matrix.terraform_directory }}
