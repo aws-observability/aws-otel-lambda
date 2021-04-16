@@ -103,8 +103,7 @@ jobs:
         run: terraform init
         working-directory: ${{ matrix.terraform_directory }}
       - name: Apply terraform
-        #run: terraform apply -auto-approve
-        run: terraform plan
+        run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
           TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
@@ -115,5 +114,5 @@ jobs:
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()
-        run: terraform destroy
+        run: terraform destroy -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
