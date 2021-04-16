@@ -109,6 +109,7 @@ jobs:
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
       - name: Send request to endpoint
         run: curl -s -S -o /dev/null $(terraform output api-gateway-url | jq -r .)
+        working-directory: ${{ matrix.terraform_directory }}
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()
