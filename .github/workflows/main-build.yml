@@ -110,9 +110,8 @@ jobs:
       - name: Send request to endpoint
         run: |
           terraform output api-gateway-url
-          terraform output api-gateway-url | jq -r .
-          echo $(terraform output api-gateway-url | jq -r .)
-          curl -s -S -o /dev/null $(terraform output api-gateway-url | jq -r .)
+          terraform output api-gateway-url | jq -r . || echo "Failed"
+          curl -s -S -o /dev/null $(terraform output api-gateway-url)
         working-directory: ${{ matrix.terraform_directory }}
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
