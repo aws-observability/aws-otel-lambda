@@ -12,36 +12,35 @@ jobs:
     strategy:
       matrix:
         include:
-# TODO(anuraaga): Enable after opentelemetry-lambda changes applied.
-#          - name: Java AWS SDK (Agent)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
-#          - name: Java AWS SDK (Wrapper)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
-#          - name: Java OkHttp (Wrapper)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
+          - name: Java AWS SDK (Agent)
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+          - name: Java AWS SDK (Wrapper)
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+          - name: Java OkHttp (Wrapper)
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
           - name: NodeJS AWS SDK
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
-#          - name: Python
-#            language: python
-#            build_directory: opentelemetry-lambda/python
-#            build_command: |
-#              cd src
-#              ./build.sh
-#              cd ../sample-apps
-#              ./build.sh
-#            terraform_directory: opentelemetry-lambda/python/integration-tests/function
+          - name: Python
+            language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd src
+              ./build.sh
+              cd ../sample-apps
+              ./build.sh
+            terraform_directory: opentelemetry-lambda/python/integration-tests/function
     steps:
       - uses: actions/checkout@v2
         with:
