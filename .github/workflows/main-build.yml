@@ -1,0 +1,130 @@
+name: Main Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-20.04
+    name: Integration Test - ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+# TODO(anuraaga): Enable after opentelemetry-lambda changes applied.
+#          - name: Java AWS SDK (Agent)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+#          - name: Java AWS SDK (Wrapper)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+#          - name: Java OkHttp (Wrapper)
+#            language: java
+#            build_directory: opentelemetry-lambda/java
+#            build_command: ./gradlew build
+#            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
+          - name: NodeJS AWS SDK
+            language: nodejs
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
+            terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
+#          - name: Python
+#            language: python
+#            build_directory: opentelemetry-lambda/python
+#            build_command: |
+#              cd src
+#              ./build.sh
+#              cd ../sample-apps
+#              ./build.sh
+#            terraform_directory: opentelemetry-lambda/python/integration-tests/function
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - uses: actions/setup-java@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Build layers / functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
+      - name: Build collector
+        run: make package
+        working-directory: opentelemetry-lambda/collector
+      - uses: hashicorp/setup-terraform@v1
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: us-east-1
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
+        env:
+          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Send request to endpoint
+        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      # TODO(anuraaga): Verify telemetry
+      - name: Destroy terraform
+        if: always()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
