@@ -12,27 +12,27 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Java AWS SDK (Agent)
+          - name: java-awssdk-agent
             language: java
             build_directory: opentelemetry-lambda/java
             build_command: ./gradlew build
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
-          - name: Java AWS SDK (Wrapper)
+          - name: java-awssdk-wrapper
             language: java
             build_directory: opentelemetry-lambda/java
             build_command: ./gradlew build
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
-          - name: Java OkHttp (Wrapper)
+          - name: java-okhttp-wrapper
             language: java
             build_directory: opentelemetry-lambda/java
             build_command: ./gradlew build
             terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
-          - name: NodeJS AWS SDK
+          - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
-          - name: Python
+          - name: python
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
@@ -113,9 +113,9 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ github.job }}
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ github.job }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ github.job }}
+          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ matrix.name }}
+          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
