@@ -12,36 +12,35 @@ jobs:
     strategy:
       matrix:
         include:
-# TODO(anuraaga): Enable after opentelemetry-lambda changes applied.
-#          - name: Java AWS SDK (Agent)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
-#          - name: Java AWS SDK (Wrapper)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
-#          - name: Java OkHttp (Wrapper)
-#            language: java
-#            build_directory: opentelemetry-lambda/java
-#            build_command: ./gradlew build
-#            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
-          - name: NodeJS AWS SDK
+          - name: java-awssdk-agent
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+          - name: java-awssdk-wrapper
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+          - name: java-okhttp-wrapper
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
+            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
+          - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
-#          - name: Python
-#            language: python
-#            build_directory: opentelemetry-lambda/python
-#            build_command: |
-#              cd src
-#              ./build.sh
-#              cd ../sample-apps
-#              ./build.sh
-#            terraform_directory: opentelemetry-lambda/python/integration-tests/function
+          - name: python
+            language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd src
+              ./build.sh
+              cd ../sample-apps
+              ./build.sh
+            terraform_directory: opentelemetry-lambda/python/integration-tests/function
     steps:
       - uses: actions/checkout@v2
         with:
@@ -103,13 +102,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Build layers / functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
-      - name: Build collector
-        run: make package
-        working-directory: opentelemetry-lambda/collector
-      - uses: hashicorp/setup-terraform@v1
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -117,6 +109,18 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: us-east-1
+      # Login to ECR since may be needed for Python build image.
+      - name: Login to Public ECR
+        uses: docker/login-action@v1
+        with:
+          registry: public.ecr.aws
+      - name: Build layers / functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
+      - name: Build collector
+        run: make package
+        working-directory: opentelemetry-lambda/collector
+      - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ matrix.terraform_directory }}
@@ -124,9 +128,9 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
+          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ matrix.name }}
+          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
