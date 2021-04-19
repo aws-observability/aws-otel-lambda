@@ -46,6 +46,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+#      # adot customizations, such as replace collector to aoc, xray backend collector config, etc.
+#      - name: Patch ADOT
+#        run: |
+#          cp -rf adot/* opentelemetry-lambda/
+#          cd opentelemetry-lambda/collector
+#          go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@0.8.2
+#          go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws@v0.23.0
+#          go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/awsxray=github.com/open-telemetry/opentelemetry-collector-contrib/internal/awsxray@v0.23.0
+#          go mod tidy
+
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
