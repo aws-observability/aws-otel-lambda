@@ -113,9 +113,9 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}
+          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ github.job }}
+          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ github.job }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ github.job }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
