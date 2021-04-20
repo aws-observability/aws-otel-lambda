@@ -1,13 +1,13 @@
-name: Main Build
+name: Canary (published artifacts) build
 
 on:
   # TODO(anuraaga): Add cron after stabilizes
   workflow_dispatch:
 
 jobs:
-  integration-test:
+  canary-test:
     runs-on: ubuntu-20.04
-    name: Integration Test - ${{ matrix.name }}
+    name: Canary Test - ${{ matrix.name }}
     strategy:
       matrix:
         include:
