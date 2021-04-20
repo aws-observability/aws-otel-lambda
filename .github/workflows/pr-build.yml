@@ -7,7 +7,7 @@ on:
 jobs:
   build-artifacts:
     runs-on: ubuntu-20.04
-    name: Build artifacts - ${{ matrix.name }}
+    name: Build artifacts - ${{ matrix.language }}
     strategy:
       matrix:
         include:
