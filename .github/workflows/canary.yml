@@ -35,7 +35,7 @@ jobs:
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
-              cd ../sample-apps
+              cd sample-apps
               ./build.sh
             terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
