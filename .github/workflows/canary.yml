@@ -10,6 +10,9 @@ jobs:
     name: Canary Test - ${{ matrix.name }}
     strategy:
       matrix:
+        aws_region:
+          # TODO(anuraaga): Add more regions when the layers are published to them.
+          - us-east-1
         include:
           - name: java-awssdk-agent
             language: java
@@ -95,7 +98,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
-          aws-region: us-east-1
+          aws-region: ${{ matrix.aws_region }}
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
