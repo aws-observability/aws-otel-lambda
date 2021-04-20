@@ -1,0 +1,52 @@
+name: Main Build
+
+on:
+  # TODO(anuraaga): Add cron after stabilizes
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-20.04
+    name: Integration Test - ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+          - name: java-awssdk-agent
+            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
+          - name: java-awssdk-wrapper
+            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
+          - name: java-okhttp-wrapper
+            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
+          - name: nodejs-awssdk
+            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
+          - name: python
+            terraform_directory: sample-apps/terraform/python/aws-sdk
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: us-east-1
+      - uses: hashicorp/setup-terraform@v1
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Send request to endpoint
+        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      # TODO(anuraaga): Verify telemetry
+      - name: Destroy terraform
+        if: always()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
