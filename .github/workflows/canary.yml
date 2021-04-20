@@ -16,18 +16,18 @@ jobs:
         include:
           - name: java-awssdk-agent
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: sample-apps/terraform/java/aws-sdk/agent
           - name: java-awssdk-wrapper
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
           - name: java-okhttp-wrapper
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: sample-apps/terraform/java/okhttp/wrapper
           - name: nodejs-awssdk
             language: nodejs
