@@ -18,4 +18,4 @@ cp "$SOURCEDIR"/wrapper-adot/build/src/adot-extension.* ./packages/layer/build/w
 
 cd ./packages/layer/build/workspace || exit
 rm ../layer.zip
-zip -r ../layer.zip *
+zip -qr ../layer.zip *
