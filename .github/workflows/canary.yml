@@ -12,19 +12,83 @@ jobs:
       matrix:
         include:
           - name: java-awssdk-agent
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
             terraform_directory: sample-apps/terraform/java/aws-sdk/agent
           - name: java-awssdk-wrapper
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
             terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
           - name: java-okhttp-wrapper
+            language: java
+            build_directory: opentelemetry-lambda/java
+            build_command: ./gradlew build
             terraform_directory: sample-apps/terraform/java/okhttp/wrapper
           - name: nodejs-awssdk
+            language: nodejs
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
             terraform_directory: sample-apps/terraform/nodejs/aws-sdk
           - name: python
+            language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd ../sample-apps
+              ./build.sh
             terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - uses: actions/setup-java@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Build functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
