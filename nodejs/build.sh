@@ -2,9 +2,10 @@
 
 SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+cd wrapper-adot || exit
 npm install
 
-cd ../opentelemetry-lambda/nodejs || exit
+cd ../../opentelemetry-lambda/nodejs || exit
 npm install
 
 mv ./packages/layer/build/workspace/otel-handler ./packages/layer/build/workspace/otel-handler-upstream
