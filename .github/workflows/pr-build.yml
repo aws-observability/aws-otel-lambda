@@ -15,8 +15,8 @@ jobs:
             build_directory: opentelemetry-lambda/java
             build_command: ./gradlew build
           - language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
+            build_directory: nodejs
+            build_command: ./build.sh
           - language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
