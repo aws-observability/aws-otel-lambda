@@ -1,4 +1,4 @@
-# for CI testing only
+# for CI/CD test only
 # ADOT Lambda Layer for Python 3.8
 | Region | Layer ARN |
 |  ----  | ----  |
