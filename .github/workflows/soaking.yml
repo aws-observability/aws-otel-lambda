@@ -14,14 +14,14 @@ jobs:
           - name: java-awssdk-agent
             layer_type: java-agent
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
           - name: java-awssdk-wrapper
             layer_type: java-wrapper
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
           - name: nodejs-awssdk
             layer_type: nodejs

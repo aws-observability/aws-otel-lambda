@@ -12,8 +12,8 @@ jobs:
       matrix:
         include:
           - language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
           - language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
