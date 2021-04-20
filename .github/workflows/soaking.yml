@@ -119,7 +119,7 @@ jobs:
           # TODO(anuraaga): Consider picking a canonical language to manage the pushed collector layer and use different
           # names for others. Won't be needed if we don't publish separate collector layer.
           TF_VAR_collector_layer_name: aws-otel-lambda-collector-${{ github.sha }}
-          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ layer_type }}-${{ github.sha }}
+          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_type }}-${{ github.sha }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
