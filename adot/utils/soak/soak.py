@@ -9,6 +9,43 @@ import requests
 # Alarm flag, False means no Alarm
 state = False
 
+# LambdaInsight layer ARNs, suppose we run soak test only in these regions
+lambdaInsightArnMap = {}
+lambdaInsightArnMap[
+    "us-east-1"
+] = "arn:aws:lambda:us-east-1:580247275435:layer:LambdaInsightsExtension:14"
+lambdaInsightArnMap[
+    "us-east-2"
+] = "arn:aws:lambda:us-east-2:580247275435:layer:LambdaInsightsExtension:14"
+lambdaInsightArnMap[
+    "us-west-1"
+] = "arn:aws:lambda:us-west-1:580247275435:layer:LambdaInsightsExtension:14"
+lambdaInsightArnMap[
+    "us-west-2"
+] = "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:14"
+
+
+def enableLambdaInsight(function_name):
+    lambdaClient = boto3.client("lambda")
+    lambdaInsightLayerArn = lambdaInsightArnMap[boto3.Session().region_name]
+    response = lambdaClient.get_function_configuration(FunctionName=function_name)
+    print("Lambda function has layers: {}".format(response["Layers"]))
+
+    arnList = []
+    for item in response["Layers"]:
+        arn = item["Arn"]
+        arnList.append(arn)
+        if arn == lambdaInsightLayerArn:
+            print("LambdaInsight has been enabled, no need enable again.")
+            return
+    arnList.append(lambdaInsightLayerArn)
+
+    lambdaClient.update_function_configuration(
+        FunctionName=function_name, Layers=arnList
+    )
+    response = lambdaClient.get_function_configuration(FunctionName=function_name)
+    print("Enable LambdaInsight {}".format(response["Layers"]))
+
 
 def parse_args():
     # default setting
@@ -139,7 +176,7 @@ def alarm_puller(function_name, cpu_threshold, memory_threshold):
 
 if __name__ == "__main__":
     (
-        name,
+        function_name,
         endpoint,
         soaking_time,
         emitter_interval,
@@ -147,9 +184,12 @@ if __name__ == "__main__":
         memory_threshold,
     ) = parse_args()
 
-    # alarms
-    memory_alarm = "otel_lambda_memory-" + name
-    cpu_alarm = "otel_lambda_cpu-" + name
+    # Enable LambdaInsight
+    enableLambdaInsight(function_name)
+
+    # Set alarm name
+    memory_alarm = "otel_lambda_memory-" + function_name
+    cpu_alarm = "otel_lambda_cpu-" + function_name
 
     cloudwatch = boto3.client("cloudwatch")
 
@@ -167,7 +207,7 @@ if __name__ == "__main__":
     alarm_thread = Thread(
         target=alarm_puller,
         name="alarm_puller",
-        args=(name, cpu_threshold, memory_threshold),
+        args=(function_name, cpu_threshold, memory_threshold),
         daemon=True,
     )
     alarm_thread.start()
