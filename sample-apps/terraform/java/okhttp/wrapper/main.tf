@@ -13,6 +13,6 @@ locals {
 module "app" {
   source = "../../../../../opentelemetry-lambda/java/sample-apps/okhttp/deploy/wrapper"
 
-  collector_layer_arn = lookup(local.collector_layer_arns, data.aws_region.current.name, "invalid")
+  collector_layer_arn    = lookup(local.collector_layer_arns, data.aws_region.current.name, "invalid")
   java_wrapper_layer_arn = lookup(local.sdk_layer_arns, data.aws_region.current.name, "invalid")
 }
