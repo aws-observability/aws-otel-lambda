@@ -14,20 +14,20 @@ jobs:
           - name: java-awssdk-agent
             layer_type: java-agent
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
           - name: java-awssdk-wrapper
             layer_type: java-wrapper
             language: java
-            build_directory: opentelemetry-lambda/java
-            build_command: ./gradlew build
+            build_directory: java
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
           - name: nodejs-awssdk
             layer_type: nodejs
             language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
+            build_directory: nodejs
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
           - name: python
             layer_type: python
@@ -43,6 +43,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
@@ -119,7 +121,7 @@ jobs:
           # TODO(anuraaga): Consider picking a canonical language to manage the pushed collector layer and use different
           # names for others. Won't be needed if we don't publish separate collector layer.
           TF_VAR_collector_layer_name: aws-otel-lambda-collector-${{ github.sha }}
-          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ layer_type }}-${{ github.sha }}
+          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_type }}-${{ github.sha }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint

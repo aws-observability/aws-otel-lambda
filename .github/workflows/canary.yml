@@ -1,55 +1,58 @@
-name: Main Build
+name: Canary (published artifacts) build
 
 on:
-  push:
-    branches: [ main ]
+  # TODO(anuraaga): Add cron after stabilizes
   workflow_dispatch:
 
 jobs:
-  integration-test:
+  canary-test:
     runs-on: ubuntu-20.04
-    name: Integration Test - ${{ matrix.name }}
+    name: Canary Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
     strategy:
       matrix:
+        aws_region:
+          # TODO(anuraaga): Add more regions when the layers are published to them.
+          - us-east-1
+        # We need to define the raw parameters to the matrix here but will customize each
+        # below.
+        name:
+          - java-awssdk-agent
+          - java-awssdk-wrapper
+          - java-okhttp-wrapper
+          - nodejs-awssdk
+          - python
         include:
           - name: java-awssdk-agent
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/agent
+            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
           - name: java-awssdk-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/wrapper
+            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
           - name: java-okhttp-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: integration-tests/java/okhttp/wrapper
+            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
           - name: nodejs-awssdk
             language: nodejs
-            build_directory: nodejs
-            build_command: ./build.sh
-            terraform_directory: integration-tests/nodejs/aws-sdk
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
+            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
           - name: python
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
-              cd src
+              cd sample-apps
               ./build.sh
-              cd ../sample-apps
-              ./build.sh
-            terraform_directory: integration-tests/python/aws-sdk
+            terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Patch ADOT
-        run: ./patch-upstream.sh
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '^1.16'
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
@@ -94,24 +97,16 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      - name: Build functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
-          aws-region: us-east-1
-      # Login to ECR since may be needed for Python build image.
-      - name: Login to Public ECR
-        uses: docker/login-action@v1
-        with:
-          registry: public.ecr.aws
-      - name: Build layers / functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
-      - name: Build collector
-        run: make package
-        working-directory: opentelemetry-lambda/collector
+          aws-region: ${{ matrix.aws_region }}
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
@@ -120,8 +115,6 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ matrix.name }}
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint

@@ -1,0 +1,43 @@
+{
+  "name": "@aws-observability/adot-wrapper",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Layer including aws-otel customization of OpenTelemetry Lambda layer.",
+  "repository": "aws-observability/aws-otel-lambda",
+  "scripts": {
+    "clean": "rimraf build/*",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prepare": "npm run compile",
+    "compile": "tsc -p ."
+  },
+  "keywords": [
+    "opentelemetry",
+    "awslambda",
+    "nodejs",
+    "tracing",
+    "profiling",
+    "instrumentation"
+  ],
+  "author": "OpenTelemetry Authors",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "14.14.41",
+    "@typescript-eslint/eslint-plugin": "4.3.0",
+    "@typescript-eslint/parser": "4.3.0",
+    "eslint": "7.19.0",
+    "eslint-config-airbnb-base": "14.2.0",
+    "eslint-plugin-header": "3.1.1",
+    "eslint-plugin-import": "2.22.1",
+    "gts": "3.1.0",
+    "rimraf": "3.0.2",
+    "typescript": "4.1.3"
+  },
+  "dependencies": {
+    "@opentelemetry/id-generator-aws-xray": "https://gitpkg.now.sh/anuraaga/opentelemetry-js-contrib/packages/opentelemetry-id-generator-aws-xray?899841c86451b25cd1fd71b7af60388c7ed10732",
+    "@opentelemetry/node": "^0.18.2"
+  }
+}

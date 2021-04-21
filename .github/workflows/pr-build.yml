@@ -1,0 +1,85 @@
+name: PR Build
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-20.04
+    name: Build artifacts - ${{ matrix.language }}
+    strategy:
+      matrix:
+        include:
+          - language: java
+            build_directory: java
+            build_command: ./build.sh
+          - language: nodejs
+            build_directory: nodejs
+            build_command: ./build.sh
+          - language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd src
+              ./build.sh
+              cd ../sample-apps
+              ./build.sh
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - uses: actions/setup-java@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Build layers / functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
+      - name: Build collector
+        run: make package
+        working-directory: opentelemetry-lambda/collector
