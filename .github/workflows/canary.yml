@@ -7,12 +7,20 @@ on:
 jobs:
   canary-test:
     runs-on: ubuntu-20.04
-    name: Canary Test - ${{ matrix.name }}
+    name: Canary Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
     strategy:
       matrix:
         aws_region:
           # TODO(anuraaga): Add more regions when the layers are published to them.
           - us-east-1
+        # We need to define the raw parameters to the matrix here but will customize each
+        # below.
+        name:
+          - java-awssdk-agent
+          - java-awssdk-wrapper
+          - java-okhttp-wrapper
+          - nodejs-awssdk
+          - python
         include:
           - name: java-awssdk-agent
             language: java
@@ -106,6 +114,8 @@ jobs:
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
+        env:
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
