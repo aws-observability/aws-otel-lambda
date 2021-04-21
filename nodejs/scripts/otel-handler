@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export NODE_OPTIONS="--require /opt/adot-extension.js ${NODE_OPTIONS}"
+
+source /opt/otel-handler-upstream

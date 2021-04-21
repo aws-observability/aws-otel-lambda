@@ -26,8 +26,8 @@ jobs:
           - name: nodejs-awssdk
             layer_type: nodejs
             language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
+            build_directory: nodejs
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
           - name: python
             layer_type: python
