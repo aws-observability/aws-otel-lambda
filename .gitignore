@@ -16,3 +16,4 @@ coverage.txt
 .aws-sam/*
 
 .terraform*
+terraform.*

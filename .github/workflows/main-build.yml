@@ -16,22 +16,22 @@ jobs:
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+            terraform_directory: integration-tests/java/aws-sdk/agent
           - name: java-awssdk-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+            terraform_directory: integration-tests/java/aws-sdk/wrapper
           - name: java-okhttp-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/java/integration-tests/okhttp/wrapper
+            terraform_directory: integration-tests/java/okhttp/wrapper
           - name: nodejs-awssdk
             language: nodejs
             build_directory: nodejs
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
+            terraform_directory: integration-tests/nodejs/aws-sdk
           - name: python
             language: python
             build_directory: opentelemetry-lambda/python
@@ -40,7 +40,7 @@ jobs:
               ./build.sh
               cd ../sample-apps
               ./build.sh
-            terraform_directory: opentelemetry-lambda/python/integration-tests/function
+            terraform_directory: integration-tests/python/aws-sdk
     steps:
       - uses: actions/checkout@v2
         with:

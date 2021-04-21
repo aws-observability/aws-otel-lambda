@@ -13,7 +13,6 @@ cp "$SOURCEDIR"/scripts/otel-handler ./packages/layer/build/workspace/otel-handl
 # This assumes that id-generator-aws-xray does not have additional dependencies outside of normal OTel ones.
 # It's inconceivable for this to ever be incorrect.
 cp -r "$SOURCEDIR"/wrapper-adot/node_modules/@opentelemetry/id-generator-aws-xray ./packages/layer/build/workspace/nodejs/node_modules/@opentelemetry
-ls "$SOURCEDIR"/wrapper-adot/build/src/
 cp "$SOURCEDIR"/wrapper-adot/build/src/adot-extension.* ./packages/layer/build/workspace/
 
 cd ./packages/layer/build/workspace || exit
