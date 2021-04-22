@@ -32,12 +32,8 @@ jobs:
           - name: python
             layer_type: python
             language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd src
-              ./build.sh
-              cd ../sample-apps
-              ./build.sh
+            build_directory: python
+            build_command: ./build.sh
             terraform_directory: opentelemetry-lambda/python/integration-tests/function
     steps:
       - uses: actions/checkout@v2
@@ -107,9 +103,6 @@ jobs:
       - name: Build layers / functions
         run: ${{ matrix.build_command }}
         working-directory: ${{ matrix.build_directory }}
-      - name: Build collector
-        run: make package
-        working-directory: opentelemetry-lambda/collector
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
@@ -118,9 +111,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          # TODO(anuraaga): Consider picking a canonical language to manage the pushed collector layer and use different
-          # names for others. Won't be needed if we don't publish separate collector layer.
-          TF_VAR_collector_layer_name: aws-otel-lambda-collector-${{ github.sha }}
+          TF_VAR_enable_collector_layer: false
           TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_type }}-${{ github.sha }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
@@ -131,9 +122,7 @@ jobs:
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       # TODO(anuraaga): Run soak test
       - name: Remove layers from terraform management to prevent deletion.
-        run: |
-          terraform state rm aws_lambda_layer_version.collector_layer
-          terraform state rm aws_lambda_layer_version.sdk_layer
+        run:  terraform state rm aws_lambda_layer_version.sdk_layer
         working-directory: ${{ matrix.terraform_directory }}
       - name: Destroy terraform
         if: always()

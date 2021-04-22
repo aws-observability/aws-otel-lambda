@@ -2,6 +2,14 @@
 
 SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# Build collector
+
+pushd ../opentelemetry-lambda/collector || exit
+make package
+popd || exit
+
+# Build the sdk layer and sample apps
+
 cd wrapper-adot || exit
 npm install
 
@@ -17,4 +25,5 @@ cp "$SOURCEDIR"/wrapper-adot/build/src/adot-extension.* ./packages/layer/build/w
 
 cd ./packages/layer/build/workspace || exit
 rm ../layer.zip
+unzip -qo ../../../../../collector/build/collector-extension.zip
 zip -qr ../layer.zip *
