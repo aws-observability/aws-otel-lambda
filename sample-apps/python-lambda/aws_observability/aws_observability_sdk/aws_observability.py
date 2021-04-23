@@ -3,13 +3,13 @@ import logging
 from opentelemetry import trace
 from importlib import import_module
 
-from opentelemetry.sdk.extension.aws.trace import AwsXRayIdsGenerator
+from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    SimpleExportSpanProcessor,
-    BatchExportSpanProcessor,
+    SimpleSpanProcessor,
+    BatchSpanProcessor,
 )
 
 from opentelemetry.resource import AwsLambdaResourceDetector
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
 trace.set_tracer_provider(
     TracerProvider(
-        ids_generator=AwsXRayIdsGenerator(),
+        id_generator=AwsXRayIdGenerator(),
         resource=resource,
     )
 )
@@ -34,16 +34,16 @@ if not console_exporter is None:
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
     trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(ConsoleSpanExporter())
+        SimpleSpanProcessor(ConsoleSpanExporter())
     )
     logger.info("Console exporter initialized.")
 
 ci = os.environ.get("_ADOT_CI", None)
 if ci is None:
-    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
     otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
-    span_processor = BatchExportSpanProcessor(otlp_exporter)
+    span_processor = BatchSpanProcessor(otlp_exporter)
     trace.get_tracer_provider().add_span_processor(span_processor)
     logger.info("Otlp exporter initialized.")
 
