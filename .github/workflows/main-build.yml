@@ -34,12 +34,8 @@ jobs:
             terraform_directory: integration-tests/nodejs/aws-sdk
           - name: python
             language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd src
-              ./build.sh
-              cd ../sample-apps
-              ./build.sh
+            build_directory: python
+            build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
     steps:
       - uses: actions/checkout@v2
@@ -109,9 +105,6 @@ jobs:
       - name: Build layers / functions
         run: ${{ matrix.build_command }}
         working-directory: ${{ matrix.build_directory }}
-      - name: Build collector
-        run: make package
-        working-directory: opentelemetry-lambda/collector
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
@@ -120,7 +113,6 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_collector_layer_name: opentelemetry-collector-ci-${{ github.run_id }}-${{ matrix.name }}
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint

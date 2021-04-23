@@ -1,9 +1,9 @@
 module "test" {
   source = "../../../opentelemetry-lambda/python/integration-tests/function"
 
-  collector_layer_name = var.collector_layer_name
-  sdk_layer_name       = var.sdk_layer_name
-  function_name        = var.function_name
+  enable_collector_layer = false
+  sdk_layer_name         = var.sdk_layer_name
+  function_name          = var.function_name
 
   tracing_mode = "Active"
 }

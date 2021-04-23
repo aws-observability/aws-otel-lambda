@@ -18,12 +18,8 @@ jobs:
             build_directory: nodejs
             build_command: ./build.sh
           - language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd src
-              ./build.sh
-              cd ../sample-apps
-              ./build.sh
+            build_directory: python
+            build_command: ./build.sh
     steps:
       - uses: actions/checkout@v2
         with:
