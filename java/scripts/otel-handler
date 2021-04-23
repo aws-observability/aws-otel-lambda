@@ -2,4 +2,4 @@
 
 export OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_SPAN_ATTRIBUTES=true
 
-source /opt/otel-stream-handler-upstream
+source /opt/otel-handler-upstream
