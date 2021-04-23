@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 # Build collector
 
 pushd ../opentelemetry-lambda/collector || exit
@@ -22,6 +24,8 @@ cd ../opentelemetry-lambda/java || exit
 pushd ./layer-javaagent/build/distributions || exit
 unzip -qo opentelemetry-javaagent-layer.zip
 rm opentelemetry-javaagent-layer.zip
+mv otel-handler otel-handler-upstream
+cp "$SOURCEDIR"/scripts/otel-handler .
 unzip -qo ../../../../collector/build/collector-extension.zip
 zip -qr opentelemetry-javaagent-layer.zip *
 popd || exit
@@ -29,6 +33,10 @@ popd || exit
 pushd ./layer-wrapper/build/distributions || exit
 unzip -qo opentelemetry-java-wrapper.zip
 rm opentelemetry-java-wrapper.zip
+mv otel-handler otel-handler-upstream
+mv otel-stream-handler otel-stream-handler-upstream
+mv otel-proxy-handler otel-proxy-handler-upstream
+cp "$SOURCEDIR"/scripts/* .
 unzip -qo ../../../../collector/build/collector-extension.zip
 zip -qr opentelemetry-java-wrapper.zip *
 popd || exit
