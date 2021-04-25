@@ -122,7 +122,7 @@ jobs:
       - name: Run soak test
         run: |
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-            public.ecr.aws/aws-otel-test/lambda-soak:latest -n aws-otel-lambda-${{ matrix.layer_type }}-${{ github.sha }} \
+            public.ecr.aws/aws-otel-test/lambda-soak:latest -n hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }} \
             -e ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Remove layers from terraform management to prevent deletion.
         run:  terraform state rm aws_lambda_layer_version.sdk_layer
