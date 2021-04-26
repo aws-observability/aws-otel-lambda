@@ -30,14 +30,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: us-east-1
-      - name: Cache layer
-        uses: actions/cache@v2
-        id: cache-layer
-        with:
-          path: ./layer.zip
-          key: ${{ github.event.inputs.sourceLayerARN }}
       - name: download layer from source
-        if: steps.cache-layer.outputs.cache-hit != 'true'
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
@@ -103,6 +96,6 @@ jobs:
           done
           cd ..
           cat layer-note
-      # TODO: build splitting ARN TF
-      - name: build splitting TF file
+      # TODO: build splitting ARN TF file
+      - name: generate TF layers file
         run: echo 'todo'
