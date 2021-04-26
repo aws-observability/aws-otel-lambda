@@ -12,6 +12,6 @@
     "name":"hello-lambda-java.*"
   },
   {
-    "name":".*"
+    "name":"aws.amazon.com"
   }
 ]

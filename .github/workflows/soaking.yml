@@ -3,6 +3,11 @@ name: Soak tests
 on:
   # TODO(anuraaga): Enable cron after this settles down
   workflow_dispatch:
+    inputs:
+      soak_config:
+        description: 'memory/cpu threshold, soak time, emitter interval'
+        retuired: false
+        default: '-t 1800'
 
 jobs:
   soaking-test:
@@ -123,7 +128,7 @@ jobs:
         run: |
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             public.ecr.aws/aws-otel-test/lambda-soak:latest -n hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }} \
-            -e ${{ steps.extract-endpoint.outputs.stdout }}
+            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }}
       - name: Remove layers from terraform management to prevent deletion.
         run:  terraform state rm aws_lambda_layer_version.sdk_layer
         working-directory: ${{ matrix.terraform_directory }}
