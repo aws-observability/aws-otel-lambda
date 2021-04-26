@@ -37,7 +37,11 @@
     "typescript": "4.1.3"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.0.0-rc.0",
+    "@opentelemetry/core": "^0.18.2",
     "@opentelemetry/id-generator-aws-xray": "https://gitpkg.now.sh/anuraaga/opentelemetry-js-contrib/packages/opentelemetry-id-generator-aws-xray?899841c86451b25cd1fd71b7af60388c7ed10732",
-    "@opentelemetry/node": "^0.18.2"
+    "@opentelemetry/node": "^0.18.2",
+    "@opentelemetry/propagator-aws-xray": "https://gitpkg.now.sh/anuraaga/opentelemetry-js-contrib/propagators/opentelemetry-propagator-aws-xray?98cb56db4623222873bc02caffb3bc5a646d61a2",
+    "@opentelemetry/propagator-b3": "^0.18.2"
   }
 }
