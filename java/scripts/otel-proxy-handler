@@ -2,4 +2,6 @@
 
 export OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_SPAN_ATTRIBUTES=true
 
+export OTEL_PROPAGATORS="${OTEL_PROPAGATORS:-xray,tracecontext,b3,b3multi}"
+
 source /opt/otel-proxy-handler-upstream
