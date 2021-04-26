@@ -1,0 +1,101 @@
+name: Release public Lambda layer
+
+on:
+  workflow_dispatch:
+    inputs:
+      layerKind:
+        description: 'Layer kind such as: java-wrapper, java-agent, python3, nodejs'
+        required: true
+      sourceLayerARN:
+        description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
+        required: true
+      toLayerName:
+        description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
+        required: true
+      aws_region:
+        description: 'Deploy to aws region'
+        retuired: true
+        default: "{\"aws_region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+
+jobs:
+  publish-prod:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.aws_region)}}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: us-east-1
+      - name: download layer from source
+        run: |
+          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
+          curl $URL -o layer.zip
+      # switch to prod
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
+          role-duration-seconds: 1200
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - name: publish
+        run: |
+          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          aws s3 mb s3://$BUCKET_NAME
+          aws s3 cp layer.zip s3://$BUCKET_NAME
+          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          echo $layerARN
+          mkdir ${{ github.event.inputs.toLayerName }}
+          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
+          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
+      - name: public layer
+        run: |
+          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
+          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+      - name: upload layer arn artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayerName }}
+          path: ${{ github.event.inputs.toLayerName }}/${{matrix.aws_region}}
+      - name: clean s3
+        if: always()
+        run: |
+          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          aws s3 rb --force s3://$BUCKET_NAME
+  generate-note:
+    runs-on: publish-prod
+    needs: init
+    steps:
+      - name: download layerARNs
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayerName }}
+          path: ${{ github.event.inputs.toLayerName }}
+      - name: show layerARNs
+        run: |
+          for file in ${{ github.event.inputs.toLayerName }}/*
+          do
+          echo $file
+          cat $file
+          done
+      - name: generate layer-note
+        run: |
+          echo "| Region | Layer ARN |" >> layer-note
+          echo "|  ----  | ----  |" >> layer-note
+          cd ${{ github.event.inputs.toLayerName }}
+          for file in *
+          do
+          read arn < $file
+          echo "| " $file " | " $arn " |" >> ../layer-note
+          done
+          cd ..
+          cat layer-note
+      # TODO: build splitting ARN TF file
+      - name: generate TF layers file
+        run: echo 'todo'
