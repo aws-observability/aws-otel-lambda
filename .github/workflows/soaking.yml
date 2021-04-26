@@ -7,7 +7,7 @@ on:
       soak_config:
         description: 'memory/cpu threshold, soak time, emitter interval'
         retuired: false
-        default: '-t 1800'
+        default: '-t 800'
 
 jobs:
   soaking-test:
