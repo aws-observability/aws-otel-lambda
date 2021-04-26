@@ -12,13 +12,6 @@
     "name":"hello-lambda-java.*"
   },
   {
-    "name":"HTTP GET",
-    "inferred":true,
-    "http":{
-      "request":{
-        "url":"http://httpbin\\.org/",
-        "method":"GET"
-      }
-    }
+    "name":".*"
   }
 ]
