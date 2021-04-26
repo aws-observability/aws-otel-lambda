@@ -18,26 +18,11 @@ on:
         default: "{\"aws_region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
 
 jobs:
-  init:
+  publish-prod:
     runs-on: ubuntu-latest
-    outputs:
-      smoke-matrix-include: ${{ steps.setup.outputs.include }}
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.aws_region)}}
     steps:
-      - name: setup matrix for smoke test
-        id: setup
-        run: |
-          output_json=""
-          case ${{ github.event.inputs.layerKind }} in
-            "python38") output_json="[{\"name\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
-            ;;
-            "nodejs") output_json="[{\"name\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
-            ;;
-            "java-agent") output_json="[{\"name\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
-            ;;
-            "java-wrapper") output_json="[{\"name\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
-            ;;
-          esac
-          echo "::set-output name=include::$output_json"
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -52,26 +37,11 @@ jobs:
           path: ./layer.zip
           key: ${{ github.event.inputs.sourceLayerARN }}
       - name: download layer from source
+        if: steps.cache-layer.outputs.cache-hit != 'true'
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
-
-  publish-prod:
-    runs-on: ubuntu-latest
-    needs: init
-    strategy:
-      matrix: ${{fromJson(github.event.inputs.aws_region)}}
-    steps:
-      - name: Cache layer
-        uses: actions/cache@v2
-        id: cache-layer
-        with:
-          path: ./layer.zip
-          key: ${{ github.event.inputs.sourceLayerARN }}
-      - name: source layer missing
-        if: steps.cache-layer.outputs.cache-hit != 'true'
-        run: |
-          exit 1
+      # switch to prod
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -105,7 +75,7 @@ jobs:
         run: |
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
-  update-code:
+  generate-note:
     runs-on: publish-prod
     needs: init
     steps:
@@ -136,101 +106,3 @@ jobs:
       # TODO: build splitting ARN TF
       - name: build splitting TF file
         run: echo 'todo'
-  smoke-test:
-    runs-on: ubuntu-latest
-    needs: [ init, update-code ]
-    strategy:
-      matrix:
-        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
-        name:
-          - ${{ github.event.inputs.layerKind }}
-        include: ${{fromJson(needs.init.outputs.smoke-matrix-include)}}
-    steps:
-      # debug
-      - name: print matrix value
-        run: |
-          echo ${{matrix.aws_region}}
-          echo ${{matrix.name}}
-          echo ${{matrix.language}}
-          echo "${{matrix.build_command}}"
-          echo ${{matrix.terraform_directory}}
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - uses: actions/setup-java@v2
-        if: ${{ matrix.language == 'java' }}
-        with:
-          distribution: adopt
-          java-version: '11'
-      - name: Cache (Java)
-        uses: actions/cache@v2
-        if: ${{ matrix.language == 'java' }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      - uses: actions/setup-node@v2
-        if: ${{ matrix.language == 'nodejs' }}
-        with:
-          node-version: '14'
-      - name: Cache (NodeJS)
-        uses: actions/cache@v2
-        if: ${{ matrix.language == 'nodejs' }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - uses: actions/setup-python@v2
-        if: ${{ matrix.language == 'python' }}
-        with:
-          python-version: '3.x'
-      - name: Cache (Python)
-        uses: actions/cache@v2
-        if: ${{ matrix.language == 'python' }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Build functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-          role-duration-seconds: 1200
-          aws-region: ${{ matrix.aws_region }}
-      - uses: hashicorp/setup-terraform@v1
-      # TODO: update splitting ARN tf in canary sample
-      - name: update ARN tf file
-        run: echo 'todo'
-      - name: Initialize terraform
-        run: terraform init
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Apply terraform
-        run: terraform apply -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
-        env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
-      - name: Extract endpoint
-        id: extract-endpoint
-        run: terraform output -raw api-gateway-url
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Send request to endpoint
-        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
-      # TODO(anuraaga): Verify telemetry
-      - name: Destroy terraform
-        if: always()
-        run: terraform destroy -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
