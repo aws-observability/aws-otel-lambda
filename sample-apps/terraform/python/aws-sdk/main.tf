@@ -11,5 +11,5 @@ module "app" {
   source = "../../../../opentelemetry-lambda/python/sample-apps/deploy"
 
   collector_layer_arn      = null
-  python_wrapper_layer_arn = lookup(local.sdk_layer_arns, data.aws_region.current.name, "invalid")
+  sdk_layer_arn = lookup(local.sdk_layer_arns, data.aws_region.current.name, "invalid")
 }
