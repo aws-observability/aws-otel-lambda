@@ -1,0 +1,32 @@
+[
+  {
+    "name":"hello-lambda-python.*"
+  },
+  {
+    "name":"hello-lambda-python.*"
+  },
+  {
+    "name":"hello-lambda-python.*"
+  },
+  {
+    "name":"hello-lambda-python.*"
+  },
+  {
+    "name":"HTTP GET",
+    "inferred":true,
+    "http":{
+      "request":{
+        "url":"http://httpbin\\.org/",
+        "method":"GET"
+      }
+    }
+  },
+  {
+    "name":"S3",
+    "origin":"AWS::S3",
+    "inferred":true,
+    "aws":{
+      "operation":"ListBuckets"
+    }
+  }
+]
