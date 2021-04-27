@@ -3,13 +3,13 @@ name: Release public Lambda layer
 on:
   workflow_dispatch:
     inputs:
-      layerKind:
+      layer_kind:
         description: 'Layer kind such as: java-wrapper, java-agent, python38, nodejs'
         required: true
-      sourceLayerARN:
+      source_layer_arn:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
-      toLayerName:
+      layer_name:
         description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
         required: true
       aws_region:
@@ -32,7 +32,7 @@ jobs:
           aws-region: us-east-1
       - name: download layer from source
         run: |
-          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
+          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.source_layer_arn }} --query Content.Location --output text)
           curl $URL -o layer.zip
       # switch to prod
       - uses: aws-actions/configure-aws-credentials@v1
@@ -45,28 +45,28 @@ jobs:
           mask-aws-account-id: false
       - name: publish
         run: |
-          BUCKET_NAME=publish-${{ github.event.inputs.layerKind }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 mb s3://$BUCKET_NAME
           aws s3 cp layer.zip s3://$BUCKET_NAME
-          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.layer_name }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
           echo $layerARN
-          mkdir ${{ github.event.inputs.toLayerName }}
-          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
-          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
+          mkdir ${{ github.event.inputs.layer_name }}
+          echo $layerARN > ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
+          cat ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
       - name: public layer
         run: |
-          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
-          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.layer_name }} --query 'max_by(LayerVersions, &Version).Version')
+          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.layer_name }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
       - name: upload layer arn artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}/${{matrix.aws_region}}
+          name: ${{ github.event.inputs.layer_name }}
+          path: ${{ github.event.inputs.layer_name }}/${{matrix.aws_region}}
       - name: clean s3
         if: always()
         run: |
-          BUCKET_NAME=publish-${{ github.event.inputs.layerKind }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
   generate-note:
     runs-on: ubuntu-latest
@@ -75,11 +75,11 @@ jobs:
       - name: download layerARNs
         uses: actions/download-artifact@v2
         with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}
+          name: ${{ github.event.inputs.layer_name }}
+          path: ${{ github.event.inputs.layer_name }}
       - name: show layerARNs
         run: |
-          for file in ${{ github.event.inputs.toLayerName }}/*
+          for file in ${{ github.event.inputs.layer_name }}/*
           do
           echo $file
           cat $file
@@ -88,7 +88,7 @@ jobs:
         run: |
           echo "| Region | Layer ARN |" >> layer-note
           echo "|  ----  | ----  |" >> layer-note
-          cd ${{ github.event.inputs.toLayerName }}
+          cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
           read arn < $file

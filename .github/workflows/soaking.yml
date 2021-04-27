@@ -23,6 +23,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/java/aws-sdk/agent
             expected_template: adot/utils/expected-templates/java-awssdk-agent.json
+            soak_config: '-c 200 -m 80'
           - name: java-awssdk-wrapper
             layer_kind: java-wrapper
             language: java
@@ -30,6 +31,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/java/aws-sdk/wrapper
             expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+            soak_config: '-c 200 -m 80'
           - name: nodejs-awssdk
             layer_kind: nodejs
             language: nodejs
@@ -37,6 +39,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/nodejs/aws-sdk
             expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+            soak_config: '-c 75 -m 70'
           - name: python
             layer_kind: python38
             language: python
@@ -44,6 +47,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
+            soak_config: '-c 75 -m 60'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -144,7 +148,7 @@ jobs:
         run: |
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             public.ecr.aws/aws-otel-test/lambda-soak:latest -n hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }} \
-            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }}
+            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ matrix.soak_config }}
       - name: Remove layers from terraform management to prevent deletion.
         run:  terraform state rm aws_lambda_layer_version.sdk_layer
         working-directory: ${{ matrix.terraform_directory }}
