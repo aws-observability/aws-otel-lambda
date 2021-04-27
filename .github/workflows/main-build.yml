@@ -128,7 +128,6 @@ jobs:
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
         uses: actions/checkout@v2
-        if: ${{ success() }}
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework
@@ -136,7 +135,7 @@ jobs:
         run: |
           cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
-          ./gradlew :validator:run  --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve
