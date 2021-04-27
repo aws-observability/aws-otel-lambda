@@ -18,7 +18,7 @@ jobs:
 #          - java-awssdk-agent
 #          - java-awssdk-wrapper
 #          - java-okhttp-wrapper
-#          - nodejs-awssdk
+          - nodejs-awssdk
           - python38
         include:
 #          - name: java-awssdk-agent
@@ -39,12 +39,12 @@ jobs:
 #            build_command: ./build.sh
 #            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
 #            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
-#          - name: nodejs-awssdk
-#            language: nodejs
-#            build_directory: opentelemetry-lambda/nodejs
-#            build_command: npm install
-#            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
-#            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+          - name: nodejs-awssdk
+            language: nodejs
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
+            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
+            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python38
             language: python
             build_directory: opentelemetry-lambda/python
