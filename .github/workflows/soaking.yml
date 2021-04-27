@@ -136,7 +136,7 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Output annotations
         run: |
-          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
+          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
