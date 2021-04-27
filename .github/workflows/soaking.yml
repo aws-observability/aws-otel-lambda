@@ -1,7 +1,8 @@
 name: Soak tests
 
 on:
-  # TODO(anuraaga): Enable cron after this settles down
+  schedule:
+    - cron: '* 1 * * *' # daily job
   workflow_dispatch:
     inputs:
       soak_config:
