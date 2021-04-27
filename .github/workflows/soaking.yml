@@ -130,6 +130,14 @@ jobs:
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
         working-directory: ${{ matrix.terraform_directory }}
+      - name: Extract SDK layer arn
+        id: extract-sdk-layer-arn
+        run: terraform output -raw sdk-layer-arn
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Output annotations
+        run: |
+          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
+          echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
