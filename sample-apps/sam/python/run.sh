@@ -1,0 +1,1 @@
+sam build -u && sam deploy --stack-name aws-otel-python-demo --capabilities CAPABILITY_NAMED_IAM --resolve-s3
