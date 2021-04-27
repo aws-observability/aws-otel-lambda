@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       soak_config:
-        description: 'memory/cpu threshold, soak time, emitter interval'
+        description: 'set memory/cpu threshold, soak time, emitter interval'
         retuired: false
-        default: '-t 800'
+        default: '-t 1800'
 
 jobs:
   soaking-test:
@@ -17,29 +17,33 @@ jobs:
       matrix:
         include:
           - name: java-awssdk-agent
-            layer_type: java-agent
+            layer_kind: java-agent
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/agent
+            terraform_directory: integration-tests/java/aws-sdk/agent
+            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
           - name: java-awssdk-wrapper
-            layer_type: java-wrapper
+            layer_kind: java-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/java/integration-tests/aws-sdk/wrapper
+            terraform_directory: integration-tests/java/aws-sdk/wrapper
+            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
           - name: nodejs-awssdk
-            layer_type: nodejs
+            layer_kind: nodejs
             language: nodejs
             build_directory: nodejs
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/nodejs/integration-tests/aws-sdk
+            terraform_directory: integration-tests/nodejs/aws-sdk
+            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python
-            layer_type: python
+            layer_kind: python38
             language: python
             build_directory: python
             build_command: ./build.sh
-            terraform_directory: opentelemetry-lambda/python/integration-tests/function
+            terraform_directory: integration-tests/python/aws-sdk
+            expected_template: adot/utils/expected-templates/python.json
     steps:
       - uses: actions/checkout@v2
         with:
@@ -93,13 +97,15 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Patch ADOT
         run: ./patch-upstream.sh
+      # Default session duration is 6 hours.
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-          role-duration-seconds: 1200
           aws-region: us-east-1
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
       # Login to ECR since may be needed for Python build image.
       - name: Login to Public ECR
         uses: docker/login-action@v1
@@ -116,7 +122,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_type }}-${{ github.sha }}
+          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_kind }}-${{ github.sha }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
@@ -124,6 +130,16 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+      - name: validate sample
+        run: |
+          cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: Run soak test
         run: |
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
