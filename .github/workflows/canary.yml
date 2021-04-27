@@ -17,8 +17,8 @@ jobs:
         # below.
         name:
 #          - java-awssdk-agent
-#          - java-awssdk-wrapper
-#          - java-okhttp-wrapper
+          - java-awssdk-wrapper
+          - java-okhttp-wrapper
           - nodejs-awssdk
           - python38
         include:
@@ -28,18 +28,18 @@ jobs:
 #            build_command: ./build.sh
 #            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
 #            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
-#          - name: java-awssdk-wrapper
-#            language: java
-#            build_directory: java
-#            build_command: ./build.sh
-#            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
-#            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
-#          - name: java-okhttp-wrapper
-#            language: java
-#            build_directory: java
-#            build_command: ./build.sh
-#            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
-#            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+          - name: java-awssdk-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
+            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+          - name: java-okhttp-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
+            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
