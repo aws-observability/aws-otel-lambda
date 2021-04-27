@@ -39,7 +39,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/nodejs/aws-sdk
             expected_template: adot/utils/expected-templates/nodejs-awssdk.json
-            soak_config: '-c 75 -m 70'
+            soak_config: '-c 90 -m 70'
           - name: python
             layer_kind: python38
             language: python
@@ -47,7 +47,7 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
-            soak_config: '-c 75 -m 60'
+            soak_config: '-c 90 -m 70'
     steps:
       - uses: actions/checkout@v2
         with:
