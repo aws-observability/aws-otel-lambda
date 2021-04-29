@@ -14,12 +14,9 @@ We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed
 2. Checkout the current Repo by
    
    ```git clone --recurse-submodules https://github.com/aws-observability/aws-otel-lambda.git```
-3. Patch AWS logic in repo folder by
-
-    ``` ./patch-upstream.sh```
-4. Go to a sample application folder, such as `sample-apps/sam/python`, `sample-apps/terraform/nodejs/aws-sdk`, etc
+3. Go to a sample application folder, such as `sample-apps/sam/python`, `sample-apps/terraform/nodejs/aws-sdk`, etc
     
-5. Deploy sample application by, 
+4. Deploy sample application by, 
     1. For SAM sample application
         ```
         ./run.sh
@@ -28,7 +25,7 @@ We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed
     2. For Terraform sample application
         ```
        terraform init
-       terraform apply
+       terraform apply -auto-approve
         ```
     
 
