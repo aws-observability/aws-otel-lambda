@@ -10,7 +10,7 @@ on:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
       layer_name:
-        description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
+        description: 'Publish to layer name (ie: aws-otel-python38-ver-1-1-0)'
         required: true
       aws_region:
         description: 'Deploy to aws region'
