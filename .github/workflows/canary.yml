@@ -2,7 +2,7 @@ name: Canary (published artifacts) build
 
 on:
   schedule:
-    - cron: '25 * * * *' # hourly job
+    - cron: '25 */8 * * *' # every 8 hours
   workflow_dispatch:
 
 jobs:

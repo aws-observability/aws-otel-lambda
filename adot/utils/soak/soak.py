@@ -49,7 +49,7 @@ def enableLambdaInsight(function_name):
 
 def parse_args():
     # default setting
-    _soaking_time, _emitter_interval, _cpu_threshold, _memory_threshold = 600, 5, 60, 45
+    _soaking_time, _emitter_interval, _cpu_threshold, _memory_threshold = 10000, 5, 60, 45
     argument_list = sys.argv[1:]
     short_options = "i:t:e:n:c:m:"
     long_options = [
