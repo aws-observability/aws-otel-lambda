@@ -9,7 +9,7 @@ As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry
 
 
 ## Sample Apps
-We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed OpenTelemetry Lambda layers. Play these sample by steps:
+We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed OpenTelemetry Lambda layers. You can play with these samples by the following:
 1. Install AWS Cli, AWS SAM, Terraform, and configure AWS credentials correctly.
 2. Checkout the current Repo by
    
