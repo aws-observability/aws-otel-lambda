@@ -2,7 +2,7 @@ name: Soak tests
 
 on:
   schedule:
-    - cron: '* 1 * * *' # daily job
+    - cron: '0 14 * * 1,3,5' # Mon, Wed, Fri morning PST
   workflow_dispatch:
     inputs:
       soak_config:
