@@ -23,7 +23,7 @@ locals {
 }
 
 module "app" {
-  source = "../../../../../opentelemetry-lambda/java/sample-apps/aws-sdk/deploy/wrapper"
+  source = "../../opentelemetry-lambda/java/sample-apps/okhttp/deploy/wrapper"
 
   name                = var.function_name
   collector_layer_arn = null

@@ -23,7 +23,7 @@ locals {
 }
 
 module "app" {
-  source = "../../../../opentelemetry-lambda/python/sample-apps/deploy"
+  source = "../../opentelemetry-lambda/python/sample-apps/deploy"
 
   name                = var.function_name
   collector_layer_arn = null

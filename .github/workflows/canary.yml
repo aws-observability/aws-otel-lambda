@@ -26,25 +26,25 @@ jobs:
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
+            terraform_directory: sample-apps/java-agent-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/java-awssdk-agent.json
           - name: java-awssdk-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
+            terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
           - name: java-okhttp-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/terraform/java/okhttp/wrapper
+            terraform_directory: sample-apps/java-wrapper-okhttp-terraform
             expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
-            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
+            terraform_directory: sample-apps/nodejs-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python38
             language: python
@@ -52,7 +52,7 @@ jobs:
             build_command: |
               cd sample-apps
               ./build.sh
-            terraform_directory: sample-apps/terraform/python/aws-sdk
+            terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
             expected_template: adot/utils/expected-templates/python.json
     steps:
       - uses: actions/checkout@v2
