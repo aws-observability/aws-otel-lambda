@@ -42,6 +42,12 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
+          - name: dotnet-awssdk-wrapper
+            language: dotnet
+            build_directory: dotnet
+            build_command: ./build.sh
+            terraform_directory: integration-tests/dotnet/aws-sdk/wrapper
+            expected_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
@@ -93,6 +99,10 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      - uses: actions/setup-dotnet@v1
+        if: ${{ matrix.language == 'dotnet' }}
+        with:
+          dotnet-version: '3.1.x'
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -126,9 +136,11 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
+        if: ${{ matrix.language != 'dotnet' }}
         run: terraform output -raw sdk-layer-arn
         working-directory: ${{ matrix.terraform_directory }}
       - name: Output annotations
+        if: ${{ matrix.language != 'dotnet' }}
         run: |
           echo "::warning::Function: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
