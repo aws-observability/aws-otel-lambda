@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-prod
     steps:
+      - uses: hashicorp/setup-terraform@v1
       - name: download layerARNs
         uses: actions/download-artifact@v2
         with:
@@ -109,6 +110,7 @@ jobs:
           cd ..
           echo "  }" >> layer.tf
           echo "}" >> layer.tf
+          terraform fmt layer.tf
           cat layer.tf
       - name: upload layer tf file
         uses: actions/upload-artifact@v2
