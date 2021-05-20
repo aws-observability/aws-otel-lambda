@@ -17,7 +17,7 @@ cp ./build/libs/aws-otel-lambda-java-extensions.jar ../opentelemetry-lambda/java
 
 cd ../opentelemetry-lambda/java || exit
 
-./gradlew build -Potel.lambda.javaagent.dependency=software.amazon.opentelemetry:aws-opentelemetry-agent:1.0.0-aws.1
+./gradlew build -Potel.lambda.javaagent.dependency=software.amazon.opentelemetry:aws-opentelemetry-agent:1.1.0
 
 # Combine the layers
 
