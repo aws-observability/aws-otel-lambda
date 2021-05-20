@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-prod
     steps:
+      - uses: hashicorp/setup-terraform@v1
       - name: download layerARNs
         uses: actions/download-artifact@v2
         with:
@@ -98,12 +99,172 @@ jobs:
           cat layer-note
       - name: generate tf layer
         run: |
-          echo "tf layers" >> layer-tf
+          echo "locals {" >> layer.tf
+          echo "  sdk_layer_arns = {" >> layer.tf
           cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
           read arn < $file
-          echo "\""$file"\" = \""$arn"\"" >> ../layer-tf
+          echo "    \""$file"\" = \""$arn"\"" >> ../layer.tf
           done
           cd ..
-          cat layer-tf
+          echo "  }" >> layer.tf
+          echo "}" >> layer.tf
+          terraform fmt layer.tf
+          cat layer.tf
+      - name: upload layer tf file
+        uses: actions/upload-artifact@v2
+        with:
+          name: layer.tf
+          path: layer.tf
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: generate-note
+    name: Smoke Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
+        # We need to define the raw parameters to the matrix here but will customize each
+        # below.
+        name:
+          - java-awssdk-agent
+          - java-awssdk-wrapper
+          - java-okhttp-wrapper
+          - nodejs-awssdk
+          - python38
+        include:
+          - name: java-awssdk-agent
+            layer_kind: java-agent
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-agent-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
+          - name: java-awssdk-wrapper
+            layer_kind: java-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+          - name: java-okhttp-wrapper
+            layer_kind: java-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-wrapper-okhttp-terraform
+            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+          - name: nodejs-awssdk
+            layer_kind: nodejs
+            language: nodejs
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
+            terraform_directory: sample-apps/nodejs-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+          - name: python38
+            layer_kind: python38
+            language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd sample-apps
+              ./build.sh
+            terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
+            expected_template: adot/utils/expected-templates/python.json
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-java@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: download layer tf file
+        uses: actions/download-artifact@v2
+        with:
+          name: layer.tf
+      - name: overwrite layer.tf
+        if: ${{ github.event.inputs.layer_kind == matrix.layer_kind }}
+        run: |
+          cat ${{ matrix.terraform_directory }}/layer.tf
+          mv -f layer.tf ${{ matrix.terraform_directory }}/layer.tf
+          cat ${{ matrix.terraform_directory }}/layer.tf
+      - name: Build functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: ${{ matrix.aws_region }}
+      - uses: hashicorp/setup-terraform@v1
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
+        env:
+          TF_VAR_function_name: hello-lambda-${{ matrix.name }}-${{ github.run_id }}-${{ matrix.aws_region }}
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Send request to endpoint
+        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+      - name: validate sample
+        run: |
+          cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+      - name: Destroy terraform
+        if: always()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
