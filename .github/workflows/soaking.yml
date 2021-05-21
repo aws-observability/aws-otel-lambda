@@ -140,6 +140,7 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
         env:
           TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.layer_kind }}-${{ github.sha }}
+          TF_VAR_collector_layer_name: aws-otel-${{ matrix.layer_kind }}-${{ github.sha }}
           TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
       - name: Extract endpoint
         id: extract-endpoint
