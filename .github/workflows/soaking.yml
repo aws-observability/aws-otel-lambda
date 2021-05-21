@@ -184,8 +184,13 @@ jobs:
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             public.ecr.aws/aws-otel-test/lambda-soak:latest -n hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }} \
             -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ matrix.soak_config }}
-      - name: Remove layers from terraform management to prevent deletion.
+      - name: Remove sdk layers from terraform management to prevent deletion.
+        if: ${{ matrix.layer_kind != 'collector' }}
         run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Remove collector layers from terraform management to prevent deletion.
+        if: ${{ matrix.layer_kind == 'collector' }}
+        run: terraform state rm module.test.aws_lambda_layer_version.collector_layer
         working-directory: ${{ matrix.terraform_directory }}
       - name: Destroy terraform
         if: always()
