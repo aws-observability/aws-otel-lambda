@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-20.04
     name: Soak Test - ${{ matrix.name }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: java-awssdk-agent
@@ -49,10 +50,18 @@ jobs:
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
             soak_config: '-c 90 -m 70'
+          - name: dotnet-awssdk-wrapper
+            layer_kind: collector
+            language: dotnet
+            build_directory: dotnet
+            build_command: ./build.sh
+            terraform_directory: integration-tests/dotnet/aws-sdk/wrapper
+            expected_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
+            soak_config: '-c 200 -m 90'
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: recursive
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
@@ -100,6 +109,10 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      - uses: actions/setup-dotnet@v1
+        if: ${{ matrix.language == 'dotnet' }}
+        with:
+          dotnet-version: '3.1.x'
       # Default session duration is 6 hours.
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -134,12 +147,25 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
+        if: ${{ matrix.layer_kind != 'collector' }}
         run: terraform output -raw sdk-layer-arn
         working-directory: ${{ matrix.terraform_directory }}
-      - name: Output annotations
+      # Tests/release for .NET manual instrumentation need collector layer arn
+      - name: Extract Collector layer arn
+        id: extract-collector-layer-arn
+        if: ${{ matrix.layer_kind == 'collector' }}
+        run: terraform output -raw collector-layer-arn
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Output SDK layer annotations
+        if: ${{ matrix.layer_kind != 'collector' }}
         run: |
           echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
+      - name: Output Collector layer annotations
+        if: ${{ matrix.layer_kind == 'collector' }}
+        run: |
+          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
+          echo "::warning::SDK Layer ARN: ${{ steps.extract-collector-layer-arn.outputs.stdout }}"
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
