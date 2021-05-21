@@ -49,7 +49,7 @@ jobs:
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
             soak_config: '-c 90 -m 70'
-          - name: dotnet
+          - name: dotnet-awssdk-wrapper
             layer_kind: collector
             language: dotnet
             build_directory: dotnet
