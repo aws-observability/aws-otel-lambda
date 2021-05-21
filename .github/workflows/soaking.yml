@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-20.04
     name: Soak Test - ${{ matrix.name }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: java-awssdk-agent
