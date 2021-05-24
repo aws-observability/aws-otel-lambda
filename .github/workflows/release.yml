@@ -14,7 +14,7 @@ on:
         required: true
       aws_region:
         description: 'Deploy to aws region'
-        retuired: true
+        required: true
         default: "{\"aws_region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
 
 jobs:
@@ -97,27 +97,16 @@ jobs:
           done
           cd ..
           cat layer-note
-      - name: generate tf sdk layer
-        if: ${{ matrix.layer_kind != 'collector' }}
+      - name: generate tf layer
         run: |
           echo "locals {" >> layer.tf
+          if [ ${{ github.event.inputs.layer_kind }} != 'collector' ]
+          then
+            echo "  sdk_layer_arns = {" >> layer.tf
+          else
+            echo "  collector_layer_arns = {" >> layer.tf
+          fi
           echo "  sdk_layer_arns = {" >> layer.tf
-          cd ${{ github.event.inputs.layer_name }}
-          for file in *
-          do
-          read arn < $file
-          echo "    \""$file"\" = \""$arn"\"" >> ../layer.tf
-          done
-          cd ..
-          echo "  }" >> layer.tf
-          echo "}" >> layer.tf
-          terraform fmt layer.tf
-          cat layer.tf
-      - name: generate tf collector layer
-        if: ${{ matrix.layer_kind == 'collector' }}
-        run: |
-          echo "locals {" >> layer.tf
-          echo "  collector_layer_arns = {" >> layer.tf
           cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
