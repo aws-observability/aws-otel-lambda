@@ -5,7 +5,6 @@ module "app" {
 
   name                = var.function_name
   collector_layer_arn = lookup(local.collector_layer_arns, data.aws_region.current.name, "invalid")
-  sdk_layer_arn       = null
   tracing_mode        = "Active"
 }
 
