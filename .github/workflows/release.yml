@@ -106,7 +106,6 @@ jobs:
           else
             echo "  collector_layer_arns = {" >> layer.tf
           fi
-          echo "  sdk_layer_arns = {" >> layer.tf
           cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
