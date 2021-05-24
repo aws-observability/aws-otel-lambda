@@ -21,6 +21,7 @@ jobs:
           - java-okhttp-wrapper
           - nodejs-awssdk
           - python38
+          - dotnet-awssdk-wrapper
         include:
           - name: java-awssdk-agent
             language: java
@@ -54,10 +55,16 @@ jobs:
               ./build.sh
             terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
             expected_template: adot/utils/expected-templates/python.json
+          - name: dotnet-awssdk-wrapper
+            language: dotnet
+            build_directory: dotnet
+            build_command: ./build.sh
+            terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: recursive
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
@@ -102,6 +109,10 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      - uses: actions/setup-dotnet@v1
+        if: ${{ matrix.language == 'dotnet' }}
+        with:
+          dotnet-version: '3.1.x'
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build functions
