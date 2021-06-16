@@ -151,7 +151,7 @@ jobs:
       - name: validate sample
         uses: nick-invision/retry@v2
         with:
-          timeout_seconds: 600
+          timeout_seconds: 300
           max_attempts: 3
           command: |
             cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
