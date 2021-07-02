@@ -6,14 +6,13 @@ receivers:
 
 exporters:
   logging:
-    loglevel: debug
   awsxray:
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [logging, awsxray]
+      exporters: [awsxray]
     metrics:
       receivers: [otlp]
       exporters: [logging]
