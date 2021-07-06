@@ -1,5 +1,5 @@
 import { propagation } from '@opentelemetry/api';
-import { CompositePropagator, HttpTraceContext } from '@opentelemetry/core';
+import { CompositePropagator, HttpTraceContextPropagator } from '@opentelemetry/core';
 import { NodeTracerConfig } from '@opentelemetry/node';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { AWSXRayIdGenerator } from '@opentelemetry/id-generator-aws-xray';
@@ -14,7 +14,7 @@ if (!process.env.OTEL_PROPAGATORS) {
     new CompositePropagator({
       propagators: [
         new AWSXRayPropagator(),
-        new HttpTraceContext(),
+        new HttpTraceContextPropagator(),
         new B3Propagator(),
         new B3Propagator({ injectEncoding: B3InjectEncoding.MULTI_HEADER }),
       ],
