@@ -1,11 +1,11 @@
 # AWS managed OpenTelemetry Lambda Layers
 
 As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry/opentelemetry-lambda), ___aws-otel-lambda___ publishes AWS managed OpenTelemetry Lambda layers that are preconfigured for use with AWS services and bundle the reduced AWS Collector. Users can onboard to OpenTelemetry in their existing Lambda functions by adding these ready-made layers directly.
-- Python3.8 layer [aws-otel-python38-ver-1-2-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.2.0` with Contrib `v0.21b0`
-- Nodejs layer [aws-otel-nodejs-ver-0-19-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript `v0.19.0` with Contrib `v0.16.0`
+- Python3.8 layer [aws-otel-python38-ver-1-3-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.3.0` with Contrib `v0.22b0`
+- Nodejs layer [aws-otel-nodejs-ver-0-23-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript `v0.23.0` with Contrib `v0.23.0`
 - Java-Wrapper layer [aws-otel-java-wrapper-ver-1-2-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.2.0`
 - Java-Agent layer [aws-otel-java-agent-ver-1-2-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS OpenTelemetry Java instrumentation `v1.2.0`
-- Collector layer [aws-otel-collector-ver-0-27-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) contains ADOT Collector for Lambda `v0.10.0`
+- Collector layer [aws-otel-collector-ver-0-29-1](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) contains ADOT Collector for Lambda `v0.11.0`
 
 
 
