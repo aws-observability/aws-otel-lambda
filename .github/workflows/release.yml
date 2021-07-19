@@ -139,6 +139,7 @@ jobs:
           - nodejs-awssdk
           - python38
           - dotnet-awssdk-wrapper
+          - go-awssdk-wrapper
         include:
           - name: java-awssdk-agent
             layer_kind: java-agent
@@ -184,6 +185,13 @@ jobs:
             build_command: ./build.sh
             terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
+          - name: go-awssdk-wrapper
+            layer_kind: collector
+            language: go
+            build_directory: go
+            build_command: ./build.sh
+            terraform_directory: sample-apps/go-wrapper-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/go-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
