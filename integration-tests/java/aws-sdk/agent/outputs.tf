@@ -7,5 +7,5 @@ output "sdk-layer-arn" {
 }
 
 output "amp_endpoint" {
-  value = aws_prometheus_workspace.test_amp_workspace.prometheus_endpoint
+  value = length(aws_prometheus_workspace.test_amp_workspace) > 0 ? aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint : null
 }

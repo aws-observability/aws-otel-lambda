@@ -6,7 +6,7 @@ module "app" {
   name                       = var.function_name
   collector_layer_arn        = null
   sdk_layer_arn              = lookup(local.sdk_layer_arns, data.aws_region.current.name, "invalid")
-  collector_config_layer_arn = aws_lambda_layer_version.collector_config_layer.arn
+  collector_config_layer_arn = length(aws_lambda_layer_version.collector_config_layer) > 0 ? aws_lambda_layer_version.collector_config_layer[0].arn : null
   tracing_mode               = "Active"
 }
 
@@ -20,11 +20,14 @@ resource "aws_iam_role_policy_attachment" "test_amp" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonPrometheusFullAccess"
 }
 
-resource "aws_prometheus_workspace" "test_amp_workspace" {}
+resource "aws_prometheus_workspace" "test_amp_workspace" {
+  count = contains(["us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"], data.aws_region.current.name) ? 1 : 0
+}
 
 data "archive_file" "init" {
   type       = "zip"
-  depends_on = [aws_prometheus_workspace.test_amp_workspace, data.aws_region.current]
+  count      = length(aws_prometheus_workspace.test_amp_workspace) > 0 ? 1 : 0
+  depends_on = [aws_prometheus_workspace.test_amp_workspace[0], data.aws_region.current]
   source {
     content  = <<EOT
 receivers:
@@ -37,7 +40,7 @@ exporters:
   logging:
   awsxray:
   awsprometheusremotewrite:
-    endpoint: "${aws_prometheus_workspace.test_amp_workspace.prometheus_endpoint}api/v1/remote_write"
+    endpoint: "${aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint}api/v1/remote_write"
     aws_auth:
       service: "aps"
       region: "${data.aws_region.current.name}"
@@ -58,6 +61,7 @@ EOT
 }
 
 resource "aws_lambda_layer_version" "collector_config_layer" {
+  count               = length(data.archive_file.init) > 0 ? 1 : 0
   depends_on          = [data.archive_file.init]
   layer_name          = "custom-config-layer"
   filename            = "${path.module}/build/custom-config-layer.zip"
