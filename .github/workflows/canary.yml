@@ -36,19 +36,19 @@ jobs:
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
-            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+            expected_trace_template: adot/utils/expected-templates/java-awssdk-wrapper.json
           - name: java-okhttp-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-wrapper-okhttp-terraform
-            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+            expected_trace_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: sample-apps/nodejs-aws-sdk-terraform
-            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+            expected_trace_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python38
             language: python
             build_directory: opentelemetry-lambda/python
@@ -56,13 +56,13 @@ jobs:
               cd sample-apps
               ./build.sh
             terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
-            expected_template: adot/utils/expected-templates/python.json
+            expected_trace_template: adot/utils/expected-templates/python.json
           - name: dotnet-awssdk-wrapper
             language: dotnet
             build_directory: dotnet
             build_command: ./build.sh
             terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
-            expected_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
+            expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
@@ -161,7 +161,7 @@ jobs:
           timeout_seconds: 300
           max_attempts: 3
           command: |
-            cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+            cp ${{ matrix.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
             cd test-framework
             ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       # add back in once the java-agent layer is published and the ARNs are available
