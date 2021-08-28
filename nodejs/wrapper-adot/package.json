@@ -38,10 +38,10 @@
   },
   "dependencies": {
     "@opentelemetry/api": "1.0.1",
-    "@opentelemetry/core": "^0.23.0",
-    "@opentelemetry/id-generator-aws-xray": "^0.23.0",
-    "@opentelemetry/node": "^0.23.0",
-    "@opentelemetry/propagator-aws-xray": "^0.23.0",
-    "@opentelemetry/propagator-b3": "^0.23.0"
+    "@opentelemetry/core": "^0.24.0",
+    "@opentelemetry/id-generator-aws-xray": "^0.24.0",
+    "@opentelemetry/node": "^0.24.0",
+    "@opentelemetry/propagator-aws-xray": "^0.24.0",
+    "@opentelemetry/propagator-b3": "^0.24.0"
   }
 }
