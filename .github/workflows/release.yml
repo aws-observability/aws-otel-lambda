@@ -146,6 +146,7 @@ jobs:
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-agent-aws-sdk-terraform
+            amp_regions: [ "us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"]
             expected_trace_template: adot/utils/expected-templates/java-awssdk-agent.json
             expected_metric_template: adot/utils/expected-templates/java-awssdk-agent-metric.json
           - name: java-awssdk-wrapper
@@ -271,7 +272,7 @@ jobs:
         run: terraform output -raw api-gateway-url
         working-directory: ${{ matrix.terraform_directory }}
       - name: Extract AMP endpoint
-        if: ${{ matrix.name == 'java-awssdk-agent' }}
+        if: ${{ matrix.name == 'java-awssdk-agent' && contains(matrix.amp_regions, matrix.aws_region) }}
         id: extract-amp-endpoint
         run: terraform output -raw amp_endpoint
         working-directory: ${{ matrix.terraform_directory }}
