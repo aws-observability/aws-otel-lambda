@@ -43,9 +43,9 @@ environ["OTEL_RESOURCE_ATTRIBUTES"] = "%s,%s" % (
 # xray propagator
 configured_propagators = environ.get("OTEL_PROPAGATORS")
 if not configured_propagators:
-    environ["OTEL_PROPAGATORS"] = "aws_xray"
+    environ["OTEL_PROPAGATORS"] = "xray"
 elif "aws_xray" not in configured_propagators.split(","):
-    environ["OTEL_PROPAGATORS"] = ",".join([configured_propagators, "aws_xray"])
+    environ["OTEL_PROPAGATORS"] = ",".join([configured_propagators, "xray"])
 
 # start the runtime with the extra options
 system(" ".join(args))
