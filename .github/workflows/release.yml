@@ -122,82 +122,99 @@ jobs:
         with:
           name: layer.tf
           path: layer.tf
-  smoke-test:
+  get-smoke-test-configuration:
     runs-on: ubuntu-latest
     needs: generate-note
-    name: Smoke Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
+    name: Set ${{ github.event.inputs.layer_kind }} Smoke Test Configuration Values
+    outputs:
+      sample_app_name: ${{ steps.set-smoke-test-outputs.outputs.sample_app_name }}
+      language: ${{ steps.set-smoke-test-outputs.outputs.language }}
+      build_directory: ${{ steps.set-smoke-test-outputs.outputs.build_directory }}
+      build_command: ${{ steps.set-smoke-test-outputs.outputs.build_command }}
+      terraform_directory: ${{ steps.set-smoke-test-outputs.outputs.terraform_directory }}
+      expected_trace_template: ${{ steps.set-smoke-test-outputs.outputs.expected_trace_template }}
+      expected_metric_template: ${{ steps.set-smoke-test-outputs.outputs.expected_metric_template }}
+      amp_regions: ${{ steps.set-smoke-test-outputs.outputs.amp_regions }}
+    steps:
+      - name: Configure Java Agent Values
+        if: ${{ github.event.inputs.layer_kind == 'java-agent' }}
+        run: |-
+          echo "SAMPLE_APP_NAME=java-awssdk-agent" >> $GITHUB_ENV;
+          echo "LANGUAGE=java" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=java" >> $GITHUB_ENV;
+          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/java-agent-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/java-awssdk-agent.json" >> $GITHUB_ENV;
+          echo "EXPECTED_METRIC_TEMPLATE=adot/utils/expected-templates/java-awssdk-agent-metric.json" >> $GITHUB_ENV;
+          echo "AMP_REGIONS=us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1" >> $GITHUB_ENV;
+      # FIXME: (enowell) You can only Smoke Test 1 Sample App with this design. We will want to test
+      # multiple in the future (i.e. Go/.NET Sample Apps with the same Collector Layer).
+      - name: Configure Java Wrapper Values
+        if: ${{ github.event.inputs.layer_kind == 'java-wrapper' }}
+        run: |-
+          echo "SAMPLE_APP_NAME=java-awssdk-wrapper" >> $GITHUB_ENV;
+          echo "LANGUAGE=java" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=java" >> $GITHUB_ENV;
+          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/java-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/java-awssdk-wrapper.json" >> $GITHUB_ENV;
+      - name: Configure NodeJS Values
+        if: ${{ github.event.inputs.layer_kind == 'nodejs' }}
+        run: |-
+          echo "SAMPLE_APP_NAME=nodejs-awssdk" >> $GITHUB_ENV;
+          echo "LANGUAGE=nodejs" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=nodejs" >> $GITHUB_ENV;
+          echo "BUILD_COMMAND=./build_upstream.sh" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/nodejs-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/nodejs-awssdk.json" >> $GITHUB_ENV;
+      - name: Configure Python Values
+        if: ${{ github.event.inputs.layer_kind == 'python38' }}
+        run: |-
+          echo "SAMPLE_APP_NAME=python38" >> $GITHUB_ENV;
+          echo "LANGUAGE=python" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=opentelemetry-lambda/python/sample-apps" >> $GITHUB_ENV;
+          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/python-aws-sdk-aiohttp-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/python.json" >> $GITHUB_ENV;
+      - name: Configure Collector Values
+        if: ${{ github.event.inputs.layer_kind == 'collector' }}
+        run: |-
+          echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
+          echo "LANGUAGE=dotnet" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=dotnet" >> $GITHUB_ENV;
+          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/dotnet-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/dotnet-awssdk-wrapper.json" >> $GITHUB_ENV;
+      - name: Set Configuration Outputs
+        id: set-smoke-test-outputs
+        run: |-
+          echo "::set-output name=sample_app_name::${{ env.SAMPLE_APP_NAME }}";
+          echo "::set-output name=language::${{ env.LANGUAGE }}";
+          echo "::set-output name=build_directory::${{ env.BUILD_DIRECTORY }}";
+          echo "::set-output name=build_command::${{ env.BUILD_COMMAND }}";
+          echo "::set-output name=terraform_directory::${{ env.TERRAFORM_DIRECTORY }}";
+          echo "::set-output name=expected_trace_template::${{ env.EXPECTED_TRACE_TEMPLATE }}";
+          echo "::set-output name=expected_metric_template::${{ env.EXPECTED_METRIC_TEMPLATE }}";
+          echo "::set-output name=amp_regions::${{ env.AMP_REGIONS }}";
+  smoke-test:
+    name: Smoke Test - ${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name }}
+    needs: get-smoke-test-configuration
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
-        # We need to define the raw parameters to the matrix here but will customize each
-        # below.
-        name:
-          - java-awssdk-agent
-          - java-awssdk-wrapper
-          - java-okhttp-wrapper
-          - nodejs-awssdk
-          - python38
-          - dotnet-awssdk-wrapper
-        include:
-          - name: java-awssdk-agent
-            layer_kind: java-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: sample-apps/java-agent-aws-sdk-terraform
-            amp_regions: [ "us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"]
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-agent.json
-            expected_metric_template: adot/utils/expected-templates/java-awssdk-agent-metric.json
-          - name: java-awssdk-wrapper
-            layer_kind: java-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-wrapper.json
-          - name: java-okhttp-wrapper
-            layer_kind: java-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: sample-apps/java-wrapper-okhttp-terraform
-            expected_trace_template: adot/utils/expected-templates/java-okhttp-wrapper.json
-          - name: nodejs-awssdk
-            layer_kind: nodejs
-            language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
-            terraform_directory: sample-apps/nodejs-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/nodejs-awssdk.json
-          - name: python38
-            layer_kind: python38
-            language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd sample-apps
-              ./build.sh
-            terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
-            expected_trace_template: adot/utils/expected-templates/python.json
-          - name: dotnet-awssdk-wrapper
-            layer_kind: collector
-            language: dotnet
-            build_directory: dotnet
-            build_command: ./build.sh
-            terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - uses: actions/setup-java@v2
-        if: ${{ matrix.language == 'java' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'java' }}
         with:
           distribution: adopt
           java-version: '11'
       - name: Cache (Java)
         uses: actions/cache@v2
-        if: ${{ matrix.language == 'java' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'java' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -207,12 +224,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - uses: actions/setup-node@v2
-        if: ${{ matrix.language == 'nodejs' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'nodejs' }}
         with:
           node-version: '14'
       - name: Cache (NodeJS)
         uses: actions/cache@v2
-        if: ${{ matrix.language == 'nodejs' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'nodejs' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -221,12 +238,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - uses: actions/setup-python@v2
-        if: ${{ matrix.language == 'python' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'python' }}
         with:
           python-version: '3.x'
       - name: Cache (Python)
         uses: actions/cache@v2
-        if: ${{ matrix.language == 'python' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'python' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -235,7 +252,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - uses: actions/setup-dotnet@v1
-        if: ${{ matrix.language == 'dotnet' }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'dotnet' }}
         with:
           dotnet-version: '3.1.x'
       - name: download layer tf file
@@ -243,14 +260,13 @@ jobs:
         with:
           name: layer.tf
       - name: overwrite layer.tf
-        if: ${{ github.event.inputs.layer_kind == matrix.layer_kind }}
         run: |
-          cat ${{ matrix.terraform_directory }}/layer.tf
-          mv -f layer.tf ${{ matrix.terraform_directory }}/layer.tf
-          cat ${{ matrix.terraform_directory }}/layer.tf
+          cat ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
+          mv -f layer.tf ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
+          cat ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
       - name: Build functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
+        run: ${{ needs.get-smoke-test-configuration.outputs.build_command }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.build_directory }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -261,21 +277,21 @@ jobs:
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
       - name: Apply terraform
         run: terraform apply -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.name }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: hello-lambda-${{ needs.get-smoke-test-configuration.outputs.sample_app_name }}-${{ github.run_id }}-${{ matrix.aws_region }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
       - name: Extract AMP endpoint
-        if: ${{ matrix.name == 'java-awssdk-agent' && contains(matrix.amp_regions, matrix.aws_region) }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
         id: extract-amp-endpoint
         run: terraform output -raw amp_endpoint
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
@@ -285,16 +301,16 @@ jobs:
           path: test-framework
       - name: validate trace sample
         run: |
-          cp ${{ matrix.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cp ${{ needs.get-smoke-test-configuration.outputs.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: validate java agent metric sample
-        if: ${{ matrix.name == 'java-awssdk-agent' && contains(matrix.amp_regions, matrix.aws_region) }}
+        if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
         run: |
-          cp ${{ matrix.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
+          cp ${{ needs.get-smoke-test-configuration.outputs.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
