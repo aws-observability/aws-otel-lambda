@@ -38,7 +38,7 @@ Resources:
       Environment:
         Variables:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/python/otel-instrument
-          OTEL_PROPAGATORS: aws_xray
+          OTEL_PROPAGATORS: xray
       Tracing: Active
       Layers:
         - !Ref OTelLayer

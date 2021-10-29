@@ -5,7 +5,7 @@
 build/
 bin/
 
-#resports
+#reports
 coverage.txt
 
 # swp file

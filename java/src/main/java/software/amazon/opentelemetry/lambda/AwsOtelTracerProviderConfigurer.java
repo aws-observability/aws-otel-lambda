@@ -15,13 +15,14 @@
 
 package software.amazon.opentelemetry.lambda;
 
-import io.opentelemetry.sdk.autoconfigure.spi.SdkTracerProviderConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.traces.SdkTracerProviderConfigurer;
 import io.opentelemetry.sdk.extension.aws.trace.AwsXrayIdGenerator;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 
 public class AwsOtelTracerProviderConfigurer implements SdkTracerProviderConfigurer {
   @Override
-  public void configure(SdkTracerProviderBuilder tracerProviderBuilder) {
+  public void configure(SdkTracerProviderBuilder tracerProviderBuilder, ConfigProperties config) {
     tracerProviderBuilder.setIdGenerator(AwsXrayIdGenerator.getInstance());
   }
 }

@@ -1,6 +1,6 @@
 import { propagation } from '@opentelemetry/api';
 import { CompositePropagator, HttpTraceContextPropagator } from '@opentelemetry/core';
-import { NodeTracerConfig } from '@opentelemetry/node';
+import { NodeTracerConfig } from '@opentelemetry/sdk-trace-node';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { AWSXRayIdGenerator } from '@opentelemetry/id-generator-aws-xray';
 import { AWSXRayPropagator } from '@opentelemetry/propagator-aws-xray';
