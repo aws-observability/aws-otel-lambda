@@ -176,7 +176,7 @@ jobs:
           echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/python.json" >> $GITHUB_ENV;
         # FIXME: (enowell) You can only Smoke Test 1 Sample App with this design. We will want to test
         # multiple in the future (i.e. Go/.NET Sample Apps with the same Collector Layer).
-        # ToDo: Add .NET layer lambda instrumentation smoke test
+        # TODO: Add and Test .NET Lambda app in the same collector-only (Same used in Go) Lambda Layer in smoke test
       - name: Configure Collector Values
         if: ${{ github.event.inputs.layer_kind == 'collector' }}
         run: |-
