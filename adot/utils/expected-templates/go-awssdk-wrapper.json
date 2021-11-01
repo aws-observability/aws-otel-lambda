@@ -1,0 +1,32 @@
+[
+  {
+    "name":"hello-lambda-go.*"
+  },
+  {
+    "name":"hello-lambda-go.*"
+  },
+  {
+    "name":"hello-lambda-go.*"
+  },
+  {
+    "name":"hello-lambda-go.*"
+  },
+  {
+    "name":"S3",
+    "origin":"AWS::S3",
+    "inferred":true,
+    "aws":{
+      "operation":"ListBuckets"
+    }
+  },
+  {
+    "name":"api.github.com",
+    "inferred":true,
+    "http":{
+      "request":{
+        "url":"https://api.github.com/repos/open-telemetry/opentelemetry-go/releases/latest",
+        "method":"GET"
+      }
+    }
+  }
+]

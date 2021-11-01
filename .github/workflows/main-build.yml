@@ -50,6 +50,12 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/dotnet/aws-sdk/wrapper
             expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
+          - name: go-awssdk-wrapper
+            language: go
+            build_directory: go
+            build_command: ./build.sh
+            terraform_directory: integration-tests/go/aws-sdk
+            expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
@@ -143,11 +149,11 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
-        if: ${{ matrix.language != 'dotnet' }}
+        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: terraform output -raw sdk-layer-arn
         working-directory: ${{ matrix.terraform_directory }}
       - name: Output annotations
-        if: ${{ matrix.language != 'dotnet' }}
+        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
           echo "::warning::Function: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"

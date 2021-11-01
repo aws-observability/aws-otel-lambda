@@ -147,8 +147,6 @@ jobs:
           echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/java-awssdk-agent.json" >> $GITHUB_ENV;
           echo "EXPECTED_METRIC_TEMPLATE=adot/utils/expected-templates/java-awssdk-agent-metric.json" >> $GITHUB_ENV;
           echo "AMP_REGIONS=us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1" >> $GITHUB_ENV;
-      # FIXME: (enowell) You can only Smoke Test 1 Sample App with this design. We will want to test
-      # multiple in the future (i.e. Go/.NET Sample Apps with the same Collector Layer).
       - name: Configure Java Wrapper Values
         if: ${{ github.event.inputs.layer_kind == 'java-wrapper' }}
         run: |-
@@ -176,15 +174,18 @@ jobs:
           echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
           echo "TERRAFORM_DIRECTORY=sample-apps/python-aws-sdk-aiohttp-terraform" >> $GITHUB_ENV;
           echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/python.json" >> $GITHUB_ENV;
+        # FIXME: (enowell) You can only Smoke Test 1 Sample App with this design. We will want to test
+        # multiple in the future (i.e. Go/.NET Sample Apps with the same Collector Layer).
+        # TODO: Add and Test .NET Lambda app in the same collector-only (Same used in Go) Lambda Layer in smoke test
       - name: Configure Collector Values
         if: ${{ github.event.inputs.layer_kind == 'collector' }}
         run: |-
           echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
-          echo "LANGUAGE=dotnet" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=dotnet" >> $GITHUB_ENV;
+          echo "LANGUAGE=go" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=go" >> $GITHUB_ENV;
           echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=sample-apps/dotnet-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/dotnet-awssdk-wrapper.json" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/go-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/go-awssdk-wrapper.json" >> $GITHUB_ENV;
       - name: Set Configuration Outputs
         id: set-smoke-test-outputs
         run: |-
@@ -251,10 +252,10 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v1
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'dotnet' }}
+      - uses: actions/setup-go@v2
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'go' }}
         with:
-          dotnet-version: '3.1.x'
+          go-version: '^1.16'
       - name: download layer tf file
         uses: actions/download-artifact@v2
         with:

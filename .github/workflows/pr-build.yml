@@ -23,6 +23,9 @@ jobs:
           - language: dotnet
             build_directory: dotnet
             build_command: ./build.sh
+          - language: go
+            build_directory: go
+            build_command: ./build.sh
     steps:
       - uses: actions/checkout@v2
         with:
