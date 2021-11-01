@@ -1,0 +1,27 @@
+#!/bin/bash
+
+: <<'END_DOCUMENTATION'
+`otel-instrument`
+
+This script configures and sets up OpenTelemetry Python with the values we
+expect will be used by the common AWS user. It then calls an OpenTelemetry
+Lambda script to finish initializing the OpenTelemetry Python SDK.
+
+NOTE: We renamed OpenTelemetry Lambda's script because we want this script to be
+the entry point. The layer build script renames it to
+`otel-instrument-upstream-lambda`.
+
+See more:
+https://github.com/open-telemetry/opentelemetry-lambda/blob/db6ff3a488e0d54f2f979f7540c5a5baccef5fe3/python/src/otel/otel_sdk/otel-instrument
+
+END_DOCUMENTATION
+
+# - Set `OTEL_PROPAGATORS` if not yet set, and include the xray propagator
+
+if [ -z ${OTEL_PROPAGATORS} ]; then
+    export OTEL_PROPAGATORS="tracecontext,baggage,xray";
+fi
+
+# - Call the upstream configure OTel script
+
+source /opt/otel-instrument-upstream-lambda
