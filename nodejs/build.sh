@@ -11,10 +11,10 @@ popd || exit
 # Build the sdk layer and sample apps
 
 cd wrapper-adot || exit
-npm install
+npm install || exit
 
 cd ../../opentelemetry-lambda/nodejs || exit
-npm install
+npm install || exit
 
 mv ./packages/layer/build/workspace/otel-handler ./packages/layer/build/workspace/otel-handler-upstream
 cp "$SOURCEDIR"/scripts/otel-handler ./packages/layer/build/workspace/otel-handler
