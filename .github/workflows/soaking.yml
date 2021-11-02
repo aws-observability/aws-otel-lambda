@@ -51,14 +51,19 @@ jobs:
             terraform_directory: integration-tests/python/aws-sdk
             expected_trace_template: adot/utils/expected-templates/python.json
             soak_config: '-c 90 -m 70'
-          # TODO: Add and Test .NET Lambda app in the same collector-only (Same used in Go) Lambda Layer in Soak test
-          - name: go-awssdk-wrapper
+            # FIXME: (enowell) Both .NET and Go Sample Apps want to Soak Test
+            # the same collector-only lambda layer. We count on Soaking Tests to
+            # test whether a layer is ready for release. However, the current
+            # workflow can only test one Sample App per Lambda Layer. We should
+            # create a separate workflow to soak-test Layers with multiple
+            # soak tests.
+          - name: dotnet-awssdk-wrapper
             layer_kind: collector
-            language: go
-            build_directory: go
+            language: dotnet
+            build_directory: dotnet
             build_command: ./build.sh
-            terraform_directory: integration-tests/go/aws-sdk
-            expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
+            terraform_directory: integration-tests/dotnet/aws-sdk/wrapper
+            expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
             soak_config: '-c 200 -m 90'
     steps:
       - uses: actions/checkout@v2
