@@ -9,7 +9,27 @@
     "name":"hello-lambda-python.*"
   },
   {
-    "name":"hello-lambda-python.*"
+    "name":"hello-lambda-python.*",
+    "subsegments": [
+      {
+          "name": "HTTP GET"
+      },
+      {
+          "name": "S3",
+          "aws": {
+            "operation": "ListBuckets"
+          },
+          "metadata": {
+            "default": {
+              "aws.service": "s3",
+              "rpc.service": "S3",
+              "rpc.method": "ListBuckets",
+              "rpc.system": "aws-api"
+            }
+          },
+          "namespace": "aws"
+      }
+    ]
   },
   {
     "name":"HTTP GET",
