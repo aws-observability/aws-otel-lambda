@@ -2,10 +2,10 @@
 
 As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry/opentelemetry-lambda), ___aws-otel-lambda___ publishes AWS managed OpenTelemetry Lambda layers that are preconfigured for use with AWS services and bundle the reduced AWS Collector. Users can onboard to OpenTelemetry in their existing Lambda functions by adding these ready-made layers directly.
 - Python3.8 layer [aws-otel-python38-ver-1-5-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.5.0` with the AWS Python Extension `v1.0.1`
-- Nodejs layer [aws-otel-nodejs-ver-0-25-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript `v0.25.0` with AWS Lambda Instrumentation `v0.26.0`
-- Java-Wrapper layer [aws-otel-java-wrapper-ver-1-6-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.6.0`
-- Java-Agent layer [aws-otel-java-agent-ver-1-6-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS OpenTelemetry Java instrumentation `v1.6.0`
-- Collector layer [aws-otel-collector-ver-0-36-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) contains ADOT Collector for Lambda `v0.13.0`
+- Nodejs layer [aws-otel-nodejs-ver-1-0-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.0.0`, OpenTelemetry Contrib `v0.26.0`, and AWS Lambda Instrumentation `v0.1.0`
+- Java-Wrapper layer [aws-otel-java-wrapper-ver-1-7-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.7.0`
+- Java-Agent layer [aws-otel-java-agent-ver-1-7-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS OpenTelemetry Java instrumentation `v1.7.0`
+- Collector layer [aws-otel-collector-ver-0-38-0](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) contains ADOT Collector for Lambda `v0.14.0`
 
 ## Sample Apps
 We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed OpenTelemetry Lambda layers. You can play with these samples by the following:
