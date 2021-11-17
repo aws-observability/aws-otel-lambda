@@ -179,19 +179,29 @@ jobs:
           echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
           echo "TERRAFORM_DIRECTORY=sample-apps/python-aws-sdk-aiohttp-terraform" >> $GITHUB_ENV;
           echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/python.json" >> $GITHUB_ENV;
-        # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
-        # design. However, both .NET and Go Sample Apps test the collector-only
-        # Lambda layer. For now we only test .NET, but we should make a new
-        # workflow to test all sample apps using the same Lambda Layer.
+      # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
+      # design. However, both .NET and Go Sample Apps test the collector-only
+      # Lambda layer. For now we only test Go, but we should either make a new
+      # workflow to test all sample apps using the same Lambda Layer or make
+      # a new layer for just .NET/Go.
+      # - name: Configure Collector Values
+      #   if: ${{ github.event.inputs.layer_kind == 'collector' }}
+      #   run: |-
+      #     echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
+      #     echo "LANGUAGE=dotnet" >> $GITHUB_ENV;
+      #     echo "BUILD_DIRECTORY=dotnet" >> $GITHUB_ENV;
+      #     echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
+      #     echo "TERRAFORM_DIRECTORY=sample-apps/dotnet-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+      #     echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/dotnet-awssdk-wrapper.json" >> $GITHUB_ENV;
       - name: Configure Collector Values
         if: ${{ github.event.inputs.layer_kind == 'collector' }}
         run: |-
           echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
-          echo "LANGUAGE=dotnet" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=dotnet" >> $GITHUB_ENV;
+          echo "LANGUAGE=go" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=go" >> $GITHUB_ENV;
           echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=sample-apps/dotnet-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/dotnet-awssdk-wrapper.json" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/go-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/go-awssdk-wrapper.json" >> $GITHUB_ENV;
       - name: Set Configuration Outputs
         id: set-smoke-test-outputs
         run: |-
@@ -258,10 +268,18 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v1
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'dotnet' }}
+      # FIXME: (enowell) Same as above - .NET uses the collector layer, but we
+      # only test Go with the collector layer so comment out for now.
+      # - name: Use .NET Language
+      #   uses: actions/setup-dotnet@v1
+      #   if: ${{ needs.get-smoke-test-configuration.outputs.language == 'dotnet' }}
+      #   with:
+      #     dotnet-version: '3.1.x'
+      - name: Use Go Language
+        uses: actions/setup-go@v2
+        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'go' }}
         with:
-          dotnet-version: '3.1.x'
+          go-version: '^1.16'
       - name: download layer tf file
         uses: actions/download-artifact@v2
         with:
