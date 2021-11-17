@@ -22,10 +22,7 @@ jobs:
           - nodejs-awssdk
           - python38
           - dotnet-awssdk-wrapper
-          # TODO: Uncomment this once Go Lambda Layer has a working published
-          # version. Right now since there is no published layer this is just
-          # causing failures on the canary test that have no action items.
-          # - go-awssdk-wrapper
+          - go-awssdk-wrapper
         include:
           - name: java-awssdk-agent
             language: java
@@ -67,12 +64,12 @@ jobs:
             build_command: ./build.sh
             terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
             expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
-          # - name: go-awssdk-wrapper
-          #   language: go
-          #   build_directory: go
-          #   build_command: ./build.sh
-          #   terraform_directory: sample-apps/go-wrapper-aws-sdk-terraform
-          #   expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
+          - name: go-awssdk-wrapper
+            language: go
+            build_directory: go
+            build_command: ./build.sh
+            terraform_directory: sample-apps/go-wrapper-aws-sdk-terraform
+            expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
