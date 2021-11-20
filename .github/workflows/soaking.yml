@@ -62,7 +62,7 @@ jobs:
             language: go
             build_directory: go
             build_command: ./build.sh
-            terraform_directory: integration-tests/go/aws-sdk/wrapper
+            terraform_directory: integration-tests/go/aws-sdk
             expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
             soak_config: '-c 200 -m 90'
     steps:
