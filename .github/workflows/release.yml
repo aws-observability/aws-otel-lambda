@@ -196,12 +196,13 @@ jobs:
       - name: Configure Collector Values
         if: ${{ github.event.inputs.layer_kind == 'collector' }}
         run: |-
-          echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
-          echo "LANGUAGE=go" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=go" >> $GITHUB_ENV;
+          export TEST_LANGUAGE=go;
+          echo "SAMPLE_APP_NAME=$TEST_LANGUAGE-awssdk-wrapper" >> $GITHUB_ENV;
+          echo "LANGUAGE=$TEST_LANGUAGE" >> $GITHUB_ENV;
+          echo "BUILD_DIRECTORY=$TEST_LANGUAGE" >> $GITHUB_ENV;
           echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=sample-apps/go-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/go-awssdk-wrapper.json" >> $GITHUB_ENV;
+          echo "TERRAFORM_DIRECTORY=sample-apps/$TEST_LANGUAGE-wrapper-aws-sdk-terraform" >> $GITHUB_ENV;
+          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/$TEST_LANGUAGE-awssdk-wrapper.json" >> $GITHUB_ENV;
       - name: Set Configuration Outputs
         id: set-smoke-test-outputs
         run: |-
