@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2021-11-23 Release
+- Python3.8 layer **aws-otel-python38-ver-1-7-1** contains OpenTelemetry Python `v1.7.1` with Contrib `v0.26b1`
+- Collector layer **aws-otel-collector-ver-0-39-0** contains ADOT Collector for Lambda `v0.15.0`
+- Layers are bundled with OpenTelemetry Collector extension with [reduced AWS OpenTelemetry Collector v0.15.0](https://github.com/aws-observability/aws-otel-collector/releases/tag/pkg%2Flambdacomponents%2Fv0.14.0)
+- Layers cover 16 AWS Regions: us-east-1, us-east-2, us-west-1, us-west-2, ap-south-1, ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-north-1, sa-east-1
+- Layers are built from Git commit `6cf4e85e61eeabac9ced8d1df13b6ca4bf0411e9` at https://github.com/aws-observability/aws-otel-lambda/commit/6cf4e85e61eeabac9ced8d1df13b6ca4bf0411e9
+
 ## 2021-11-03 Release
 - Nodejs layer **aws-otel-nodejs-ver-1-0-0** contains OpenTelemetry JavaScript `1.0.0` with Contrib `0.26.0`
 - Java-Wrapper layer **aws-otel-java-wrapper-ver-1-7-0** contains OpenTelemetry Java `v1.7.0`
