@@ -9,7 +9,19 @@
     "name":"hello-lambda-python.*"
   },
   {
-    "name":"hello-lambda-python.*"
+    "name":"hello-lambda-python.*",
+    "subsegments": [
+      {
+          "name": "HTTP GET"
+      },
+      {
+          "name": "S3",
+          "aws": {
+            "operation": "ListBuckets"
+          },
+          "namespace": "aws"
+      }
+    ]
   },
   {
     "name":"HTTP GET",
