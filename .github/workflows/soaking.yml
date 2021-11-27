@@ -111,7 +111,11 @@ jobs:
         working-directory: ${{ matrix.language }}
       - name: Get terraform directory
         run: |
+<<<<<<< HEAD
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
+=======
+          echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.integration-type }} |
+>>>>>>> e6ea3ae (Make testing file paths consistent)
           tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform

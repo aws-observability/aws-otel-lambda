@@ -21,7 +21,10 @@ jobs:
             instrumentation-type: agent
           - language: java
             sample-app: okhttp
+<<<<<<< HEAD
             instrumentation-type: wrapper
+=======
+>>>>>>> e6ea3ae (Make testing file paths consistent)
     steps:
       - uses: actions/checkout@v2
         with:
