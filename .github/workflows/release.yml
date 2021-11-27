@@ -300,26 +300,23 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
+      - name: Get terraform directory
+        run: |
+          echo TERRAFORM_DIRECTORY=integration-tests/${{ matrix.language }}/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
+          tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v1
-      - name: Initialize terraform
-        run: terraform init
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
-      - name: Apply terraform
-        run: terraform apply -auto-approve
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
-        env:
-          TF_VAR_function_name: hello-lambda-${{ needs.get-smoke-test-configuration.outputs.sample_app_name }}-${{ github.run_id }}-${{ matrix.aws_region }}
-      - name: Extract endpoint
-        id: extract-endpoint
-        run: terraform output -raw api-gateway-url
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
-      - name: Extract AMP endpoint
-        if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
-        id: extract-amp-endpoint
-        run: terraform output -raw amp_endpoint
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
-      - name: Send request to endpoint
-        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Validate terraform and get outputs
+        id: terraform-outputs
+        working-directory: .github/scripts
+        run: |
+          ./validate_terraform_and_print_outputs.sh \
+          ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }} \
+          ${{ needs.get-smoke-test-configuration.outputs.sample_app_name }}-${{ github.run_id }}-${{ matrix.aws_region }} |
+          tee --append $GITHUB_ENV;
+
+          echo "::set-output name=amp-endpoint::${{ env.AMP_ENDPOINT }}";
+          echo "::set-output name=api-gateway-url::${{ env.API_GATEWARY_URL }}";
+          echo "::set-output name=sdk-layer-arn::${{ env.SDK_LAYER_ARN }}";
       - name: Checkout test framework
         uses: actions/checkout@v2
         with:
@@ -329,13 +326,21 @@ jobs:
         run: |
           cp ${{ needs.get-smoke-test-configuration.outputs.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="
+            -c default-lambda-validation.yml
+            --endpoint ${{ steps.terraform-outputs.api-gateway-url }}
+            --region $AWS_REGION
+          "
       - name: validate java agent metric sample
         if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
         run: |
           cp ${{ needs.get-smoke-test-configuration.outputs.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="
+            -c prometheus-static-metric-validation.yml
+            --cortex-instance-endpoint ${{ steps.terraform-outputs.amp-endpoint }}
+            --region $AWS_REGION
+          "
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve

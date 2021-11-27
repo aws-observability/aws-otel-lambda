@@ -8,54 +8,19 @@ on:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Integration Test - ${{ matrix.name }}
+    name: Integration Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }})
     strategy:
       fail-fast: false
       matrix:
+        language: [ dotnet, go, java, nodejs, python ]
+        sample-app: [ aws-sdk ]
+        instrumentation-type: [ wrapper ]
         include:
-          - name: java-awssdk-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/agent
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-agent.json
-            expected_metric_template: adot/utils/expected-templates/java-awssdk-agent-metric.json
-          - name: java-awssdk-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/wrapper
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-wrapper.json
-          - name: java-okhttp-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/okhttp/wrapper
-            expected_trace_template: adot/utils/expected-templates/java-okhttp-wrapper.json
-          - name: nodejs-awssdk
-            language: nodejs
-            build_directory: nodejs
-            build_command: ./build.sh
-            terraform_directory: integration-tests/nodejs/aws-sdk
-            expected_trace_template: adot/utils/expected-templates/nodejs-awssdk.json
-          - name: python
-            language: python
-            build_directory: python
-            build_command: ./build.sh
-            terraform_directory: integration-tests/python/aws-sdk
-            expected_trace_template: adot/utils/expected-templates/python.json
-          - name: dotnet-awssdk-wrapper
-            language: dotnet
-            build_directory: dotnet
-            build_command: ./build.sh
-            terraform_directory: integration-tests/dotnet/aws-sdk/wrapper
-            expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
-          - name: go-awssdk-wrapper
-            language: go
-            build_directory: go
-            build_command: ./build.sh
-            terraform_directory: integration-tests/go/aws-sdk
-            expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent
+          - language: java
+            sample-app: okhttp
     steps:
       - uses: actions/checkout@v2
         with:
@@ -126,39 +91,24 @@ jobs:
         with:
           registry: public.ecr.aws
       - name: Build layers / functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
-      - uses: hashicorp/setup-terraform@v1
-      - name: Initialize terraform
-        run: terraform init
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Apply terraform
-        run: terraform apply -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
-        env:
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
-      - name: Extract endpoint
-        id: extract-endpoint
-        run: terraform output -raw api-gateway-url
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Extract AMP endpoint
-        id: extract-amp-endpoint
-        if: ${{ matrix.name == 'java-awssdk-agent' }}
-        run: terraform output -raw amp_endpoint
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Extract SDK layer arn
-        id: extract-sdk-layer-arn
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
-        run: terraform output -raw sdk-layer-arn
-        working-directory: ${{ matrix.terraform_directory }}
-      - name: Output annotations
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
+        run: ./build.sh
+        working-directory: ${{ matrix.language }}
+      - name: Get terraform directory
         run: |
-          echo "::warning::Function: opentelemetry-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
-          echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
-      - name: Send request to endpoint
-        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+          echo TERRAFORM_DIRECTORY=integration-tests/${{ matrix.language }}/${{ matrix.sample-app }}/${{ matrix.integration-type }} |
+          tee --append $GITHUB_ENV
+      - uses: hashicorp/setup-terraform@v1
+      - name: Validate terraform and get outputs
+        id: terraform-outputs
+        working-directory: .github/scripts
+        run: |
+          TERRAFORM_DIRECTORY=${{ env.TERRAFORM_DIRECTORY }} \
+          TEST_CASE_UNIQUE_SUFFIX=${{ matrix.language }}-${{ github.run_id }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }} \
+          ./validate_terraform_and_print_outputs.sh | tee --append $GITHUB_ENV;
+
+          echo "::set-output name=amp-endpoint::${{ env.AMP_ENDPOINT }}";
+          echo "::set-output name=api-gateway-url::${{ env.API_GATEWARY_URL }}";
+          echo "::set-output name=sdk-layer-arn::${{ env.SDK_LAYER_ARN }}";
       - name: Checkout test framework
         uses: actions/checkout@v2
         with:
@@ -166,16 +116,26 @@ jobs:
           path: test-framework
       - name: validate trace sample
         run: |
-          cp ${{ matrix.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
+             test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="
+            -c default-lambda-validation.yml
+            --endpoint ${{ steps.terraform-outputs.amp-endpoint }}
+            --region $AWS_REGION
+          "
       - name: validate java agent metric sample
-        if: ${{ matrix.name == 'java-awssdk-agent' }}
+        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' }}
         run: |
-          cp ${{ matrix.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
+          cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
+             test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="
+            -c prometheus-static-metric-validation.yml
+            --cortex-instance-endpoint ${{ steps.terraform-outputs.amp-endpoint }}
+            --region $AWS_REGION
+          "
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
