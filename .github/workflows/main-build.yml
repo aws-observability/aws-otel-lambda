@@ -8,10 +8,11 @@ on:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Integration Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }})
+    name: Integration - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
     strategy:
       fail-fast: false
       matrix:
+        architecture: [ amd64, arm64 ]
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
@@ -19,12 +20,19 @@ jobs:
           - language: java
             sample-app: aws-sdk
             instrumentation-type: agent
+            architecture: amd64
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: arm64
           - language: java
             sample-app: okhttp
-<<<<<<< HEAD
             instrumentation-type: wrapper
-=======
->>>>>>> e6ea3ae (Make testing file paths consistent)
+            architecture: amd64
+          - language: java
+            sample-app: okhttp
+            instrumentation-type: wrapper
+            architecture: arm64
     steps:
       - uses: actions/checkout@v2
         with:
@@ -95,8 +103,14 @@ jobs:
         with:
           registry: public.ecr.aws
       - name: Build layers / functions
-        run: ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh
         working-directory: ${{ matrix.language }}
+      - name: Get Lambda Layer amd64 architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer arm64 architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Get terraform directory
         run: |
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
@@ -105,12 +119,16 @@ jobs:
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get terraform Lambda function name
+        run: |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} | tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
+          TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -128,7 +146,7 @@ jobs:
       - name: Output annotations
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
-          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}"
+          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}

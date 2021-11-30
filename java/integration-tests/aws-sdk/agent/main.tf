@@ -6,6 +6,7 @@ module "test" {
   enable_collector_layer     = false
   sdk_layer_name             = var.sdk_layer_name
   function_name              = var.function_name
+  architecture               = var.architecture
   collector_config_layer_arn = length(aws_lambda_layer_version.collector_config_layer) > 0 ? aws_lambda_layer_version.collector_config_layer[0].arn : null
   tracing_mode               = "Active"
 }

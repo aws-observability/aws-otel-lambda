@@ -2,8 +2,9 @@ module "test" {
   source = "../../../../opentelemetry-lambda/go/integration-tests/aws-sdk/wrapper"
 
   enable_collector_layer = true
-  collector_layer_name = var.collector_layer_name
-  function_name = var.function_name
+  collector_layer_name   = var.collector_layer_name
+  function_name          = var.function_name
+  architecture           = var.architecture
 
   tracing_mode = "Active"
 }

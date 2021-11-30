@@ -22,3 +22,8 @@ variable "function_name" {
   default     = "hello-java-awssdk-agent"
 }
 
+variable "architecture" {
+  type        = string
+  description = "Lambda function architecture, either arm64 or x86_64"
+  default     = "x86_64"
+}
