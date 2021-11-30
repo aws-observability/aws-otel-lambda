@@ -23,32 +23,19 @@ jobs:
         # workflow can only test one Sample App per Lambda Layer. We should
         # create a separate workflow to soak-test Layers with multiple
         # soak tests.
-<<<<<<< HEAD
         language: [ go, nodejs, python ]
-=======
-        language: [ go, java, nodejs, python ]
->>>>>>> e6ea3ae (Make testing file paths consistent)
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
         soak_config: [ '-c 90 -m 70' ]
         include:
           - language: java
-<<<<<<< HEAD
             sample-app: aws-sdk
             instrumentation-type: wrapper
-=======
->>>>>>> e6ea3ae (Make testing file paths consistent)
             soak_config: '-c 200 -m 90'
           - language: java
             sample-app: aws-sdk
             instrumentation-type: agent
             soak_config: '-c 200 -m 90'
-<<<<<<< HEAD
-=======
-        exclude:
-          - language: java
-            soak_config: '-c 90 -m 70'
->>>>>>> e6ea3ae (Make testing file paths consistent)
     steps:
       - uses: actions/checkout@v2
         with:
@@ -124,11 +111,7 @@ jobs:
         working-directory: ${{ matrix.language }}
       - name: Get terraform directory
         run: |
-<<<<<<< HEAD
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
-=======
-          echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.integration-type }} |
->>>>>>> e6ea3ae (Make testing file paths consistent)
           tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
