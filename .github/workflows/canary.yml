@@ -28,48 +28,48 @@ jobs:
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/java-agent-aws-sdk-terraform
+            terraform_directory: java/sample-apps/aws-sdk/deploy/agent
             amp_regions: [ "us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"]
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-agent.json
-            expected_metric_template: adot/utils/expected-templates/java-awssdk-agent-metric.json
+            expected_trace_template: adot/utils/expected-templates/java-aws-sdk-agent.json
+            expected_metric_template: adot/utils/expected-templates/java-aws-sdk-agent-metric.json
           - name: java-awssdk-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+            terraform_directory: java/sample-apps/aws-sdk/deploy/wrapper
+            expected_trace_template: adot/utils/expected-templates/java-aws-sdk-wrapper.json
           - name: java-okhttp-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
-            terraform_directory: sample-apps/java-wrapper-okhttp-terraform
+            terraform_directory: java/sample-apps/okhttp/deploy/wrapper
             expected_trace_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
-            terraform_directory: sample-apps/nodejs-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/nodejs-awssdk.json
+            terraform_directory: nodejs/sample-apps/aws-sdk/deploy/wrapper
+            expected_trace_template: adot/utils/expected-templates/nodejs-aws-sdk-wrapper.json
           - name: python38
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
               cd sample-apps
               ./build.sh
-            terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
-            expected_trace_template: adot/utils/expected-templates/python.json
+            terraform_directory: python/sample-apps/aws-sdk/deploy/wrapper
+            expected_trace_template: adot/utils/expected-templates/python-aws-sdk-wrapper.json
           - name: dotnet-awssdk-wrapper
             language: dotnet
             build_directory: dotnet
             build_command: ./build.sh
-            terraform_directory: sample-apps/dotnet-wrapper-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/dotnet-awssdk-wrapper.json
+            terraform_directory: dotnet/sample-apps/aws-sdk/deploy/wrapper
+            expected_trace_template: adot/utils/expected-templates/dotnet-aws-sdk-wrapper.json
           - name: go-awssdk-wrapper
             language: go
             build_directory: go
             build_command: ./build.sh
-            terraform_directory: sample-apps/go-wrapper-aws-sdk-terraform
-            expected_trace_template: adot/utils/expected-templates/go-awssdk-wrapper.json
+            terraform_directory: go/sample-apps/aws-sdk/deploy/wrapper
+            expected_trace_template: adot/utils/expected-templates/go-aws-sdk-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
