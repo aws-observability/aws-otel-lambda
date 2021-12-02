@@ -1,19 +1,22 @@
 name: Soak tests
 
+env:
+  AWS_DEFAULT_REGION: us-east-1
+
 on:
   schedule:
     - cron: '0 14 * * 1,3,5' # Mon, Wed, Fri morning PST
   workflow_dispatch:
     inputs:
       soak_config:
-        description: 'set memory/cpu threshold, soak time, emitter interval'
+        description: 'set memory/cpu threshold, soak time (s), emitter interval'
         retuired: false
         default: '-t 1800'
 
 jobs:
   soaking-test:
     runs-on: ubuntu-20.04
-    name: Soak Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }})
+    name: Soak Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
     strategy:
       fail-fast: false
       matrix:
@@ -23,19 +26,22 @@ jobs:
         # workflow can only test one Sample App per Lambda Layer. We should
         # create a separate workflow to soak-test Layers with multiple
         # soak tests.
-        language: [ go, nodejs, python ]
+        language: [ go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
-        soak_config: [ '-c 90 -m 70' ]
+        architecture: [ amd64, arm64 ]
         include:
-          - language: java
-            sample-app: aws-sdk
-            instrumentation-type: wrapper
-            soak_config: '-c 200 -m 90'
+          # FIXME: (enowell) Same problem as above, we cannot Soak Test the
+          # other java app (okhttp) because it will create its own Lambda Layer
+          # instead of soak test the same one as the `aws-sdk` sample app.
           - language: java
             sample-app: aws-sdk
             instrumentation-type: agent
-            soak_config: '-c 200 -m 90'
+            architecture: amd64
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: arm64
     steps:
       - uses: actions/checkout@v2
         with:
@@ -59,6 +65,15 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Get default soaking test configuration
+        if: ${{ matrix.language != 'java' }}
+        run: |
+          echo SOAKING_TEST_CONFIG="-c 90 -m 70" | tee --append $GITHUB_ENV
+      - name: Get java soaking test configuration
+        # NOTE (enowell): Java's JVM is heavy and needs more memory than others.
+        if: ${{ matrix.language == 'java' }}
+        run: |
+          echo SOAKING_TEST_CONFIG="-c 200 -m 90" | tee --append $GITHUB_ENV
       - uses: actions/setup-node@v2
         if: ${{ matrix.language == 'nodejs' }}
         with:
@@ -98,7 +113,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           mask-aws-account-id: false
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - name: Patch ADOT
         run: ./patch-upstream.sh
       # Login to ECR since may be needed for Python build image.
@@ -107,8 +122,14 @@ jobs:
         with:
           registry: public.ecr.aws
       - name: Build layers / functions
-        run: ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh
         working-directory: ${{ matrix.language }}
+      - name: Get Lambda Layer `amd64` architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer `arm64` architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Get terraform directory
         run: |
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
@@ -117,13 +138,26 @@ jobs:
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get terraform Lambda function name
+        run: |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          tee --append $GITHUB_ENV
+        # NOTE: (enowell) We don't need to include `sample-app` in the Lambda
+        # Layer name because different apps should be use the same layer, not
+        # create their own. However, if we ever Soak Test multiple apps, we need
+        # to BE CAREFUL about not creating duplicate layer with the same name.
+      - name: Get terraform Lambda layer name
+        run: |
+          echo TERRAFORM_LAMBDA_LAYER_NAME=aws-otel-${{ matrix.language }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.sha }} |
+          tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: aws-otel-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
-          TF_VAR_collector_layer_name: aws-otel-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: ${{ env.TERRAFORM_LAMBDA_LAYER_NAME }}
+          TF_VAR_collector_layer_name: ${{ env.TERRAFORM_LAMBDA_LAYER_NAME }}
+          TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -147,12 +181,12 @@ jobs:
       - name: Output SDK layer annotations
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
-          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
+          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
       - name: Output Collector layer annotations
         if: ${{ matrix.layer_kind == 'collector' }}
         run: |
-          echo "::warning::Function: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}"
+          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
           echo "::warning::Collector Layer ARN: ${{ steps.extract-collector-layer-arn.outputs.stdout }}"
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
@@ -166,25 +200,25 @@ jobs:
           cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
              test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region ${{ env.AWS_DEFAULT_REGION }}"
       - name: validate java agent metric sample
         if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' }}
         run: |
           cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
              test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
-          ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
+          ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region ${{ env.AWS_DEFAULT_REGION }}"
       - name: Run soak test
         run: |
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-            public.ecr.aws/aws-otel-test/lambda-soak:latest -n hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }} \
-            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ matrix.soak_config }}
+            public.ecr.aws/aws-otel-test/lambda-soak:latest -n ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }} \
+            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ env.SOAKING_TEST_CONFIG }}
       - name: Remove sdk layers from terraform management to prevent deletion.
-        if: ${{ matrix.layer_kind != 'collector' }}
+        if: ${{ matrix.language != 'go' }}
         run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Remove collector layers from terraform management to prevent deletion.
-        if: ${{ matrix.layer_kind == 'collector' }}
+        if: ${{ matrix.language == 'go' }}
         run: terraform state rm module.test.aws_lambda_layer_version.collector_layer
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Destroy terraform
