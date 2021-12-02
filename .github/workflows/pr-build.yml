@@ -10,22 +10,9 @@ jobs:
     name: Build artifacts - ${{ matrix.language }}
     strategy:
       matrix:
-        include:
-          - language: java
-            build_directory: java
-            build_command: ./build.sh
-          - language: nodejs
-            build_directory: nodejs
-            build_command: ./build.sh
-          - language: python
-            build_directory: python
-            build_command: ./build.sh
-          - language: dotnet
-            build_directory: dotnet
-            build_command: ./build.sh
-          - language: go
-            build_directory: go
-            build_command: ./build.sh
+        language: [ java, nodejs, python, dotnet, go ]
+        build_command: [ ./build.sh ]
+        architecture: [ amd64, arm64 ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -83,9 +70,11 @@ jobs:
           dotnet-version: '3.1.x'
       - name: Patch ADOT
         run: ./patch-upstream.sh
-      - name: Build layers / functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
+      - name: Build layers / sample functions
+        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
+        run: GOARCH=${{ matrix.architecture }} ${{ matrix.build_command }}
+        working-directory: ${{ matrix.language }}
       - name: Build collector
-        run: make package
+        if: ${{ matrix.language == 'dotnet' || matrix.language == 'go' }}
+        run: GOARCH=${{ matrix.architecture }} make package
         working-directory: opentelemetry-lambda/collector
