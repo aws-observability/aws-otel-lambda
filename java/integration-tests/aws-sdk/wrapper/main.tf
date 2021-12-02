@@ -4,6 +4,7 @@ module "test" {
   enable_collector_layer = false
   sdk_layer_name         = var.sdk_layer_name
   function_name          = var.function_name
+  architecture           = var.architecture
 
   tracing_mode = "Active"
 }
