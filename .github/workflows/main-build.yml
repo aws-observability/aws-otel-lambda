@@ -121,7 +121,8 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} | tee --append $GITHUB_ENV
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
