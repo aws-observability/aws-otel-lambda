@@ -3,3 +3,9 @@ variable "function_name" {
   description = "Name of sample app function / API gateway"
   default     = "hello-java-awssdk-agent"
 }
+
+variable "architecture" {
+  type        = string
+  description = "Lambda function architecture, either arm64 or x86_64"
+  default     = "x86_64"
+}

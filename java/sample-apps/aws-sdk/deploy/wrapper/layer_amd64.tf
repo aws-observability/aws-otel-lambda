@@ -1,5 +1,5 @@
 locals {
-  sdk_layer_arns = {
+  sdk_layer_arns_amd64 = {
     "ap-northeast-1" = "arn:aws:lambda:ap-northeast-1:901920570463:layer:aws-otel-java-wrapper-ver-1-7-0:1"
     "ap-northeast-2" = "arn:aws:lambda:ap-northeast-2:901920570463:layer:aws-otel-java-wrapper-ver-1-7-0:1"
     "ap-south-1"     = "arn:aws:lambda:ap-south-1:901920570463:layer:aws-otel-java-wrapper-ver-1-7-0:1"
