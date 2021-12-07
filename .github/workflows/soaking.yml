@@ -42,6 +42,21 @@ jobs:
             sample-app: aws-sdk
             instrumentation-type: agent
             architecture: arm64
+    outputs:
+      go-wrapper-error: ${{ steps.set-layer-if-error-output.outputs.go-wrapper-error }}
+      nodejs-wrapper-error: ${{ steps.set-layer-if-error-output.outputs.nodejs-wrapper-error }}
+      python-wrapper-error: ${{ steps.set-layer-if-error-output.outputs.python-wrapper-error }}
+      java-agent-error: ${{ steps.set-layer-if-error-output.outputs.java-agent-error }}
+      java-wrapper-error: ${{ steps.set-layer-if-error-output.outputs.java-wrapper-error }}
+
+      # NOTE: (enowell) When we release a Lambda Layer, we will ALWAYS release
+      # all the architectures TOGETHER. So all architectures will be at the same
+      # version.
+      go-wrapper-version: ${{ steps.set-collector-layer-version-output.outputs.go-wrapper-version }}
+      nodejs-wrapper-version: ${{ steps.set-sdk-layer-version-output.outputs.nodejs-wrapper-version }}
+      python-wrapper-version: ${{ steps.set-sdk-layer-version-output.outputs.python-wrapper-version }}
+      java-agent-version: ${{ steps.set-sdk-layer-version-output.outputs.java-agent-version }}
+      java-wrapper-version: ${{ steps.set-sdk-layer-version-output.outputs.java-wrapper-version }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -172,22 +187,33 @@ jobs:
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: terraform output -raw sdk-layer-arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
-      # Tests/release for .NET manual instrumentation need collector layer arn
       - name: Extract Collector layer arn
         id: extract-collector-layer-arn
         if: ${{ matrix.language == 'dotnet' || matrix.language == 'go' }}
         run: terraform output -raw collector-layer-arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
-      - name: Output SDK layer annotations
+          # NOTE: (enowell) `terraform output` outputs additional text we are
+          # not interested in because the `hashicorp/setup-terraform@v1` has a
+          # wrapper. We solve this by using separate steps, because this text
+          # doesn't show up when accessed in later steps.
+          #
+          # See more: https://github.com/hashicorp/setup-terraform/issues/20
+      - name: Set SDK layer version output
+        id: set-sdk-layer-version-output
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
-          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
-          echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
-      - name: Output Collector layer annotations
-        if: ${{ matrix.layer_kind == 'collector' }}
+          version=$(echo "${{ steps.extract-sdk-layer-arn.outputs.stdout }}" | cut -d : -f 8)
+          echo "Found version number: $version"
+          echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-version::$version"
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Set Collector layer version output
+        id: set-collector-layer-version-output
+        if: ${{ matrix.language == 'dotnet' || matrix.language == 'go' }}
         run: |
-          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
-          echo "::warning::Collector Layer ARN: ${{ steps.extract-collector-layer-arn.outputs.stdout }}"
+          version=$(echo "${{ steps.extract-collector-layer-arn.outputs.stdout }}" | cut -d : -f 8)
+          echo "Found version number: $version"
+          echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-version::$version"
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
@@ -213,6 +239,10 @@ jobs:
           docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             public.ecr.aws/aws-otel-test/lambda-soak:latest -n ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }} \
             -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ env.SOAKING_TEST_CONFIG }}
+      - name: Set output if layer Soak Tests has error
+        id: set-layer-if-error-output
+        if: ${{ failure() }}
+        run: echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-error::FAILED"
       - name: Remove sdk layers from terraform management to prevent deletion.
         if: ${{ matrix.language != 'go' }}
         run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
@@ -225,3 +255,34 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+  output-keywords:
+    if: ${{ always() }}
+    name: Output (${{ matrix.language }}, ${{ matrix.instrumentation-type }}) Layer Keyword
+    runs-on: ubuntu-20.04
+    needs:
+      - soaking-test
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ go, java, nodejs, python ]
+        instrumentation-type: [ wrapper ]
+        include:
+          - language: java
+            instrumentation-type: agent
+    steps:
+      - name: Confirm none of the architecture soak tests for the layer failed
+        run: |
+          AT_LEAST_ONE_LAYER_SOAK_TEST_FAILED=$(
+            echo '${{ toJSON(needs.soaking-test.outputs) }}' |
+            jq '
+              ."${{ matrix.language }}-${{ matrix.instrumentation-type }}-error" == "FAILED"
+            ' || echo false
+          )
+          [[ $AT_LEAST_ONE_LAYER_SOAK_TEST_FAILED == false ]]
+      - name: Output keyword for (${{ matrix.language }}, ${{ matrix.instrumentation-type }}) layer
+        run: |
+          VERSION=$(
+            echo '${{ toJSON(needs.soaking-test.outputs) }}' |
+            jq -r '."${{ matrix.language }}-${{ matrix.instrumentation-type }}-version"'
+          )
+          echo "::warning::Layer ARN: arn:aws:lambda:${{ env.AWS_DEFAULT_REGION }}:611364707713:layer:aws-otel-${{ matrix.language }}-${{ matrix.instrumentation-type }}-<ARCHITECTURE>-${{ github.sha }}:$VERSION"
