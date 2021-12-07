@@ -5,78 +5,64 @@ on:
     - cron: '25 */8 * * *' # every 8 hours
   workflow_dispatch:
 
+env:
+  AMP_REGIONS: us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1
+
 jobs:
   canary-test:
     runs-on: ubuntu-latest
-    name: Canary Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
+    name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }})
     strategy:
       fail-fast: false
       matrix:
-        aws_region:  [ "us-east-1", "us-east-2", "us-west-1", "us-west-2", "ap-south-1", "ap-northeast-2", "ap-southeast-1", "ap-southeast-2", "ap-northeast-1", "ca-central-1", "eu-central-1", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1", "sa-east-1"]
-        # We need to define the raw parameters to the matrix here but will customize each
-        # below.
-        name:
-          - java-awssdk-agent
-          - java-awssdk-wrapper
-          - java-okhttp-wrapper
-          - nodejs-awssdk
-          - python38
-          - dotnet-awssdk-wrapper
-          - go-awssdk-wrapper
-        include:
-          - name: java-awssdk-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: java/sample-apps/aws-sdk/deploy/agent
-            amp_regions: [ "us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"]
-            expected_trace_template: adot/utils/expected-templates/java-aws-sdk-agent.json
-            expected_metric_template: adot/utils/expected-templates/java-aws-sdk-agent-metric.json
-          - name: java-awssdk-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: java/sample-apps/aws-sdk/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/java-aws-sdk-wrapper.json
-          - name: java-okhttp-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: java/sample-apps/okhttp/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/java-okhttp-wrapper.json
-          - name: nodejs-awssdk
-            language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
-            terraform_directory: nodejs/sample-apps/aws-sdk/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/nodejs-aws-sdk-wrapper.json
-          - name: python38
-            language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd sample-apps
-              ./build.sh
-            terraform_directory: python/sample-apps/aws-sdk/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/python-aws-sdk-wrapper.json
-          - name: dotnet-awssdk-wrapper
-            language: dotnet
-            build_directory: dotnet
-            build_command: ./build.sh
-            terraform_directory: dotnet/sample-apps/aws-sdk/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/dotnet-aws-sdk-wrapper.json
-          - name: go-awssdk-wrapper
-            language: go
-            build_directory: go
-            build_command: ./build.sh
-            terraform_directory: go/sample-apps/aws-sdk/deploy/wrapper
-            expected_trace_template: adot/utils/expected-templates/go-aws-sdk-wrapper.json
+        aws_region: [
+          "us-east-1",
+          "us-east-2",
+          "us-west-1",
+          "us-west-2",
+          "ap-south-1",
+          "ap-northeast-2",
+          "ap-southeast-1",
+          "ap-southeast-2",
+          "ap-northeast-1",
+          "ca-central-1",
+          "eu-central-1",
+          "eu-west-1",
+          "eu-west-2",
+          "eu-west-3",
+          "eu-north-1",
+          "sa-east-1"
+        ]
+        language: [ dotnet, go, java, nodejs, python ]
+        sample-app: [ aws-sdk, okhttp ]
+        instrumentation-type: [ agent, wrapper ]
+        exclude:
+          - language: dotnet
+            sample-app: okhttp
+          - language: dotnet
+            instrumentation-type: agent
+          - language: go
+            sample-app: okhttp
+          - language: go
+            instrumentation-type: agent
+          - language: nodejs
+            sample-app: okhttp
+          - language: nodejs
+            instrumentation-type: agent
+          - language: python
+            sample-app: okhttp
+          - language: python
+            instrumentation-type: agent
+          - language: java
+            sample-app: okhttp
+            instrumentation-type: agent
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
+          go-version: '^1.17'
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
@@ -128,8 +114,8 @@ jobs:
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build functions
-        run: ${{ matrix.build_command }}
-        working-directory: ${{ matrix.build_directory }}
+        run: ./build.sh
+        working-directory: ${{ matrix.language }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -137,24 +123,28 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
+      - name: Get terraform directory
+        run: |
+          echo TERRAFORM_DIRECTORY=${{ matrix.language }}/sample-apps/${{ matrix.sample-app }}/deploy/${{ matrix.instrumentation-type }} |
+          tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Apply terraform
         run: terraform apply -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.name }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}-${{ matrix.aws_region }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract AMP endpoint
-        if: ${{ matrix.name == 'java-awssdk-agent' && contains(matrix.amp_regions, matrix.aws_region)}}
+        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' && contains(env.AMP_REGIONS, matrix.aws_region) }}
         id: extract-amp-endpoint
         run: terraform output -raw amp_endpoint
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
@@ -168,18 +158,20 @@ jobs:
           timeout_seconds: 300
           max_attempts: 3
           command: |
-            cp ${{ matrix.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+            cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
+             test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
             cd test-framework
             ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       # add back in once the java-agent layer is published and the ARNs are available
       # - name: validate java agent metric sample
-      #   if: ${{ matrix.name == 'java-awssdk-agent' && contains(matrix.amp_regions, matrix.aws_region)}}
+      #   if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' && contains(env.AMP_REGIONS, matrix.aws_region) }}
       #   run: |
-      #     cp ${{ matrix.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
+      #     cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
+      #      test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
       #     cd test-framework
       #     ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve
-        working-directory: ${{ matrix.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
   
