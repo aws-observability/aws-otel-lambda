@@ -3,9 +3,6 @@ name: Release public Lambda layer
 on:
   workflow_dispatch:
     inputs:
-      layer_kind:
-        description: 'Layer kind such as: java-wrapper, java-agent, python38, nodejs, collector'
-        required: true
       source_layer_arn:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
@@ -15,13 +12,24 @@ on:
       aws_region:
         description: 'Deploy to aws region'
         required: true
-        default: "{\"aws_region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+        default: "[ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\" ]"
+
+env:
+  AMP_REGIONS: us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1
 
 jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate `layer_name` (${{ github.event.inputs.layer_name }})
+        run: |
+          grep -Eq "aws-otel-(collector|java-agent|java-wrapper|nodejs|python38)-ver-[0-9]+-[0-9]+-[0-9]+" <<< "${{ github.event.inputs.layer_name }}"
   publish-prod:
     runs-on: ubuntu-latest
+    needs: validate-inputs
     strategy:
-      matrix: ${{fromJson(github.event.inputs.aws_region)}}
+      matrix:
+        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -30,6 +38,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: us-east-1
+      - name: Get layer kind by parsing `${{ github.event.inputs.layer_name }}`
+        run: |
+          echo LAYER_KIND=$(echo "${{ github.event.inputs.layer_name }}" | cut -d - -f 3) | tee --append $GITHUB_ENV
       - name: download layer from source
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.source_layer_arn }} --query Content.Location --output text)
@@ -43,36 +54,55 @@ jobs:
           role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
           mask-aws-account-id: false
+      - name: Get bucket name for release run
+        run: |
+          echo BUCKET_NAME=publish-${{ env.LAYER_KIND }}-${{ github.run_id }}-${{ matrix.aws_region }} | tee --append $GITHUB_ENV
       - name: publish
         run: |
-          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
-          aws s3 mb s3://$BUCKET_NAME
-          aws s3 cp layer.zip s3://$BUCKET_NAME
-          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.layer_name }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          aws s3 mb s3://${{ env.BUCKET_NAME }}
+          aws s3 cp layer.zip s3://${{ env.BUCKET_NAME }}
+          layerARN=$(
+            aws lambda publish-layer-version \
+              --layer-name ${{ github.event.inputs.layer_name }} \
+              --content S3Bucket=${{ env.BUCKET_NAME }},S3Key=layer.zip \
+              --query 'LayerVersionArn' \
+              --output text
+          )
           echo $layerARN
           mkdir ${{ github.event.inputs.layer_name }}
           echo $layerARN > ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
           cat ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
       - name: public layer
         run: |
-          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.layer_name }} --query 'max_by(LayerVersions, &Version).Version')
-          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.layer_name }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+          layerVersion=$(
+            aws lambda list-layer-versions \
+              --layer-name ${{ github.event.inputs.layer_name }} \
+              --query 'max_by(LayerVersions, &Version).Version'
+          )
+          aws lambda add-layer-version-permission \
+            --layer-name ${{ github.event.inputs.layer_name }} \
+            --version-number $layerVersion \
+            --principal "*" \
+            --statement-id publish \
+            --action lambda:GetLayerVersion
       - name: upload layer arn artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.inputs.layer_name }}
-          path: ${{ github.event.inputs.layer_name }}/${{matrix.aws_region}}
+          path: ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
       - name: clean s3
         if: always()
         run: |
-          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
-          aws s3 rb --force s3://$BUCKET_NAME
+          aws s3 rb --force s3://${{ env.BUCKET_NAME }}
   generate-note:
     runs-on: ubuntu-latest
     needs: publish-prod
     steps:
       - uses: hashicorp/setup-terraform@v1
+      - name: Get layer kind by parsing `${{ github.event.inputs.layer_name }}`
+        run: |
+          echo LAYER_KIND=$(echo "${{ github.event.inputs.layer_name }}" | cut -d - -f 3) | tee --append $GITHUB_ENV
       - name: download layerARNs
         uses: actions/download-artifact@v2
         with:
@@ -86,10 +116,10 @@ jobs:
           cat $file
           done
       - name: generate layer-note
+        working-directory: ${{ github.event.inputs.layer_name }}
         run: |
-          echo "| Region | Layer ARN |" >> layer-note
-          echo "|  ----  | ----  |" >> layer-note
-          cd ${{ github.event.inputs.layer_name }}
+          echo "| Region | Layer ARN |" >> ../layer-note
+          echo "|  ----  | ----  |" >> ../layer-note
           for file in *
           do
           read arn < $file
@@ -98,13 +128,14 @@ jobs:
           cd ..
           cat layer-note
       - name: generate tf layer
+        working-directory: ${{ github.event.inputs.layer_name }}
         run: |
-          echo "locals {" >> layer.tf
-          if [ ${{ github.event.inputs.layer_kind }} != 'collector' ]
+          echo "locals {" >> ../layer.tf
+          if [ "${{ env.LAYER_KIND }}" != 'collector' ]
           then
-            echo "  sdk_layer_arns = {" >> layer.tf
+            echo "  sdk_layer_arns = {" >> ../layer.tf
           else
-            echo "  collector_layer_arns = {" >> layer.tf
+            echo "  collector_layer_arns = {" >> ../layer.tf
           fi
           cd ${{ github.event.inputs.layer_name }}
           for file in *
@@ -122,117 +153,53 @@ jobs:
         with:
           name: layer.tf
           path: layer.tf
-  get-smoke-test-configuration:
-    runs-on: ubuntu-latest
-    needs: generate-note
-    name: Set ${{ github.event.inputs.layer_kind }} Smoke Test Configuration Values
-    outputs:
-      sample_app_name: ${{ steps.set-smoke-test-outputs.outputs.sample_app_name }}
-      language: ${{ steps.set-smoke-test-outputs.outputs.language }}
-      build_directory: ${{ steps.set-smoke-test-outputs.outputs.build_directory }}
-      build_command: ${{ steps.set-smoke-test-outputs.outputs.build_command }}
-      terraform_directory: ${{ steps.set-smoke-test-outputs.outputs.terraform_directory }}
-      expected_trace_template: ${{ steps.set-smoke-test-outputs.outputs.expected_trace_template }}
-      expected_metric_template: ${{ steps.set-smoke-test-outputs.outputs.expected_metric_template }}
-      amp_regions: ${{ steps.set-smoke-test-outputs.outputs.amp_regions }}
-    steps:
-      - name: Configure Java Agent Values
-        if: ${{ github.event.inputs.layer_kind == 'java-agent' }}
-        run: |-
-          echo "SAMPLE_APP_NAME=java-awssdk-agent" >> $GITHUB_ENV;
-          echo "LANGUAGE=java" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=java" >> $GITHUB_ENV;
-          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=java/sample-apps/aws-sdk/deploy/agent" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/java-aws-sdk-agent.json" >> $GITHUB_ENV;
-          echo "EXPECTED_METRIC_TEMPLATE=adot/utils/expected-templates/java-aws-sdk-agent-metric.json" >> $GITHUB_ENV;
-          echo "AMP_REGIONS=us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1" >> $GITHUB_ENV;
-        # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
-        # design. However, there are multiple Sample Apps that test the same
-        # Java Wrapper Lambda Layer. (`java-wrapper-aws-sdk-terraform`
-        # and `java-wrapper-okhttp-terraform`). We should create a new workflow
-        # to test all Sample Apps on the same Layer.
-      - name: Configure Java Wrapper Values
-        if: ${{ github.event.inputs.layer_kind == 'java-wrapper' }}
-        run: |-
-          echo "SAMPLE_APP_NAME=java-awssdk-wrapper" >> $GITHUB_ENV;
-          echo "LANGUAGE=java" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=java" >> $GITHUB_ENV;
-          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=java/sample-apps/aws-sdk/deploy/wrapper" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/java-aws-sdk-wrapper.json" >> $GITHUB_ENV;
-      - name: Configure NodeJS Values
-        if: ${{ github.event.inputs.layer_kind == 'nodejs' }}
-        run: |-
-          echo "SAMPLE_APP_NAME=nodejs-awssdk" >> $GITHUB_ENV;
-          echo "LANGUAGE=nodejs" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=nodejs" >> $GITHUB_ENV;
-          echo "BUILD_COMMAND=./build_upstream.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=nodejs/sample-apps/aws-sdk/deploy/wrapper" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/nodejs-aws-sdk-wrapper.json" >> $GITHUB_ENV;
-      - name: Configure Python Values
-        if: ${{ github.event.inputs.layer_kind == 'python38' }}
-        run: |-
-          echo "SAMPLE_APP_NAME=python38" >> $GITHUB_ENV;
-          echo "LANGUAGE=python" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=opentelemetry-lambda/python/sample-apps" >> $GITHUB_ENV;
-          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=python/sample-apps/aws-sdk/deploy/wrapper" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/python-awsdk-wrapper.json" >> $GITHUB_ENV;
-      # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
-      # design. However, both .NET and Go Sample Apps test the collector-only
-      # Lambda layer. For now we only test Go, but we should either make a new
-      # workflow to test all sample apps using the same Lambda Layer or make
-      # a new layer for just .NET/Go.
-      # - name: Configure Collector Values
-      #   if: ${{ github.event.inputs.layer_kind == 'collector' }}
-      #   run: |-
-      #     echo "SAMPLE_APP_NAME=dotnet-awssdk-wrapper" >> $GITHUB_ENV;
-      #     echo "LANGUAGE=dotnet" >> $GITHUB_ENV;
-      #     echo "BUILD_DIRECTORY=dotnet" >> $GITHUB_ENV;
-      #     echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-      #     echo "TERRAFORM_DIRECTORY=dotnet/sample-apps/aws-sdk/deploy/agent" >> $GITHUB_ENV;
-      #     echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/dotnet-aws-sdk-wrapper.json" >> $GITHUB_ENV;
-      - name: Configure Collector Values
-        if: ${{ github.event.inputs.layer_kind == 'collector' }}
-        run: |-
-          export TEST_LANGUAGE=go;
-          echo "SAMPLE_APP_NAME=$TEST_LANGUAGE-awssdk-wrapper" >> $GITHUB_ENV;
-          echo "LANGUAGE=$TEST_LANGUAGE" >> $GITHUB_ENV;
-          echo "BUILD_DIRECTORY=$TEST_LANGUAGE" >> $GITHUB_ENV;
-          echo "BUILD_COMMAND=./build.sh" >> $GITHUB_ENV;
-          echo "TERRAFORM_DIRECTORY=$TEST_LANGUAGE/sample-apps/aws-sdk/deploy/wrapper" >> $GITHUB_ENV;
-          echo "EXPECTED_TRACE_TEMPLATE=adot/utils/expected-templates/$TEST_LANGUAGE-aws-sdk-wrapper.json" >> $GITHUB_ENV;
-      - name: Set Configuration Outputs
-        id: set-smoke-test-outputs
-        run: |-
-          echo "::set-output name=sample_app_name::${{ env.SAMPLE_APP_NAME }}";
-          echo "::set-output name=language::${{ env.LANGUAGE }}";
-          echo "::set-output name=build_directory::${{ env.BUILD_DIRECTORY }}";
-          echo "::set-output name=build_command::${{ env.BUILD_COMMAND }}";
-          echo "::set-output name=terraform_directory::${{ env.TERRAFORM_DIRECTORY }}";
-          echo "::set-output name=expected_trace_template::${{ env.EXPECTED_TRACE_TEMPLATE }}";
-          echo "::set-output name=expected_metric_template::${{ env.EXPECTED_METRIC_TEMPLATE }}";
-          echo "::set-output name=amp_regions::${{ env.AMP_REGIONS }}";
   smoke-test:
-    name: Smoke Test - ${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name }}
-    needs: get-smoke-test-configuration
+    name: Smoke Test - (${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name }})
+    needs: generate-note
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
+        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
     steps:
+      - name: Parse smoke test values from layer name - ${{ github.event.inputs.layer_name }}
+          # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
+          # design. However, there are multiple Sample Apps that test the same
+          # Java Wrapper Lambda Layer.
+          #
+          # i.e.
+          # - `aws-sdk` and `okhttp` both test the `java-wrapper` layer but we
+          #   can only test one (`aws-sdk`).
+          # - `go` and `dotnet` both test the `collector` layer but we can only
+          #   test one (`go`).
+        run: |
+          LAYER_KIND=$(echo "${{ github.event.inputs.layer_name }}" | cut -d - -f 3)
+          if [ "$LAYER_KIND" = "python38" ]; then
+            TEST_LANGUAGE=python
+          elif [ "$LAYER_KIND" = "collector" ]; then
+            TEST_LANGUAGE=go
+          else
+            TEST_LANGUAGE=$LAYER_KIND
+          fi
+          echo TEST_LANGUAGE=$TEST_LANGUAGE | tee --append $GITHUB_ENV
+
+          LAYER_INSTR_TYPE=$(echo "${{ github.event.inputs.layer_name }}" | cut -d - -f 4)
+          if [ "$LAYER_INSTR_TYPE" = "agent" ] || [ "$LAYER_INSTR_TYPE" = "wrapper" ]; then
+            TEST_INSTR_TYPE=$LAYER_INSTR_TYPE
+          else
+            TEST_INSTR_TYPE="wrapper"
+          fi
+          echo TEST_INSTR_TYPE=$TEST_INSTR_TYPE | tee --append $GITHUB_ENV
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - uses: actions/setup-java@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'java' }}
+        if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           distribution: adopt
           java-version: '11'
       - name: Cache (Java)
         uses: actions/cache@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'java' }}
+        if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -242,12 +209,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - uses: actions/setup-node@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'nodejs' }}
+        if: ${{ env.TEST_LANGUAGE == 'nodejs' }}
         with:
           node-version: '14'
       - name: Cache (NodeJS)
         uses: actions/cache@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'nodejs' }}
+        if: ${{ env.TEST_LANGUAGE == 'nodejs' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -256,12 +223,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - uses: actions/setup-python@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'python' }}
+        if: ${{ env.TEST_LANGUAGE == 'python' }}
         with:
           python-version: '3.x'
       - name: Cache (Python)
         uses: actions/cache@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'python' }}
+        if: ${{ env.TEST_LANGUAGE == 'python' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -273,26 +240,37 @@ jobs:
       # only test Go with the collector layer so comment out for now.
       # - name: Use .NET Language
       #   uses: actions/setup-dotnet@v1
-      #   if: ${{ needs.get-smoke-test-configuration.outputs.language == 'dotnet' }}
+      #   if: ${{ env.TEST_LANGUAGE == 'dotnet' }}
       #   with:
       #     dotnet-version: '3.1.x'
       - name: Use Go Language
         uses: actions/setup-go@v2
-        if: ${{ needs.get-smoke-test-configuration.outputs.language == 'go' }}
+        # NOTE: (enowell) In case the languages below need to build the
+        # collector, and because building the collector requires go 1.17 and
+        # above, always setup go 1.17.
+        # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
-          go-version: '^1.16'
+          go-version: '^1.17'
       - name: download layer tf file
         uses: actions/download-artifact@v2
         with:
           name: layer.tf
+      - name: Get terraform directory
+        run: |
+          echo TERRAFORM_DIRECTORY=${{ env.TEST_LANGUAGE }}/sample-apps/aws-sdk/deploy/${{ env.TEST_INSTR_TYPE }} |
+          tee --append $GITHUB_ENV
       - name: overwrite layer.tf
         run: |
-          cat ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
-          mv -f layer.tf ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
-          cat ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}/layer.tf
+          cat ${{ env.TERRAFORM_DIRECTORY }}/layer.tf
+          mv -f layer.tf ${{ env.TERRAFORM_DIRECTORY }}/layer.tf
+          cat ${{ env.TERRAFORM_DIRECTORY }}/layer.tf
+        # NOTE: (enowell) This builds BOTH the sample app functions AND the
+        # layer. But we only use the sample app build in the release workflow.
+        # Also, we NEED the architecture value because some apps (like .NET and
+        # Go) depend on this architecture value.
       - name: Build functions
-        run: ${{ needs.get-smoke-test-configuration.outputs.build_command }}
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.build_directory }}
+        run: GOARCH=amd64 ./build.sh
+        working-directory: ${{ env.TEST_LANGUAGE }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -303,21 +281,21 @@ jobs:
       - uses: hashicorp/setup-terraform@v1
       - name: Initialize terraform
         run: terraform init
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Apply terraform
         run: terraform apply -auto-approve
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ needs.get-smoke-test-configuration.outputs.sample_app_name }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: hello-lambda-${{ env.TEST_LANGUAGE }}-aws-sdk-${{ env.TEST_INSTR_TYPE }}-${{ github.run_id }}-${{ matrix.aws_region }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract AMP endpoint
-        if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
+        if: ${{ env.TEST_LANGUAGE == 'java' && env.TEST_INSTR_TYPE == 'agent' && contains(env.AMP_REGIONS, matrix.aws_region) }}
         id: extract-amp-endpoint
         run: terraform output -raw amp_endpoint
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
@@ -327,16 +305,16 @@ jobs:
           path: test-framework
       - name: validate trace sample
         run: |
-          cp ${{ needs.get-smoke-test-configuration.outputs.expected_trace_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cp adot/utils/expected-templates/${{ env.TEST_LANGUAGE }}-aws-sdk-${{ env.TEST_INSTR_TYPE }}.json test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: validate java agent metric sample
-        if: ${{ needs.get-smoke-test-configuration.outputs.sample_app_name == 'java-awssdk-agent' && contains(needs.get-smoke-test-configuration.outputs.amp_regions, matrix.aws_region) }}
+        if: ${{ env.TEST_LANGUAGE == 'java' && env.TEST_INSTR_TYPE == 'agent' && contains(env.AMP_REGIONS, matrix.aws_region) }}
         run: |
-          cp ${{ needs.get-smoke-test-configuration.outputs.expected_metric_template }} test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
+          cp adot/utils/expected-templates/${{ env.TEST_LANGUAGE }}-aws-sdk-${{ env.TEST_INSTR_TYPE }}-metric.json test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: Destroy terraform
         if: always()
         run: terraform destroy -auto-approve
-        working-directory: ${{ needs.get-smoke-test-configuration.outputs.terraform_directory }}
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
