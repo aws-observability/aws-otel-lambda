@@ -285,4 +285,4 @@ jobs:
             echo '${{ toJSON(needs.soaking-test.outputs) }}' |
             jq -r '."${{ matrix.language }}-${{ matrix.instrumentation-type }}-version"'
           )
-          echo "::warning::Layer ARN: arn:aws:lambda:${{ env.AWS_DEFAULT_REGION }}:611364707713:layer:aws-otel-${{ matrix.language }}-${{ matrix.instrumentation-type }}-<ARCHITECTURE>-${{ github.sha }}:$VERSION"
+          echo "::warning::Layer ARN Keyword: arn:aws:lambda:${{ env.AWS_DEFAULT_REGION }}:611364707713:layer:aws-otel-${{ matrix.language }}-${{ matrix.instrumentation-type }}-<ARCHITECTURE>-${{ github.sha }}:$VERSION"
