@@ -15,8 +15,13 @@ pushd ../sample-apps || exit
 ./build.sh
 popd || exit
 
-# Combine the layers
+# Go to build folder
 cd ./build || exit
+
+# Add AWS X-Ray dependencies
+pip install opentelemetry-sdk-extension-aws -t python/
+
+# Combine the layers
 unzip -qo layer.zip
 rm layer.zip
 unzip -qo ../../../collector/build/collector-extension.zip
