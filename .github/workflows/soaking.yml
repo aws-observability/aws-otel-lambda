@@ -17,6 +17,8 @@ jobs:
   soaking-test:
     runs-on: ubuntu-20.04
     name: Soak Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -124,8 +126,6 @@ jobs:
       # Default session duration is 6 hours.
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           mask-aws-account-id: false
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
