@@ -1,13 +1,21 @@
 data "aws_region" "current" {}
 
+locals {
+  architecture_to_arns_mapping = {
+    "x86_64" = local.sdk_layer_arns_amd64
+    "arm64"  = local.sdk_layer_arns_arm64
+  }
+}
+
 module "app" {
   source = "../../../../../opentelemetry-lambda/java/sample-apps/aws-sdk/deploy/agent"
 
   name                       = var.function_name
   collector_layer_arn        = null
-  sdk_layer_arn              = lookup(local.sdk_layer_arns, data.aws_region.current.name, "invalid")
+  sdk_layer_arn              = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   collector_config_layer_arn = length(aws_lambda_layer_version.collector_config_layer) > 0 ? aws_lambda_layer_version.collector_config_layer[0].arn : null
   tracing_mode               = "Active"
+  architecture               = var.architecture
 }
 
 resource "aws_iam_role_policy_attachment" "test_xray" {
