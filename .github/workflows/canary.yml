@@ -11,7 +11,7 @@ env:
 jobs:
   canary-test:
     runs-on: ubuntu-latest
-    name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }})
+    name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }} - ${{ matrix.architecture }})
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +36,8 @@ jobs:
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ agent, wrapper ]
+         # TODO: Add back arm64 when Lambda clock skew bug is fixed.
+        architecture: [ amd64 ]
         exclude:
           - language: dotnet
             sample-app: okhttp
@@ -114,7 +116,7 @@ jobs:
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build functions
-        run: ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh
         working-directory: ${{ matrix.language }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -131,11 +133,18 @@ jobs:
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get Lambda Layer `amd64` architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer `arm64` architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
