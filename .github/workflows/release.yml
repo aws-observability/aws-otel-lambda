@@ -315,7 +315,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ env.TEST_LANGUAGE }}-aws-sdk-${{ env.TEST_INSTR_TYPE }}-${{ matrix.architecture }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: lambda-${{ env.TEST_LANGUAGE }}-aws-sdk-${{ env.TEST_INSTR_TYPE }}-${{ matrix.architecture }}-${{ github.run_id }}-${{ matrix.aws_region }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
       - name: Extract endpoint
         id: extract-endpoint

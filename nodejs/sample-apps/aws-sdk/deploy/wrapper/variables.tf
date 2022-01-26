@@ -1,7 +1,7 @@
 variable "function_name" {
   type        = string
   description = "Name of sample app function / API gateway"
-  default     = "hello-nodejs-awssdk"
+  default     = "lambda-nodejs-awssdk-wrapper-amd64"
 }
 
 variable "architecture" {
