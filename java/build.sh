@@ -8,18 +8,22 @@ pushd ../opentelemetry-lambda/collector || exit
 make package
 popd || exit
 
-# Build the sdk layer and sample apps
+# Build ADOT Lambda Java SDK Layer Code
 
 ./gradlew build
 
+# Move the ADOT Lambda Java SDK code into OTel Lambda Java folder
 mkdir -p ../opentelemetry-lambda/java/build/extensions
 cp ./build/libs/aws-otel-lambda-java-extensions.jar ../opentelemetry-lambda/java/build/extensions
 
+# Go to OTel Lambda Java folder
 cd ../opentelemetry-lambda/java || exit
 
-./gradlew build -Potel.lambda.javaagent.dependency=software.amazon.opentelemetry:aws-opentelemetry-agent:1.7.0
-# Combine the layers
+# Build the OTel Lambda Java folder which has ADOT Lambda Java configured code
+OTEL_VERSION=1.10.0
+./gradlew build -Potel.lambda.javaagent.dependency=software.amazon.opentelemetry:aws-opentelemetry-agent:$OTEL_VERSION
 
+# Combine Java Agent build and ADOT Collector
 pushd ./layer-javaagent/build/distributions || exit
 unzip -qo opentelemetry-javaagent-layer.zip
 rm opentelemetry-javaagent-layer.zip
@@ -29,6 +33,7 @@ unzip -qo ../../../../collector/build/collector-extension.zip
 zip -qr opentelemetry-javaagent-layer.zip *
 popd || exit
 
+# Combine Java Wrapper build and ADOT Collector
 pushd ./layer-wrapper/build/distributions || exit
 unzip -qo opentelemetry-java-wrapper.zip
 rm opentelemetry-java-wrapper.zip
