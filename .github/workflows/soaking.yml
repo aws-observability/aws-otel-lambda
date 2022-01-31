@@ -77,7 +77,7 @@ jobs:
             ~/go/pkg/mod
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}-CACHE_VERSION=1
       - name: Get default soaking test configuration
         if: ${{ matrix.language != 'java' }}
         run: |
