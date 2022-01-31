@@ -33,9 +33,7 @@ jobs:
             ~/go/pkg/mod
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}-CACHE_VERSION=1
       - uses: actions/setup-node@v2
         if: ${{ matrix.language == 'nodejs' }}
         with:
