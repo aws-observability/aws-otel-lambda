@@ -79,8 +79,6 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
       - uses: actions/setup-node@v2
         if: ${{ matrix.language == 'nodejs' }}
         with:
