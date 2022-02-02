@@ -2,13 +2,13 @@
 All notable changes to this project will be documented in this file.
 
 ## 2022-02-02 Release
-- Python3.8 layer [aws-otel-python38-ver-1-9-1](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.9.1` with the AWS Python Extension `v1.0.1`
+- Python3.8 layer **aws-otel-python38-ver-1-9-1** contains OpenTelemetry Python `v1.9.1` with the AWS Python Extension `v1.0.1`
 - Nodejs layer [aws-otel-nodejs-ver-1-0-1](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.0.1` with AWS Lambda Instrumentation `v0.28.1`
-- Java-Wrapper layer [aws-otel-java-wrapper-ver-1-10-1](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.10.1`
-- Java-Agent layer [aws-otel-java-agent-ver-1-10-1](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS OpenTelemetry Java instrumentation `v1.10.1`
+- Java-Wrapper layer **aws-otel-java-wrapper-ver-1-10-1** contains OpenTelemetry Java `v1.10.1`
+- Java-Agent layer **aws-otel-java-agent-ver-1-10-1** contains AWS OpenTelemetry Java instrumentation `v1.10.1`
 - Collector layer **aws-otel-collector-ver-0-43-1** contains ADOT Collector for Lambda `v0.16.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
 - Layers cover 16 AWS Regions: us-east-1, us-east-2, us-west-1, us-west-2, ap-south-1, ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-north-1, sa-east-1
-- Layers are built from Git commit `9f59051e2773d2234fd5b7d567e17fbe721b48cc` at https://github.com/aws-observability/aws-otel-lambda/commit/9f59051e2773d2234fd5b7d567e17fbe721b48cc
+- Layers are built from Git commit `to_be_added` at to_be_added
 
 ## 2021-11-23 Release
 - Python3.8 layer **aws-otel-python38-ver-1-7-1** contains OpenTelemetry Python `v1.7.1` with Contrib `v0.26b1`
