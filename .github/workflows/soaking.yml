@@ -26,6 +26,7 @@ jobs:
         # workflow can only test one Sample App per Lambda Layer. We should
         # create a separate workflow to soak-test Layers with multiple
         # soak tests.
+        # TODO: Add back arm64 when Lambda clock skew bug is fixed.
         language: [ go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]

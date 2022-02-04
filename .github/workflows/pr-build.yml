@@ -10,9 +10,10 @@ jobs:
     name: Build artifacts - ${{ matrix.language }}
     strategy:
       matrix:
+        # TODO: Add back arm64 when Lambda clock skew bug is fixed.
         language: [ java, nodejs, python, dotnet, go ]
         build_command: [ ./build.sh ]
-        architecture: [ amd64, arm64 ]
+        architecture: [ amd64 ]
     steps:
       - uses: actions/checkout@v2
         with:

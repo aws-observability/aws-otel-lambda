@@ -19,9 +19,10 @@ on:
         # reason they would is if the Soak Test Layer ARN Keyword only worked
         # for ONE architecture and FAILED for the other and at the point we
         # should be really certain that we want to release such a layer.
+        # TODO: Add back arm64 when Lambda clock skew bug is fixed.
         description: 'Architecture-compatible distributions of the layer to release in each region'
         required: true
-        default: "[ \"amd64\", \"arm64\" ]"
+        default: "[ \"amd64\" ]"
 
 env:
   AMP_REGIONS: us-west-2,us-east-1,us-east-2,eu-central-1,eu-west-1

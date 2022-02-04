@@ -12,7 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: [ amd64, arm64 ]
+        # TODO: Add back arm64 when Lambda clock skew bug is fixed.
+        architecture: [ amd64 ]
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
@@ -22,17 +23,9 @@ jobs:
             instrumentation-type: agent
             architecture: amd64
           - language: java
-            sample-app: aws-sdk
-            instrumentation-type: agent
-            architecture: arm64
-          - language: java
             sample-app: okhttp
             instrumentation-type: wrapper
             architecture: amd64
-          - language: java
-            sample-app: okhttp
-            instrumentation-type: wrapper
-            architecture: arm64
     steps:
       - uses: actions/checkout@v2
         with:
