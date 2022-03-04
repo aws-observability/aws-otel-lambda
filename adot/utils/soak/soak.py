@@ -174,7 +174,7 @@ def alarm_puller(function_name, cpu_threshold, memory_threshold):
     while True:
         for response in paginator.paginate(AlarmNames=[memory_alarm, cpu_alarm]):
             for alarm in response["MetricAlarms"]:
-                print("{} state {}".format(alarm["AlarmName"], alarm["StateValue"]))
+                print("{} state {} - {}".format(alarm["AlarmName"], alarm["StateValue"], alarm["StateReason"]))
                 if alarm["StateValue"] == "ALARM":
                     state = True
                     return
