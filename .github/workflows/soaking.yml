@@ -235,10 +235,20 @@ jobs:
           cd test-framework
           ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region ${{ env.AWS_DEFAULT_REGION }}"
       - name: Run soak test
-        run: |
-          docker run --rm -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-            public.ecr.aws/aws-otel-test/lambda-soak:latest -n ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }} \
-            -e ${{ steps.extract-endpoint.outputs.stdout }} ${{ github.event.inputs.soak_config }} ${{ env.SOAKING_TEST_CONFIG }}
+        run:
+          >-
+            docker run
+            --rm
+            -e AWS_DEFAULT_REGION
+            -e AWS_ACCESS_KEY_ID
+            -e AWS_SECRET_ACCESS_KEY
+            -e AWS_SESSION_TOKEN
+            public.ecr.aws/aws-otel-test/lambda-soak:latest
+            -n ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
+            -e ${{ steps.extract-endpoint.outputs.stdout }}
+            ${{ github.event.inputs.soak_config }}
+            ${{ env.SOAKING_TEST_CONFIG }}
+            -a ${{ matrix.architecture }}
       - name: Set output if layer Soak Tests has error
         id: set-layer-if-error-output
         if: ${{ failure() }}
