@@ -246,7 +246,8 @@ jobs:
             public.ecr.aws/aws-otel-test/lambda-soak:latest
             -n ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
             -e ${{ steps.extract-endpoint.outputs.stdout }}
-            ${{ github.event.inputs.soak_config }} ${{ env.SOAKING_TEST_CONFIG }}
+            ${{ github.event.inputs.soak_config }}
+            ${{ env.SOAKING_TEST_CONFIG }}
             -a ${{ matrix.architecture }}
       - name: Set output if layer Soak Tests has error
         id: set-layer-if-error-output
