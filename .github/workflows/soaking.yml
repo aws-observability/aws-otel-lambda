@@ -235,8 +235,9 @@ jobs:
           cd test-framework
           ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region ${{ env.AWS_DEFAULT_REGION }}"
       - name: Run soak test
-        run: >-
-          docker run 
+        run:
+          >-
+            docker run
             --rm
             -e AWS_DEFAULT_REGION
             -e AWS_ACCESS_KEY_ID
