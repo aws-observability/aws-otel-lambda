@@ -38,8 +38,26 @@ jobs:
     needs: validate-inputs
     strategy:
       matrix:
-        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
+        # TODO: (pvasir) Excluding the following regions from release because
+        # they do not support `arm64` Lambda functions. Update this list when
+        # Lambda expands region support for ARM64.
+        # See more:
+        # https://aws.amazon.com/about-aws/whats-new/2021/09/better-price-performance-aws-lambda-functions-aws-graviton2-processor/
         architecture: ${{ fromJson(github.event.inputs.architecture) }}
+        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
+        exclude:
+          - aws_region: ap-northeast-2
+            architecture: arm64
+          - aws_region: ca-central-1
+            architecture: arm64
+          - aws_region: eu-north-1
+            architecture: arm64
+          - aws_region: eu-west-3
+            architecture: arm64
+          - aws_region: sa-east-1
+            architecture: arm64
+          - aws_region: us-west-1
+            architecture: arm64
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -180,8 +198,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
         architecture: ${{ fromJson(github.event.inputs.architecture) }}
+        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
+        # TODO: (pvasir) Excluding the following regions from release because
+        # they do not support `arm64` Lambda functions. Update this list when
+        # Lambda expands region support for ARM64.
+        # See more:
+        # https://aws.amazon.com/about-aws/whats-new/2021/09/better-price-performance-aws-lambda-functions-aws-graviton2-processor/
+        exclude:
+          - aws_region: ap-northeast-2
+            architecture: arm64
+          - aws_region: ca-central-1
+            architecture: arm64
+          - aws_region: eu-north-1
+            architecture: arm64
+          - aws_region: eu-west-3
+            architecture: arm64
+          - aws_region: sa-east-1
+            architecture: arm64
+          - aws_region: us-west-1
+            architecture: arm64
     steps:
       - name: Parse smoke test values from layer name - ${{ github.event.inputs.layer_name_keyword }}
           # FIXME: (enowell) You can only Smoke Test 1 Sample App with this
