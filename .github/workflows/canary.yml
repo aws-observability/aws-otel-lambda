@@ -36,8 +36,7 @@ jobs:
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ agent, wrapper ]
-         # TODO: Add back arm64 when Lambda clock skew bug is fixed.
-        architecture: [ amd64 ]
+        architecture: [ amd64, arm64 ]
         exclude:
           - language: dotnet
             sample-app: okhttp
