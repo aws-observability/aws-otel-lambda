@@ -37,6 +37,11 @@ jobs:
         sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ agent, wrapper ]
         architecture: [ amd64, arm64 ]
+        # TODO: (pvasir) Excluding the following regions from release because
+        # they do not support `arm64` Lambda functions. Update this list when
+        # Lambda expands region support for ARM64.
+        # See more:
+        # https://aws.amazon.com/about-aws/whats-new/2021/09/better-price-performance-aws-lambda-functions-aws-graviton2-processor/
         exclude:
           - language: dotnet
             sample-app: okhttp
@@ -57,6 +62,23 @@ jobs:
           - language: java
             sample-app: okhttp
             instrumentation-type: agent
+          # TODO: (pvasir) Excluding the following regions from release because
+          # they do not support `arm64` Lambda functions. Update this list when
+          # Lambda expands region support for ARM64.
+          # See more:
+          # https://aws.amazon.com/about-aws/whats-new/2021/09/better-price-performance-aws-lambda-functions-aws-graviton2-processor/
+          - aws_region: ap-northeast-2
+            architecture: arm64
+          - aws_region: ca-central-1
+            architecture: arm64
+          - aws_region: eu-north-1
+            architecture: arm64
+          - aws_region: eu-west-3
+            architecture: arm64
+          - aws_region: sa-east-1
+            architecture: arm64
+          - aws_region: us-west-1
+            architecture: arm64
     steps:
       - uses: actions/checkout@v2
         with:
