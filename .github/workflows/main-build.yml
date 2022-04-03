@@ -16,6 +16,7 @@ jobs:
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
+        python-version: [ 3.8, 3.9 ]
         include:
           - language: java
             sample-app: aws-sdk
@@ -33,6 +34,19 @@ jobs:
             sample-app: okhttp
             instrumentation-type: wrapper
             architecture: arm64
+          - language: python
+            python-version: 3.8
+            architecture: amd64
+          - language: python
+            python-version: 3.8
+            architecture: arm64
+          - language: python
+            python-version : 3.9
+            architecture: amd64
+          - language: python
+            python-version: 3.9
+            architecture: arm64
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -73,7 +87,7 @@ jobs:
       - uses: actions/setup-python@v2
         if: ${{ matrix.language == 'python' }}
         with:
-          python-version: '3.x'
+          python-version:
       - name: Cache (Python)
         uses: actions/cache@v2
         if: ${{ matrix.language == 'python' }}
@@ -92,7 +106,6 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: us-east-1
       - name: Patch ADOT
@@ -124,12 +137,23 @@ jobs:
           echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
+        if: ${{ matrix.language != 'python' && matrix.python-version != 3.8 }}
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+      - name: Apply terraform
+        if: ${{ matrix.language == 'python' && matrix.python-version == 3.8 }}
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_sdk_layer_name: ${{ env.TERRAFORM_LAMBDA_LAYER_NAME }}
+          TF_VAR_collector_layer_name: ${{ env.TERRAFORM_LAMBDA_LAYER_NAME }}
+          TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+          TF_VAR_runtime: 'python3.8'
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
