@@ -83,7 +83,7 @@ jobs:
       - name: Get default soaking test configuration
         if: ${{ matrix.language != 'java' && matrix.architecture != 'arm64' }}
         run: |
-          echo SOAKING_TEST_CONFIG="-c 90 -m 70" | tee --append $GITHUB_ENV
+          echo SOAKING_TEST_CONFIG="-c 120 -m 90" | tee --append $GITHUB_ENV
       - name: Get java soaking test configuration
         # NOTE (enowell): Java's JVM is heavy and needs more memory than others.
         if: ${{ matrix.language == 'java' || matrix.architecture == 'arm64' }}

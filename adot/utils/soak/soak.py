@@ -93,8 +93,8 @@ def parse_args():
             "soak time:\t%s sec\n"
             "invoke interval:\t%s sec\n"
             "alarm cpu threshold:\t%s ns\n"
-            "alarm memory threshold:\t%s%%"
-            "architecture:\t%s%%"
+            "alarm memory threshold:\t%s%%\n"
+            "architecture:\t%s"
         )
         % (
             _name,
