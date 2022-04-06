@@ -5,6 +5,7 @@ module "test" {
   sdk_layer_name         = var.sdk_layer_name
   function_name          = var.function_name
   architecture           = var.architecture
+  runtime                = var.runtime
 
   tracing_mode = "Active"
 }

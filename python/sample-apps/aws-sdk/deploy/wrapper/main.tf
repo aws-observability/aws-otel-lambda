@@ -15,6 +15,7 @@ module "app" {
   sdk_layer_arn       = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   tracing_mode        = "Active"
   architecture        = var.architecture
+  runtime             =var.runtime
 }
 
 resource "aws_iam_role_policy_attachment" "test_xray" {
