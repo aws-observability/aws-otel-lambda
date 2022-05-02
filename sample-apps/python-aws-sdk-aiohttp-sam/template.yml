@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: AWS OTel Python 3.8 Lambda layer sample
+Description: AWS OTel Python Lambda layer sample
 Resources:
   api:
     Type: AWS::Serverless::Api
@@ -12,7 +12,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: lambda_function.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.9
       CodeUri: ./function
       Description: Python sample application
       MemorySize: 512
