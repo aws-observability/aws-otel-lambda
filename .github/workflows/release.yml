@@ -7,7 +7,7 @@ on:
         description: 'Clone layer from keyword ARN by substituting architecture parameter (ie: arn:aws:lambda:us-east-1:012345678912:layer:aws-otel-nodejs-wrapper-<ARCHITECTURE>-d8b20954c3284abcd08f5fb8178986a89cff7160:1)'
         required: true
       layer_name_keyword:
-        description: 'Publish layer to keyword name by substituting architecture parameter (ie: aws-otel-python38-<ARCHITECTURE>-ver-1-7-1)'
+        description: 'Publish layer to keyword name by substituting architecture parameter (ie: aws-otel-python-<ARCHITECTURE>-ver-1-7-1)'
         required: true
       aws_region:
         description: 'Deploy to aws region'
@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Validate `layer_name_keyword` (${{ github.event.inputs.layer_name_keyword }})
         run: |
-          grep -Eq "aws-otel-(collector|java-agent|java-wrapper|nodejs|python38)-<ARCHITECTURE>-ver-[0-9]+-[0-9]+-[0-9]+" <<< "${{ github.event.inputs.layer_name_keyword }}"
+          grep -Eq "aws-otel-(collector|java-agent|java-wrapper|nodejs|python)-<ARCHITECTURE>-ver-[0-9]+-[0-9]+-[0-9]+" <<< "${{ github.event.inputs.layer_name_keyword }}"
   publish-prod:
     runs-on: ubuntu-latest
     needs: validate-inputs
