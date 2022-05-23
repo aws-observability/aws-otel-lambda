@@ -231,7 +231,7 @@ jobs:
           #   test one (`go`).
         run: |
           LAYER_KIND=$(echo "${{ github.event.inputs.layer_name_keyword }}" | cut -d - -f 3)
-          if [ "$LAYER_KIND" = "python38" ]; then
+          if [ "$LAYER_KIND" = "python" ]; then
             TEST_LANGUAGE=python
           elif [ "$LAYER_KIND" = "collector" ]; then
             TEST_LANGUAGE=go
