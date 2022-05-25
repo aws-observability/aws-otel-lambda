@@ -21,20 +21,19 @@ We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed
    ```
    ./build.sh
    ```
-4. Go to a sample application folder, such as `sample-apps/sam/python`, `sample-apps/terraform/nodejs/aws-sdk`, etc
+4. Go to a sample application folder, such as `sample-apps/aws-sdk/deploy/wrapper/`.
     
-5. Deploy sample application by, 
-    1. For SAM sample application
-        ```
-        ./run.sh
-       ```
+5. Deploy sample application by,
        
-    2. For Terraform sample application
-        ```
-       terraform init
-       terraform apply -auto-approve
-        ```
-    
+    For Terraform sample application
+    ```
+    terraform init
+    terraform apply -auto-approve
+    ```
+ To Deploy SAM sample application, navigate to `sample-apps/python-aws-sdk-aiohttp-sam/` and run.
+    ```
+    ./run.sh
+    ```
 
 ## Security
 
