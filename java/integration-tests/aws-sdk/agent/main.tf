@@ -21,6 +21,10 @@ data "archive_file" "init" {
   depends_on = [aws_prometheus_workspace.test_amp_workspace, data.aws_region.current]
   source {
     content  = <<EOT
+extensions:
+  sigv4auth:
+    region: "us-west-2"
+
 receivers:
   otlp:
     protocols:
@@ -30,20 +34,20 @@ receivers:
 exporters:
   logging:
   awsxray:
-  awsprometheusremotewrite:
+  prometheusremotewrite:
     endpoint: "${aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint}api/v1/remote_write"
-    aws_auth:
-      service: "aps"
-      region: "${data.aws_region.current.name}"
+    auth:
+      authenticator: sigv4auth
 
 service:
+  extensions: [sigv4auth]
   pipelines:
     traces:
       receivers: [otlp]
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging, awsprometheusremotewrite]
+      exporters: [logging, prometheusremotewrite]
 EOT
     filename = "config.yaml"
   }
