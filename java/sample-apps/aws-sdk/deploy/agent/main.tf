@@ -40,7 +40,7 @@ data "archive_file" "init" {
     content  = <<EOT
 extensions:
   sigv4auth:
-    region: "us-west-2"
+    region: ${data.aws_region.current.name}
 
 receivers:
   otlp:
