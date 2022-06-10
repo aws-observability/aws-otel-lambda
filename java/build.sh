@@ -19,9 +19,9 @@ cp ./build/libs/aws-otel-lambda-java-extensions.jar ../opentelemetry-lambda/java
 # Go to OTel Lambda Java folder
 cd ../opentelemetry-lambda/java || exit
 
-# Build the OTel Lambda Java folder which has ADOT Lambda Java configured code
-OTEL_VERSION=1.10.1
-./gradlew build -Potel.lambda.javaagent.dependency=software.amazon.opentelemetry:aws-opentelemetry-agent:$OTEL_VERSION
+# Build the OTel Lambda Java
+OTEL_VERSION=1.14.0
+./gradlew build -Potel.lambda.javaagent.dependency=io.opentelemetry.javaagent:opentelemetry-javaagent:$OTEL_VERSION
 
 # Combine Java Agent build and ADOT Collector
 pushd ./layer-javaagent/build/distributions || exit
