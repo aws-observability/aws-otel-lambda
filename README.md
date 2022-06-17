@@ -4,7 +4,7 @@ As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry
 - Python layer [**aws-otel-python-<amd64|arm64>-ver-1-11-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.11.1` with the AWS Python Extension `v2.0.1`
 - Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-2-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.2.0` with AWS Lambda Instrumentation `v0.30.0`
 - Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-14-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.14.0`
-- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-14-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains OpenTelemetry Java instrumentation `v1.14.0`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-14-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.14.0`
 - Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-51-0** contains ADOT Collector for Lambda `v0.18.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
 
 ## Sample Apps
