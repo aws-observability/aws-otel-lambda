@@ -34,6 +34,20 @@ We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed
     ```
     ./run.sh
     ```
+## ADOT Lambda Layer available components
+
+This table represents the components that the ADOT Lambda Layer will support and can be used in the [custom configuration for ADOT collector on Lambda](https://aws-otel.github.io/docs/getting-started/lambda#custom-configuration-for-the-adot-collector-on-lambda). The highlighted components below are developed by AWS in-house.
+
+| Receiver       | Exporter                          | Extensions                  |
+|----------------|-----------------------------------|-----------------------------|
+|otlpreceiver    |`awsemfexporter`                   |`sigv4authextension`         |
+|                |`awsprometheusremotewriteexporter` |                             |
+|                |`awsxrayexporter`                  |                             |
+|                |prometheusexporter                 |                             |
+|                |prometheusremotewriteexporter      |                             |
+|                |loggingexporter                    |                             |
+|                |otlpexporter                       |                             |
+|                |otlphttpexporter                   |                             |
 
 ## Security
 
