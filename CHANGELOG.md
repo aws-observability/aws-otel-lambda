@@ -1,9 +1,6 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-# To be Released
-
-
 ## 2022-05-23 Release
 **AWS Distro For OpenTelemetry Lambda now supports ARM64 Architecture**
 - Python layer [**aws-otel-python-<amd64|arm64>-ver-1-11-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.11.1` with the AWS Python Extension `v2.0.1`
