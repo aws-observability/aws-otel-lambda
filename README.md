@@ -53,6 +53,10 @@ This table represents the components that the ADOT Lambda Layer will support and
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
+## Support 
+
+Please note that as per policy, we're providing support via GitHub on a best effort basis. However, if you have AWS Enterprise Support you can create a ticket and we will provide direct support within the respective SLAs.
+
 ## License
 
 This project is licensed under the Apache-2.0 License.
