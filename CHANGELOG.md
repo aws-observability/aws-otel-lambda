@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2022-08-18 Release
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-5-0:2**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.5.0` with AWS Lambda Instrumentation `v0.32.0`
+  - This includes [a fix](https://github.com/aws-observability/aws-otel-lambda/pull/280) for global propagator registration in the wrapper that was preventing use of the OTel API within functions.
+  - Note that there is a [known issue](https://github.com/open-telemetry/opentelemetry-js/issues/3173) preventing the manual creations of spans when using the NodeJS v14 runtime.  The NodeJS v16 runtime can be used to create spans manually and autoinstrumentation functions as expected with NodeJS v14.
+
 ## 2022-07-29 Release
 **AWS Distro For OpenTelemetry Lambda now supports ARM64 Architecture**
 - Python layer [**aws-otel-python-<amd64|arm64>-ver-1-11-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.11.1` with the AWS Python Extension `v2.0.1`
