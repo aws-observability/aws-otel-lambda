@@ -304,8 +304,8 @@ jobs:
       - name: Use Go Language
         uses: actions/setup-go@v2
         # NOTE: (enowell) In case the languages below need to build the
-        # collector, and because building the collector requires go 1.17 and
-        # above, always setup go 1.17.
+        # collector, and because building the collector requires go 1.18 and
+        # above, always setup go 1.18.
         # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
           go-version: '^1.18'
