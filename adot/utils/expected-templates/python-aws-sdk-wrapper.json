@@ -27,12 +27,6 @@
     "name":"HTTP GET"
   },
   {
-    "name":"HTTP GET"
-  },
-  {
-    "name":"HTTP GET"
-  },
-  {
     "name":"HTTP GET",
     "inferred":true,
     "http":{
