@@ -31,7 +31,7 @@
     "inferred":true,
     "http":{
       "request":{
-        "url":"http://httpbin\\.org/",
+        "url":"https://www\\.amazon\\.com/",
         "method":"GET"
       }
     }
