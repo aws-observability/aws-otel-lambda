@@ -18,7 +18,7 @@ cp -rf adot/* opentelemetry-lambda/
 cd opentelemetry-lambda/collector
 
 # Replace OTel Collector with ADOT Collector
-go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.21.0
+go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.21.1
 
 # Include X-Ray components for the Collector
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil@v0.58.0
