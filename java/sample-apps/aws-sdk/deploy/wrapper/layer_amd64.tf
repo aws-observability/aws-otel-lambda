@@ -18,3 +18,4 @@ locals {
     "us-west-2"      = "arn:aws:lambda:us-west-2:901920570463:layer:aws-otel-java-wrapper-amd64-ver-1-17-0:1"
   }
 }
+
