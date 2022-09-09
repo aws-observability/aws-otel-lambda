@@ -13,6 +13,8 @@ module "test" {
 
 resource "aws_prometheus_workspace" "test_amp_workspace" {
   count = contains(["us-west-2", "us-east-1", "us-east-2", "eu-central-1", "eu-west-1"], data.aws_region.current.name) ? 1 : 0
+  alias = var.function_name
+  tags = {"ephemeral" = "true"}
 }
 
 data "archive_file" "init" {
