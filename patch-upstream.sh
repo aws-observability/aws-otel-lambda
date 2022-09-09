@@ -28,4 +28,4 @@ go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/i
 # A simple `go mod tidy` does not work.
 # See: https://github.com/aws-observability/aws-otel-collector/issues/926
 rm -fr go.sum
-go mod tidy -compat=1.18
+go mod tidy -compat=1.18 
