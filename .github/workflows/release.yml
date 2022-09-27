@@ -247,7 +247,7 @@ jobs:
             TEST_INSTR_TYPE="wrapper"
           fi
           echo TEST_INSTR_TYPE=$TEST_INSTR_TYPE | tee --append $GITHUB_ENV
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: actions/setup-java@v2
@@ -365,7 +365,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework

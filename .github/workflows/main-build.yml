@@ -36,7 +36,7 @@ jobs:
             instrumentation-type: wrapper
             architecture: arm64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: actions/setup-go@v3
@@ -154,7 +154,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework
