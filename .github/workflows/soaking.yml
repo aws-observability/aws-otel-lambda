@@ -70,7 +70,7 @@ jobs:
           distribution: adopt
           java-version: '11'
       - name: Cache (Java)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'java' }}
         with:
           path: |
@@ -94,7 +94,7 @@ jobs:
         with:
           node-version: '14'
       - name: Cache (NodeJS)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'nodejs' }}
         with:
           path: |
@@ -108,7 +108,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'python' }}
         with:
           path: |
