@@ -136,7 +136,7 @@ jobs:
       matrix:
         architecture: ${{ fromJson(github.event.inputs.architecture) }}
     steps:
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
       - name: Get layer name by substituting `${{ matrix.architecture }}` into Workflow Input name keyword
         run: |
           echo LAYER_NAME=$(echo "${{ github.event.inputs.layer_name_keyword }}" | sed 's/<ARCHITECTURE>/${{ matrix.architecture }}/') | tee --append $GITHUB_ENV
@@ -337,7 +337,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
