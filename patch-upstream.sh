@@ -25,6 +25,10 @@ go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/i
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics@v0.61.0
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray@v0.61.0
 
+# Replace the prometheus import to avoid the mismatch in go dependency
+# see https://github.com/aws-observability/aws-otel-collector/blob/v0.22.0/pkg/lambdacomponents/go.mod#L66
+go mod edit -replace github.com/prometheus/prometheus@v1.8.2-0.20220117154355-4855a0c067e2=github.com/prometheus/prometheus@v0.38.0
+
 # A simple `go mod tidy` does not work.
 # See: https://github.com/aws-observability/aws-otel-collector/issues/926
 rm -fr go.sum
