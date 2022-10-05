@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: AWS OTel Python 3.8 Lambda layer sample
+Description: AWS OTel Python Lambda layer sample
 Resources:
   api:
     Type: AWS::Serverless::Api
@@ -12,7 +12,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: lambda_function.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.9
       CodeUri: ./function
       Description: Python sample application
       MemorySize: 512
@@ -25,6 +25,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-instrument
           OTEL_PROPAGATORS: xray
       Tracing: Active
+      #TODO: (pvasir) Add ARM64 layers to these tests
       Layers:
         - !FindInMap [RegionMap, !Ref "AWS::Region", layer]
       Events:
@@ -37,34 +38,34 @@ Resources:
 Mappings:
   RegionMap:
     ap-northeast-1:
-      layer: "arn:aws:lambda:ap-northeast-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ap-northeast-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     ap-northeast-2:
-      layer: "arn:aws:lambda:ap-northeast-2:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ap-northeast-2:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     ap-south-1:
-      layer: "arn:aws:lambda:ap-south-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ap-south-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     ap-southeast-1:
-      layer: "arn:aws:lambda:ap-southeast-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ap-southeast-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     ap-southeast-2:
-      layer: "arn:aws:lambda:ap-southeast-2:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ap-southeast-2:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     ca-central-1:
-      layer: "arn:aws:lambda:ca-central-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:ca-central-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     eu-central-1:
-      layer: "arn:aws:lambda:eu-central-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:eu-central-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     eu-north-1:
-      layer: "arn:aws:lambda:eu-north-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:eu-north-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     eu-west-1:
-      layer: "arn:aws:lambda:eu-west-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:eu-west-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     eu-west-2:
-      layer: "arn:aws:lambda:eu-west-2:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:eu-west-2:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     eu-west-3:
-      layer: "arn:aws:lambda:eu-west-3:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:eu-west-3:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     sa-east-1:
-      layer: "arn:aws:lambda:sa-east-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:sa-east-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     us-east-1:
-      layer: "arn:aws:lambda:us-east-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:us-east-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     us-east-2:
-      layer: "arn:aws:lambda:us-east-2:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:us-east-2:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     us-west-1:
-      layer: "arn:aws:lambda:us-west-1:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:us-west-1:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"
     us-west-2:
-      layer: "arn:aws:lambda:us-west-2:901920570463:layer:aws-otel-python38-ver-1-7-1:1"
+      layer: "arn:aws:lambda:us-west-2:901920570463:layer:aws-otel-python-amd64-ver-1-12-0:1"

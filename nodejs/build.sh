@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Build collector

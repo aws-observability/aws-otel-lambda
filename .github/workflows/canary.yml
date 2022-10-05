@@ -11,7 +11,7 @@ env:
 jobs:
   canary-test:
     runs-on: ubuntu-latest
-    name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }})
+    name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }} - ${{ matrix.architecture }})
     permissions:
       id-token: write
     strategy:
@@ -38,6 +38,7 @@ jobs:
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ agent, wrapper ]
+        architecture: [ amd64, arm64 ]
         exclude:
           - language: dotnet
             sample-app: okhttp
@@ -58,20 +59,37 @@ jobs:
           - language: java
             sample-app: okhttp
             instrumentation-type: agent
+          # TODO: (pvasir) Excluding the following regions from release because
+          # they do not support `arm64` Lambda functions. Update this list when
+          # Lambda expands region support for ARM64.
+          # See more:
+          # https://aws.amazon.com/about-aws/whats-new/2021/09/better-price-performance-aws-lambda-functions-aws-graviton2-processor/
+          - aws_region: ap-northeast-2
+            architecture: arm64
+          - aws_region: ca-central-1
+            architecture: arm64
+          - aws_region: eu-north-1
+            architecture: arm64
+          - aws_region: eu-west-3
+            architecture: arm64
+          - aws_region: sa-east-1
+            architecture: arm64
+          - aws_region: us-west-1
+            architecture: arm64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '^1.17'
+          go-version: '^1.19.1'
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
           distribution: adopt
           java-version: '11'
       - name: Cache (Java)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'java' }}
         with:
           path: |
@@ -86,7 +104,7 @@ jobs:
         with:
           node-version: '14'
       - name: Cache (NodeJS)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'nodejs' }}
         with:
           path: |
@@ -95,12 +113,12 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         if: ${{ matrix.language == 'python' }}
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'python' }}
         with:
           path: |
@@ -109,14 +127,14 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v2
         if: ${{ matrix.language == 'dotnet' }}
         with:
           dotnet-version: '3.1.x'
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build functions
-        run: ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh
         working-directory: ${{ matrix.language }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -127,15 +145,22 @@ jobs:
         run: |
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/sample-apps/${{ matrix.sample-app }}/deploy/${{ matrix.instrumentation-type }} |
           tee --append $GITHUB_ENV
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get Lambda Layer `amd64` architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer `arm64` architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_function_name: lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -148,7 +173,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework

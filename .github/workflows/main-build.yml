@@ -2,7 +2,9 @@ name: Main Build
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main 
+      - release/*
   workflow_dispatch:
 
 jobs:
@@ -36,19 +38,19 @@ jobs:
             instrumentation-type: wrapper
             architecture: arm64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '^1.16'
+          go-version: '^1.19.1'
       - uses: actions/setup-java@v2
         if: ${{ matrix.language == 'java' }}
         with:
           distribution: adopt
           java-version: '11'
       - name: Cache (Java)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'java' }}
         with:
           path: |
@@ -63,7 +65,7 @@ jobs:
         with:
           node-version: '14'
       - name: Cache (NodeJS)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'nodejs' }}
         with:
           path: |
@@ -72,12 +74,12 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         if: ${{ matrix.language == 'python' }}
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ matrix.language == 'python' }}
         with:
           path: |
@@ -86,7 +88,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v2
         if: ${{ matrix.language == 'dotnet' }}
         with:
           dotnet-version: '3.1.x'
@@ -115,13 +117,13 @@ jobs:
         run: |
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
           tee --append $GITHUB_ENV
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=hello-lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
@@ -152,7 +154,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework

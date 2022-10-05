@@ -1,15 +1,21 @@
 [
   {
-    "name":"hello-lambda-java.*"
+    "name":"lambda-java.*"
   },
   {
-    "name":"hello-lambda-java.*"
+    "name":"lambda-java.*"
   },
   {
-    "name":"hello-lambda-java.*"
+    "name":"lambda-java.*"
   },
   {
-    "name":"hello-lambda-java.*"
+    "name":"lambda-java.*"
+  },
+  {
+    "name":"lambda-java.*"
+  },
+  {
+    "name":"lambda-java.*"
   },
   {
     "name":"S3",

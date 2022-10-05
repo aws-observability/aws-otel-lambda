@@ -1,0 +1,95 @@
+name: Python38 Layer Integration Test
+# This workflow is for verifying python3.9 layer in Lambda python3.8 environment
+on:
+  push:
+    branches: 
+      - main 
+      - release/*
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-20.04
+    name: Python38-${{ matrix.architecture }}-IntegrationTest
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19.1'
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: us-east-1
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
+      - name: Login to Public ECR
+        uses: docker/login-action@v1
+        with:
+          registry: public.ecr.aws
+      - name: Build layers / functions
+        run: GOARCH=${{ matrix.architecture }} ./build.sh
+        working-directory: python
+      - name: Get Lambda Layer amd64 architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer arm64 architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
+      - name: Get terraform directory
+        run: |
+          echo TERRAFORM_DIRECTORY=python/integration-tests/aws-sdk/wrapper |
+          tee --append $GITHUB_ENV
+      - uses: hashicorp/setup-terraform@v2
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get terraform Lambda function name
+        run: |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-python-${{ matrix.architecture }} |
+          tee --append $GITHUB_ENV
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}
+          TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+          TF_VAR_runtime: 'python3.8'
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Extract SDK layer arn
+        id: extract-sdk-layer-arn
+        run: terraform output -raw sdk-layer-arn
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Output annotations
+        run: |
+          echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
+          echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
+      - name: Send request to endpoint
+        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Checkout test framework
+        uses: actions/checkout@v3
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+      - name: validate trace sample
+        run: |
+          cp adot/utils/expected-templates/python-aws-sdk-wrapper.json \
+             test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+      - name: Destroy terraform
+        if: always()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}

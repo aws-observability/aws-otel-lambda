@@ -10,24 +10,26 @@ import requests
 state = False
 
 # LambdaInsight layer ARNs, suppose we run soak test only in these regions
-lambdaInsightArnMap = {}
-lambdaInsightArnMap[
-    "us-east-1"
-] = "arn:aws:lambda:us-east-1:580247275435:layer:LambdaInsightsExtension:14"
-lambdaInsightArnMap[
-    "us-east-2"
-] = "arn:aws:lambda:us-east-2:580247275435:layer:LambdaInsightsExtension:14"
-lambdaInsightArnMap[
-    "us-west-1"
-] = "arn:aws:lambda:us-west-1:580247275435:layer:LambdaInsightsExtension:14"
-lambdaInsightArnMap[
-    "us-west-2"
-] = "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:14"
+# ARM64 layers ARNs for us-west-1 are not available at the time of creating this PR
+# TODO (pvasir) Add the layer ARNs for us-west-1 in both AMD and ARM64 when cloudwatch-agent publish
+lambdaInsightAMD64ArnMap = {
+    "us-east-1": "arn:aws:lambda:us-east-1:580247275435:layer:LambdaInsightsExtension:16",
+    "us-east-2": "arn:aws:lambda:us-east-2:580247275435:layer:LambdaInsightsExtension:16",
+    "us-west-2": "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:16"
+}
+lambdaInsightARM64ArnMap = {
+    "us-east-1": "arn:aws:lambda:us-east-1:580247275435:layer:LambdaInsightsExtension-Arm64:1",
+    "us-east-2": "arn:aws:lambda:us-east-2:580247275435:layer:LambdaInsightsExtension-Arm64:1",
+    "us-west-2": "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension-Arm64:1"
+}
+lambdaInsightsArchitectureMap = {
+    "amd64": lambdaInsightAMD64ArnMap,
+    "arm64": lambdaInsightARM64ArnMap
+}
 
-
-def enableLambdaInsight(function_name):
+def enableLambdaInsight(function_name, architecture):
     lambdaClient = boto3.client("lambda")
-    lambdaInsightLayerArn = lambdaInsightArnMap[boto3.Session().region_name]
+    lambdaInsightLayerArn = lambdaInsightsArchitectureMap[architecture][boto3.Session().region_name]
     response = lambdaClient.get_function_configuration(FunctionName=function_name)
     print("Lambda function has layers: {}".format(response["Layers"]))
 
@@ -51,7 +53,7 @@ def parse_args():
     # default setting
     _soaking_time, _emitter_interval, _cpu_threshold, _memory_threshold = 10000, 5, 60, 45
     argument_list = sys.argv[1:]
-    short_options = "i:t:e:n:c:m:"
+    short_options = "i:t:e:n:c:m:a:"
     long_options = [
         "interval=",
         "time=",
@@ -59,6 +61,7 @@ def parse_args():
         "name=",
         "cpu-threshold=",
         "memory-threshold=",
+        "architecture=",
     ]
 
     try:
@@ -80,6 +83,8 @@ def parse_args():
             _cpu_threshold = int(current_value)
         elif current_argument in ("-m", "--memory-threshold"):
             _memory_threshold = int(current_value)
+        elif current_argument in ("-a", "--architecture"):
+            _architecture = current_value
 
     print(
         (
@@ -89,6 +94,7 @@ def parse_args():
             "invoke interval:\t%s sec\n"
             "alarm cpu threshold:\t%s ns\n"
             "alarm memory threshold:\t%s%%"
+            "architecture:\t%s%%"
         )
         % (
             _name,
@@ -97,6 +103,7 @@ def parse_args():
             _emitter_interval,
             _cpu_threshold,
             _memory_threshold,
+            _architecture,
         )
     )
 
@@ -107,6 +114,7 @@ def parse_args():
         _emitter_interval,
         _cpu_threshold,
         _memory_threshold,
+        _architecture,
     )
 
 
@@ -166,7 +174,7 @@ def alarm_puller(function_name, cpu_threshold, memory_threshold):
     while True:
         for response in paginator.paginate(AlarmNames=[memory_alarm, cpu_alarm]):
             for alarm in response["MetricAlarms"]:
-                print("{} state {}".format(alarm["AlarmName"], alarm["StateValue"]))
+                print("{} state {} - {}".format(alarm["AlarmName"], alarm["StateValue"], alarm["StateReason"]))
                 if alarm["StateValue"] == "ALARM":
                     state = True
                     return
@@ -182,10 +190,11 @@ if __name__ == "__main__":
         emitter_interval,
         cpu_threshold,
         memory_threshold,
+        architecture,
     ) = parse_args()
 
     # Enable LambdaInsight
-    enableLambdaInsight(function_name)
+    enableLambdaInsight(function_name, architecture)
 
     # Set alarm name
     memory_alarm = "otel_lambda_memory-" + function_name

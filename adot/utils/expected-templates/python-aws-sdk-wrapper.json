@@ -1,15 +1,15 @@
 [
   {
-    "name":"hello-lambda-python.*"
+    "name":"lambda-python.*"
   },
   {
-    "name":"hello-lambda-python.*"
+    "name":"lambda-python.*"
   },
   {
-    "name":"hello-lambda-python.*"
+    "name":"lambda-python.*"
   },
   {
-    "name":"hello-lambda-python.*",
+    "name":"lambda-python.*",
     "subsegments": [
       {
           "name": "HTTP GET"
