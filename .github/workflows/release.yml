@@ -250,7 +250,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           distribution: adopt
