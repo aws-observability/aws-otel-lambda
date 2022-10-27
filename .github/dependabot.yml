@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "gradle"
-    directory: "/"
+    directory: "/java"
     schedule:
       interval: "weekly"
       day: sunday
@@ -10,10 +10,8 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "npm"
-    directory: '/'
+    directory: "/nodejs/wrapper-adot"
     schedule:
       interval: "weekly"
       day: "sunday"
-    labels:
-      - "npm dependencies"
     rebase-strategy: "auto"
