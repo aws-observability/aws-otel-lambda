@@ -89,7 +89,7 @@ jobs:
         if: ${{ matrix.language == 'java' || matrix.architecture == 'arm64' }}
         run: |
           echo SOAKING_TEST_CONFIG="-c 200 -m 90" | tee --append $GITHUB_ENV
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         if: ${{ matrix.language == 'nodejs' }}
         with:
           node-version: '14'
