@@ -5,7 +5,14 @@ on:
     branches: 
       - main 
       - release/*
+    paths-ignore:
+      - '.github/**'
+      - '**.md'
   workflow_dispatch:
+
+concurrency:
+  group: main-build-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   integration-test:
