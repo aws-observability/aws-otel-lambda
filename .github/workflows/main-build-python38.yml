@@ -5,7 +5,15 @@ on:
     branches: 
       - main 
       - release/*
+    paths-ignore:
+      - '.github/**'
+      - '!.github/workflows/main-build-python38.yml'
+      - '**.md'
   workflow_dispatch:
+
+concurrency:
+  group: main-build-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   integration-test:
