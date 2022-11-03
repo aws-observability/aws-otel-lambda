@@ -6,7 +6,7 @@ on:
       - main 
       - release/*
     paths-ignore:
-      - '.github/**'
+      - '.github/workflows/main-build.yml'
       - '**.md'
   workflow_dispatch:
 
