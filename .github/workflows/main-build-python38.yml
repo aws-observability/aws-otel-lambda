@@ -5,7 +5,15 @@ on:
     branches: 
       - main 
       - release/*
+    paths-ignore:
+      - '.github/**'
+      - '!.github/workflows/main-build-python38.yml'
+      - '**.md'
   workflow_dispatch:
+
+concurrency:
+  group: main-build-python38-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   integration-test:
@@ -21,7 +29,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-go@v3
         with:
-          go-version: '^1.19.1'
+          go-version: '^1.19.3'
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
