@@ -20,7 +20,7 @@ jobs:
           role-duration-seconds: 1200
           aws-region: us-east-1
       - name: Login to ECR
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: public.ecr.aws
       - name: Set up Docker Buildx
