@@ -253,7 +253,7 @@ jobs:
             -a ${{ matrix.architecture }}
       - name: Set output if layer Soak Tests has error
         id: set-layer-if-error-output
-        if: ${{ failure() }}
+        if: ${{ success() }}
         run: echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-error::FAILED"
       - name: Remove sdk layers from terraform management to prevent deletion.
         if: ${{ matrix.language != 'go' }}
