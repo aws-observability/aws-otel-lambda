@@ -38,6 +38,8 @@ jobs:
     needs: validate-inputs
     strategy:
       matrix:
+        architecture: ${{ fromJson(github.event.inputs.architecture) }}
+        aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
