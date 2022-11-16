@@ -252,7 +252,7 @@ jobs:
       - name: Set output if layer Soak Tests has error
         id: set-layer-if-error-output
         if: ${{ failure() }}
-        run: echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-version=$version" >> $GITHUB_OUTPUT
+        run: echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-error=FAILED" >> $GITHUB_OUTPUT
       - name: Remove sdk layers from terraform management to prevent deletion.
         if: ${{ matrix.language != 'go' }}
         run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
