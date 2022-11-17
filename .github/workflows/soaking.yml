@@ -206,7 +206,7 @@ jobs:
         run: |
           version=$(echo "${{ steps.extract-sdk-layer-arn.outputs.stdout }}" | cut -d : -f 8)
           echo "Found version number: $version"
-          echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-version::$version"
+          echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-version=$version" >> $GITHUB_OUTPUT
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Set Collector layer version output
         id: set-collector-layer-version-output
@@ -214,7 +214,7 @@ jobs:
         run: |
           version=$(echo "${{ steps.extract-collector-layer-arn.outputs.stdout }}" | cut -d : -f 8)
           echo "Found version number: $version"
-          echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-version::$version"
+          echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-version=$version" >> $GITHUB_OUTPUT
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
@@ -254,7 +254,7 @@ jobs:
       - name: Set output if layer Soak Tests has error
         id: set-layer-if-error-output
         if: ${{ failure() }}
-        run: echo "::set-output name=${{ matrix.language }}-${{ matrix.instrumentation-type }}-error::FAILED"
+        run: echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-error=FAILED" >> $GITHUB_OUTPUT
       - name: Remove sdk layers from terraform management to prevent deletion.
         if: ${{ matrix.language != 'go' }}
         run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
