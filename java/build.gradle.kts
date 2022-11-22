@@ -24,7 +24,7 @@ spotless {
 }
 
 dependencies {
-    compileOnly(platform("io.opentelemetry:opentelemetry-bom:1.19.0"))
+    compileOnly(platform("io.opentelemetry:opentelemetry-bom:1.20.1"))
     compileOnly(platform("io.opentelemetry:opentelemetry-bom-alpha:1.20.0-alpha"))
     // Already included in wrapper so compileOnly
     compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
