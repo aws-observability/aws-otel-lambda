@@ -182,7 +182,7 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
-  publish-soaking-status:
+  publish-canary-status:
     runs-on: ubuntu-latest
     needs: [canary-test]
     if: always()
