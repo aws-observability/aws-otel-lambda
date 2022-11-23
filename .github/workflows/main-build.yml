@@ -194,7 +194,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           mask-aws-account-id: false
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          aws-region: us-west-2
 
       - name: Publish CI status
         run: |
