@@ -1,0 +1,59 @@
+# Reusable workflow used to publish status of the caller github workflow to Cloudwatch metrics
+name: Publish status
+on:
+  workflow_call:
+    inputs:
+      # Cloudwatch Metrics namespace
+      namespace:
+        required: true
+        type: string
+      # Dimensions
+      repository:
+        required: true
+        type: string
+      branch:
+        require: true
+        type: string
+      workflow:
+        required: true
+        type: string
+      # Metric name
+      success:
+        required: true
+        type: boolean
+      # Region where the metric is published
+      region:
+        required: true
+        type: string
+    secrets:
+      roleArn:
+        required: true
+
+jobs:
+  publish-status:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.roleArn }}
+          aws-region: ${{ inputs.region }}
+          role-duration-seconds: 21600
+
+      - name: Publish status success
+        if: ${{ inputs.success }}
+        run: |
+          aws cloudwatch put-metric-data --namespace '${{ inputs.namespace }}' \
+            --metric-name Success \
+            --dimensions repository=${{ inputs.repository }},branch=${{ inputs.branch }},workflow=${{ inputs.workflow }} \
+            --value 1.0
+      - name: Publish status failure
+        if: ${{ !inputs.success }}
+        run: |
+          aws cloudwatch put-metric-data --namespace '${{ inputs.namespace }}' \
+            --metric-name Success \
+            --dimensions repository=${{ inputs.repository }},branch=${{ inputs.branch }},workflow=${{ inputs.workflow }} \
+            --value 0.0

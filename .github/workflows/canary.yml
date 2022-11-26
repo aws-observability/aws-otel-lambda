@@ -183,27 +183,15 @@ jobs:
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
   publish-canary-status:
-    runs-on: ubuntu-latest
     needs: [canary-test]
-    if: always()
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.METRICS_ROLE_ARN }}
-          aws-region: us-west-2
-          role-duration-seconds: 21600
-
-      - name: Publish CI status
-        run: |
-          if [ '${{ needs.canary-test.result }}' = 'success' ]; then
-            aws cloudwatch put-metric-data --namespace 'ADOT/GitHubActions' \
-              --metric-name Success \
-              --dimensions repository=${{ github.repository }},branch=${{ github.ref_name }},workflow=canary \
-              --value 1.0
-          else
-            aws cloudwatch put-metric-data --namespace 'ADOT/GitHubActions' \
-              --metric-name Success \
-              --dimensions repository=${{ github.repository }},branch=${{ github.ref_name }},workflow=canary \
-              --value 0.0
-          fi
+    if: ${{ always() }}
+    uses: ./.github/workflows/publish-status.yml
+    with:
+      namespace: 'ADOT/GitHubActions'
+      repository: ${{ github.repository }}
+      branch: ${{ github.ref_name }}
+      workflow: canary
+      success: ${{ needs.canary-test.result == 'success' }}
+      region: us-west-2
+    secrets:
+      roleArn: ${{ secrets.METRICS_ROLE_ARN }}
