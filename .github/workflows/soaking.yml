@@ -300,27 +300,15 @@ jobs:
           echo "::warning::Layer ARN Keyword: arn:aws:lambda:${{ env.AWS_DEFAULT_REGION }}:611364707713:layer:aws-otel-${{ matrix.language }}-${{ matrix.instrumentation-type }}-<ARCHITECTURE>-${{ github.sha }}:$VERSION"
 
   publish-soaking-status:
-    runs-on: ubuntu-latest
     needs: [soaking-test]
-    if: always()
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.METRICS_ROLE_ARN }}
-          aws-region: us-west-2
-          role-duration-seconds: 21600
-
-      - name: Publish CI status
-        run: |
-          if [ '${{ needs.soaking-test.result }}' = 'success' ]; then
-            aws cloudwatch put-metric-data --namespace 'ADOT/GitHubActions' \
-              --metric-name Success \
-              --dimensions repository=${{ github.repository }},branch=${{ github.ref_name }},workflow=soaking \
-              --value 1.0
-          else
-            aws cloudwatch put-metric-data --namespace 'ADOT/GitHubActions' \
-              --metric-name Success \
-              --dimensions repository=${{ github.repository }},branch=${{ github.ref_name }},workflow=soaking \
-              --value 0.0
-          fi
+    if: ${{ always() }}
+    uses: ./.github/workflows/publish-status.yml
+    with:
+      namespace: 'ADOT/GitHubActions'
+      repository: ${{ github.repository }}
+      branch: ${{ github.ref_name }}
+      workflow: soaking
+      success: ${{ needs.soaking-test.result == 'success' }}
+      region: us-west-2
+    secrets:
+      roleArn: ${{ secrets.METRICS_ROLE_ARN }}
