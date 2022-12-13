@@ -28,6 +28,10 @@ go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/la
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil@v0.66.0
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics@v0.66.0
 go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray@v0.66.0
+go mod edit -replace go.opentelemetry.io/collector/featuregate=go.opentelemetry.io/collector/featuregate@v0.66.0
+go mod edit -replace go.opentelemetry.io/collector/pdata=go.opentelemetry.io/collector/pdata@v0.66.0
+go mod edit -replace go.opentelemetry.io/collector/semconv=go.opentelemetry.io/collector/semconv@v0.66.0
+go mod edit -replace go.opentelemetry.io/collector/processor/batchprocessor=go.opentelemetry.io/collector/processor/batchprocessor@v0.66.0
 
 # Replace the prometheus import to avoid the mismatch in go dependency
 # see https://github.com/aws-observability/aws-otel-collector/blob/v0.22.0/pkg/lambdacomponents/go.mod#L66
