@@ -217,7 +217,7 @@ jobs:
       - uses: actions/setup-java@v3
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
-          distribution: adopt
+          distribution: corretto
           java-version: '11'
       - name: Cache (Java)
         uses: actions/cache@v3
@@ -272,7 +272,7 @@ jobs:
         # above, always setup go 1.18.
         # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
-          go-version: '^1.19.3'
+          go-version: '^1.19.4'
       - name: download layer tf file
         uses: actions/download-artifact@v3
         with:
