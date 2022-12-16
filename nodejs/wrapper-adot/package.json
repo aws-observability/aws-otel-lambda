@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.2.0",
-    "@types/node": "18.11.12",
+    "@types/node": "18.11.16",
     "@typescript-eslint/eslint-plugin": "5.46.0",
     "@typescript-eslint/parser": "5.46.0",
     "eslint": "8.29.0",
