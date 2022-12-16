@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [ main ]
 
+
+permissions:
+  id-token: write
+
 jobs:
   build-artifacts:
     runs-on: ubuntu-20.04
