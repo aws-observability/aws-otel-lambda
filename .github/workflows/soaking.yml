@@ -13,6 +13,9 @@ on:
         required: false
         default: '-t 1800'
 
+permissions:
+  id-token: write
+  
 jobs:
   soaking-test:
     runs-on: ubuntu-20.04

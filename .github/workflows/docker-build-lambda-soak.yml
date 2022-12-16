@@ -6,6 +6,9 @@ on:
       - adot/utils/soak/**
       - .github/workflows/docker-build-lambda-soak.yml
 
+permissions:
+  id-token: write
+
 jobs:
   build-lambda-soak:
     runs-on: ubuntu-latest
