@@ -10,6 +10,7 @@ env:
 
 permissions:
   id-token: write
+  contents: read
 
 jobs:
   canary-test:
