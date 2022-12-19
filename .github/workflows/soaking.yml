@@ -125,12 +125,13 @@ jobs:
         if: ${{ matrix.language == 'dotnet' }}
         with:
           dotnet-version: '3.1.x'
-      # Default session duration is 6 hours.
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           mask-aws-account-id: false
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          # Default session duration is 1 hour with OIDC.
+          role-duration-seconds: 14400 # 4 hours
       - name: Patch ADOT
         run: ./patch-upstream.sh
       # Login to ECR since may be needed for Python build image.
