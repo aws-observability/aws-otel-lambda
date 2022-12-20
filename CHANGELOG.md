@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2022-12-20 Release
+**AWS Distro For OpenTelemetry Lambda now supports AMD64 and ARM64 Architectures**
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-15-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.15.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-8-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.8.0` with AWS Lambda Instrumentation `v0.34.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-20-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.20.1`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-20-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.20.1`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-66-0** contains ADOT Collector for Lambda `v0.24.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- x86_64/ARM64 Layers are now available in 16 AWS Regions: us-east-1, us-east-2, us-west-1, us-west-2, ap-south-1, ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-north-1, sa-east-1.
+- Layers are built from Git commit `2646717dc36d41aa16ee5953ffb704a020f360b1` at https://github.com/aws-observability/aws-otel-lambda/commit/2646717dc36d41aa16ee5953ffb704a020f360b1
+
 ## 2022-11-09 Release
 **AWS Distro For OpenTelemetry Lambda now supports AMD64 and ARM64 Architectures**
 - Python layer [**aws-otel-python-<amd64|arm64>-ver-1-14-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.14.0` with the AWS Python Extension `v2.0.1`
