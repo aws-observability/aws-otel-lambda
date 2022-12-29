@@ -50,12 +50,8 @@ def enableLambdaInsight(function_name, architecture):
 
 
 def parse_args():
-    _soaking_time = 10000
-    _emitter_interval = 5
-    _cpu_threshold = 100 # total cpu time in ms. This value was obtained
-    # empirically using the Max value from the Golang soak test as baseline.
-    _memory_threshold = 45 # Memory usage in %
-
+    # default setting
+    _soaking_time, _emitter_interval, _cpu_threshold, _memory_threshold = 10000, 5, 60, 45
     argument_list = sys.argv[1:]
     short_options = "i:t:e:n:c:m:a:"
     long_options = [
