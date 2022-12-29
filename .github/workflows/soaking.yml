@@ -88,7 +88,7 @@ jobs:
         # CPU baseline was obtained empirically based on the max value observed for Go in a complete run of soak test
         if: ${{ matrix.language != 'java' }}
         run: |
-          echo SOAKING_TEST_CONFIG="-c 100 -m 70" | tee --append $GITHUB_ENV
+          echo SOAKING_TEST_CONFIG="-c 120 -m 70" | tee --append $GITHUB_ENV
       - name: Get java soaking test configuration
         # NOTE (enowell): Java's JVM is heavy and needs more memory than others.
         if: ${{ matrix.language == 'java' }}
