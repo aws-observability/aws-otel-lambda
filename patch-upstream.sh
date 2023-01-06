@@ -24,20 +24,9 @@ patch -p2 < ../../collector.patch
 # Replace OTel Collector with ADOT Collector
 go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.25.0
 
-# Include X-Ray components for the Collector
-go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil@v0.68.0
-go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics@v0.68.0
-go mod edit -replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray=github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray@v0.68.0
-go mod edit -replace go.opentelemetry.io/collector/featuregate=go.opentelemetry.io/collector/featuregate@v0.68.0
-go mod edit -replace go.opentelemetry.io/collector/pdata=go.opentelemetry.io/collector/pdata@v0.68.0
-go mod edit -replace go.opentelemetry.io/collector/semconv=go.opentelemetry.io/collector/semconv@v0.68.0
-go mod edit -replace go.opentelemetry.io/collector/processor/batchprocessor=go.opentelemetry.io/collector/processor/batchprocessor@v0.68.0
-
 # Replace the prometheus import to avoid the mismatch in go dependency
 # see https://github.com/aws-observability/aws-otel-collector/blob/v0.22.0/pkg/lambdacomponents/go.mod#L66
 go mod edit -replace github.com/prometheus/prometheus@v1.8.2-0.20220117154355-4855a0c067e2=github.com/prometheus/prometheus@v0.40.5
 
-# A simple `go mod tidy` does not work.
-# See: https://github.com/aws-observability/aws-otel-collector/issues/926
 rm -fr go.sum
-go mod tidy -compat=1.18
+go mod tidy
