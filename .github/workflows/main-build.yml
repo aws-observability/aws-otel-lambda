@@ -101,7 +101,7 @@ jobs:
       - uses: actions/setup-dotnet@v3
         if: ${{ matrix.language == 'dotnet' }}
         with:
-          dotnet-version: '3.1.x'
+          dotnet-version: '6.0.x'
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
