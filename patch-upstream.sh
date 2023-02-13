@@ -19,14 +19,13 @@ cd opentelemetry-lambda/collector
 
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
-patch -p2 < ../../collector.patch
+patch < ../../collector.patch
+
+# patch manager.go to remove lambdacomponents attribute
+patch < ../../manager.patch
 
 # Replace OTel Collector with ADOT Collector
-go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.25.1
-
-# Replace the prometheus import to avoid the mismatch in go dependency
-# see https://github.com/aws-observability/aws-otel-collector/blob/v0.22.0/pkg/lambdacomponents/go.mod#L66
-go mod edit -replace github.com/prometheus/prometheus@v1.8.2-0.20220117154355-4855a0c067e2=github.com/prometheus/prometheus@v0.40.5
+go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.26.0
 
 rm -fr go.sum
 go mod tidy

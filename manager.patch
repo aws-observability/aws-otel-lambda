@@ -1,0 +1,11 @@
+--- internal/lifecycle/oldcollector.go	
++++ internal/lifecycle/oldcollector.go
+@@ -90,7 +90,7 @@
+ 		}
+ 	}()
+ 
+-	factories, _ := lambdacomponents.Components(res.ExtensionID)
++	factories, _ := lambdacomponents.Components()
+ 	lm.collector = collector.NewCollector(logger, factories, version)
+ 
+ 	return ctx, lm
