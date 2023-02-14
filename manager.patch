@@ -1,5 +1,5 @@
---- internal/lifecycle/oldcollector.go	
-+++ internal/lifecycle/oldcollector.go
+--- internal/lifecycle/manager.go	
++++ internal/lifecycle/manager.go
 @@ -90,7 +90,7 @@
  		}
  	}()
