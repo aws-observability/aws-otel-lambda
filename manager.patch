@@ -1,5 +1,7 @@
---- internal/lifecycle/manager.go	
-+++ internal/lifecycle/manager.go
+diff --git a/collector/internal/lifecycle/manager.go b/collector/internal/lifecycle/manager.go
+index 5ec1b6a..d7bf7d2 100644
+--- a/collector/internal/lifecycle/manager.go
++++ b/collector/internal/lifecycle/manager.go
 @@ -90,7 +90,7 @@
  		}
  	}()

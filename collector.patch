@@ -1,5 +1,7 @@
---- internal/collector/collector.go	
-+++ internal/collector/collector.go
+diff --git a/collector/internal/collector/collector.go b/collector/internal/collector/collector.go
+index 7cdea69..6fbd781 100644
+--- a/collector/internal/collector/collector.go
++++ b/collector/internal/collector/collector.go
 @@ -19,13 +19,11 @@
  	"fmt"
  	"os"

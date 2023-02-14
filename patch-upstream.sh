@@ -17,14 +17,12 @@ cp -rf adot/* opentelemetry-lambda/
 # collector used in each Lambda layer
 cd opentelemetry-lambda/collector
 
-pwd
-
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
-patch < ../../collector.patch
+patch -p2 < ../../collector.patch
 
 # patch manager.go to remove lambdacomponents attribute
-patch < ../../manager.patch
+patch -p2 < ../../manager.patch
 
 # Replace OTel Collector with ADOT Collector
 go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.26.0
