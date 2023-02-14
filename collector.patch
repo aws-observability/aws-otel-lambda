@@ -1,5 +1,5 @@
---- a/collector/collector.go
-+++ b/collector/collector.go
+--- internal/collector/collector.go	
++++ internal/collector/collector.go
 @@ -19,13 +19,11 @@
  	"fmt"
  	"os"
