@@ -19,6 +19,8 @@ cd opentelemetry-lambda/collector
 
 pwd
 
+ls
+
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
 patch < ../../collector.patch
