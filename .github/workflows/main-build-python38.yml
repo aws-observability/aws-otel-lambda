@@ -33,7 +33,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-go@v3
         with:
-          go-version: '^1.19.4'
+          go-version: '^1.19.6'
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
