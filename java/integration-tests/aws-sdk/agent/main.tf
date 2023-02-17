@@ -31,8 +31,9 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: "localhost:4317"
       http:
-
+        endpoint: "localhost:4318"
 exporters:
   logging:
   awsxray:
@@ -50,6 +51,9 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [logging, prometheusremotewrite]
+  telemetry:
+    metrics:
+      address: localhost:8888
 EOT
     filename = "config.yaml"
   }
