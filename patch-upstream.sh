@@ -17,6 +17,9 @@ cp -rf adot/* opentelemetry-lambda/
 # collector used in each Lambda layer
 cd opentelemetry-lambda/collector
 
+# patch otel version on collector/go.mod
+patch -p2 < ../../OTEL_Version.patch
+
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
 patch -p2 < ../../collector.patch
