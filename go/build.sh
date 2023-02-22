@@ -9,4 +9,4 @@ popd || exit
 # Build sample app
 
 cd ../opentelemetry-lambda/go/sample-apps/function || exit
-./build.sh
+./build.sh 
