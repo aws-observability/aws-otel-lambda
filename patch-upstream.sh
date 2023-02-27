@@ -10,6 +10,9 @@ their Lambdas with Lambda Layers configured to export to the X-Ray backend.
 
 END_DOCUMENTATION
 
+# Run local tests in ADOT lambdacomponents
+make -C adot/collector/lambdacomponents
+
 # Patch some upstream components with ADOT specific components
 cp -rf adot/* opentelemetry-lambda/
 
