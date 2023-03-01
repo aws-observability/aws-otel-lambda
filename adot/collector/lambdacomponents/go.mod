@@ -2,8 +2,6 @@ module lambdacomponents
 
 go 1.18
 
-retract v0.25.0
-
 require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.70.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.70.0
