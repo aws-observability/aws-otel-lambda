@@ -118,15 +118,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// see https://github.com/aws-observability/aws-otel-collector/issues/977
-exclude github.com/docker/distribution v2.8.0+incompatible
-
-// see https://github.com/ionos-cloud/sdk-go/issues/27
-exclude github.com/ionos-cloud/sdk-go/v6 v6.0.5851
-
-// ambiguous import: found package cloud.google.com/go/compute/metadata in multiple modules:
-//        cloud.google.com/go
-//        cloud.google.com/go/compute
-// Force cloud.google.com/go to be at least v0.100.2, so that the metadata is not present.
-replace cloud.google.com/go => cloud.google.com/go v0.100.2
