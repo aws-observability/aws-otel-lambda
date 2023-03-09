@@ -16,12 +16,19 @@ make --directory=adot/collector/lambdacomponents
 # Patch some upstream components with ADOT specific components
 cp -rf adot/* opentelemetry-lambda/
 
+# Get current repo path
+CURRENT_DIR=$PWD
+
 # Move to the upstream OTel Lambda Collector folder where we will build a
 # collector used in each Lambda layer
 cd opentelemetry-lambda/collector
 
 # patch otel version on collector/go.mod
-patch -p2 < ../../OTEL_Version.patch
+PATCH_OTEL_VERSION="../../OTEL_Version.patch"
+
+if [ -f $PATCH_OTEL_VERSION ]; then
+    patch -p2 < $PATCH_OTEL_VERSION;
+fi
 
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
@@ -31,7 +38,8 @@ patch -p2 < ../../collector.patch
 patch -p2 < ../../manager.patch
 
 # Replace OTel Collector with ADOT Collector
-go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=github.com/aws-observability/aws-otel-collector/pkg/lambdacomponents@v0.26.0
+go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=${CURRENT_DIR}/adot/collector/lambdacomponents
+#/Users/kausika/Documents/aws-otel-lambda/adot/collector/lambdacomponents
 
 rm -fr go.sum
 go mod tidy
