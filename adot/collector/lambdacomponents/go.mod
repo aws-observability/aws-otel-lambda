@@ -3,23 +3,23 @@ module github.com/aws-observability/aws-otel-lambda/adot/collector/lambdacompone
 go 1.18
 
 require (
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.71.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.71.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.71.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.71.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.71.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.72.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.72.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.72.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.72.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.72.0
 	github.com/stretchr/testify v1.8.1
-	go.opentelemetry.io/collector v0.71.0
-	go.opentelemetry.io/collector/exporter/loggingexporter v0.71.0
-	go.opentelemetry.io/collector/exporter/otlpexporter v0.71.0
-	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.71.0
-	go.opentelemetry.io/collector/receiver/otlpreceiver v0.71.0
+	go.opentelemetry.io/collector v0.72.0
+	go.opentelemetry.io/collector/exporter/loggingexporter v0.72.0
+	go.opentelemetry.io/collector/exporter/otlpexporter v0.72.0
+	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.72.0
+	go.opentelemetry.io/collector/receiver/otlpreceiver v0.72.0
 	go.uber.org/multierr v1.9.0
 )
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
-	github.com/aws/aws-sdk-go v1.44.196 // indirect
+	github.com/aws/aws-sdk-go v1.44.205 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.5 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.15 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.15 // indirect
@@ -62,21 +62,21 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/go-grpc-compression v1.1.17 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.71.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheusremotewrite v0.71.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.72.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheusremotewrite v0.72.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.39.0 // indirect
+	github.com/prometheus/common v0.40.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/prometheus/prometheus v0.41.0 // indirect
+	github.com/prometheus/prometheus v0.42.1-0.20230210113933-af1d9e01c7e4 // indirect
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.1 // indirect
@@ -91,12 +91,12 @@ require (
 	github.com/tklauser/numcpus v0.6.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/collector/component v0.71.0 // indirect
-	go.opentelemetry.io/collector/confmap v0.71.0 // indirect
-	go.opentelemetry.io/collector/consumer v0.71.0 // indirect
-	go.opentelemetry.io/collector/featuregate v0.71.0 // indirect
-	go.opentelemetry.io/collector/pdata v1.0.0-rc5 // indirect
-	go.opentelemetry.io/collector/semconv v0.71.0 // indirect
+	go.opentelemetry.io/collector/component v0.72.0 // indirect
+	go.opentelemetry.io/collector/confmap v0.72.0 // indirect
+	go.opentelemetry.io/collector/consumer v0.72.0 // indirect
+	go.opentelemetry.io/collector/featuregate v0.72.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.0.0-rc6 // indirect
+	go.opentelemetry.io/collector/semconv v0.72.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.39.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.14.0 // indirect
@@ -112,8 +112,8 @@ require (
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	gonum.org/v1/gonum v0.12.0 // indirect
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
-	google.golang.org/grpc v1.52.3 // indirect
+	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
