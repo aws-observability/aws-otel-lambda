@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 : <<'END_DOCUMENTATION'
 `patch-upstream.sh`
 
