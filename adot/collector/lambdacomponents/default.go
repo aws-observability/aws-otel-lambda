@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package lambdacomponents
+package github.com/aws-observability/aws-otel-lambda/adot/collector/lambdacomponents
 
 import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
