@@ -20,7 +20,6 @@ package lambdacomponents
 import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension"
 	"go.opentelemetry.io/collector/exporter"
@@ -59,7 +58,6 @@ func Components() (
 	exporters, err := exporter.MakeFactoryMap(
 		awsxrayexporter.NewFactory(),
 		awsemfexporter.NewFactory(),
-		prometheusexporter.NewFactory(),
 		prometheusremotewriteexporter.NewFactory(),
 		loggingexporter.NewFactory(),
 		otlpexporter.NewFactory(),

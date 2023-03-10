@@ -42,7 +42,6 @@ This table represents the components that the ADOT Lambda Layer will support and
 |----------------|-----------------------------------|-----------------------------|
 |otlpreceiver    |`awsemfexporter`                   |`sigv4authextension`         |
 |                |`awsxrayexporter`                  |                             |
-|                |prometheusexporter                 |                             |
 |                |prometheusremotewriteexporter      |                             |
 |                |loggingexporter                    |                             |
 |                |otlpexporter                       |                             |
