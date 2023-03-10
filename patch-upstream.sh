@@ -39,7 +39,6 @@ patch -p2 < ../../manager.patch
 
 # Replace OTel Collector with ADOT Collector
 go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=${CURRENT_DIR}/adot/collector/lambdacomponents
-#/Users/kausika/Documents/aws-otel-lambda/adot/collector/lambdacomponents
 
 rm -fr go.sum
 go mod tidy
