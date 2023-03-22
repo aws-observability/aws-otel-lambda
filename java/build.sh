@@ -40,6 +40,7 @@ rm opentelemetry-java-wrapper.zip
 mv otel-handler otel-handler-upstream
 mv otel-stream-handler otel-stream-handler-upstream
 mv otel-proxy-handler otel-proxy-handler-upstream
+mv otel-sqs-handler otel-sqs-handler-upstream
 cp "$SOURCEDIR"/scripts/* .
 unzip -qo ../../../../collector/build/collector-extension.zip
 zip -qr opentelemetry-java-wrapper.zip *
