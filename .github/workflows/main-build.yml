@@ -180,7 +180,7 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract AMP endpoint
         id: extract-amp-endpoint
-        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' }}
+        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && startsWith(matrix.instrumentation-type, 'agent') }}
         run: terraform output -raw amp_endpoint
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract SDK layer arn
