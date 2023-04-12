@@ -30,6 +30,7 @@ jobs:
         language: [ dotnet, go, java, nodejs, python ]
         sample-app: [ aws-sdk ]
         instrumentation-type: [ wrapper ]
+        confmap: [""]
         include:
           - language: java
             sample-app: aws-sdk
@@ -39,6 +40,36 @@ jobs:
             sample-app: aws-sdk
             instrumentation-type: agent
             architecture: arm64
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: amd64
+            confmap: s3
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: arm64
+            confmap: s3
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: amd64
+            confmap: http
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: arm64
+            confmap: http
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: amd64
+            confmap: https
+          - language: java
+            sample-app: aws-sdk
+            instrumentation-type: agent-confmap
+            architecture: arm64
+            confmap: https
           - language: java
             sample-app: okhttp
             instrumentation-type: wrapper
@@ -142,6 +173,7 @@ jobs:
           TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+          TF_VAR_configuration_source: ${{ matrix.confmap }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -175,7 +207,7 @@ jobs:
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: validate java agent metric sample
-        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && matrix.instrumentation-type == 'agent' }}
+        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && startsWith(matrix.instrumentation-type, 'agent') }}
         run: |
           cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
              test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
