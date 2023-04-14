@@ -25,8 +25,8 @@
     "node": ">=14.0.0"
   },
   "devDependencies": {
-    "@opentelemetry/api": "^1.4.0",
-    "@types/node": "18.15.11",
+    "@opentelemetry/api": "^1.4.1",
+    "@types/node": "10.17.60",
     "@typescript-eslint/eslint-plugin": "5.57.1",
     "@typescript-eslint/parser": "5.57.1",
     "eslint": "8.38.0",
@@ -37,10 +37,10 @@
     "typescript": "5.0.4"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.9.1",
+    "@opentelemetry/core": "^1.12.0",
     "@opentelemetry/id-generator-aws-xray": "^1.1.1",
-    "@opentelemetry/sdk-trace-node": "^1.9.1",
+    "@opentelemetry/sdk-trace-node": "^1.12.0",
     "@opentelemetry/propagator-aws-xray": "^1.2.0",
-    "@opentelemetry/propagator-b3": "^1.9.1"
+    "@opentelemetry/propagator-b3": "^1.12.0"
   }
 }
