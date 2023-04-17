@@ -29,5 +29,5 @@ cp "$SOURCEDIR"/wrapper-adot/build/src/adot-extension.* ./packages/layer/build/w
 
 cd ./packages/layer/build/workspace || exit
 rm ../layer.zip
-unzip -qo ../../../../../collector/build/collector-extension.zip
+unzip -qo ../../../../../collector/build/collector-extension-$1.zip
 zip -qr ../layer.zip *

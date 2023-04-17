@@ -119,7 +119,7 @@ jobs:
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build functions
-        run: GOARCH=${{ matrix.architecture }} ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: ${{ matrix.language }}
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:

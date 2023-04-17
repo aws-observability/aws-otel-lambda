@@ -29,7 +29,7 @@ unzip -qo opentelemetry-javaagent-layer.zip
 rm opentelemetry-javaagent-layer.zip
 mv otel-handler otel-handler-upstream
 cp "$SOURCEDIR"/scripts/otel-handler .
-unzip -qo ../../../../collector/build/collector-extension.zip
+unzip -qo ../../../../collector/build/collector-extension-$1.zip
 zip -qr opentelemetry-javaagent-layer.zip *
 popd || exit
 
@@ -41,6 +41,6 @@ mv otel-handler otel-handler-upstream
 mv otel-stream-handler otel-stream-handler-upstream
 mv otel-proxy-handler otel-proxy-handler-upstream
 cp "$SOURCEDIR"/scripts/* .
-unzip -qo ../../../../collector/build/collector-extension.zip
+unzip -qo ../../../../collector/build/collector-extension-$1.zip
 zip -qr opentelemetry-java-wrapper.zip *
 popd || exit

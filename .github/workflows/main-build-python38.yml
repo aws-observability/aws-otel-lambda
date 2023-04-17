@@ -46,7 +46,7 @@ jobs:
         with:
           registry: public.ecr.aws
       - name: Build layers / functions
-        run: GOARCH=${{ matrix.architecture }} ./build.sh
+        run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: python
       - name: Get Lambda Layer amd64 architecture value
         if: ${{ matrix.architecture == 'amd64' }}
