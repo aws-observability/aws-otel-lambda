@@ -292,7 +292,7 @@ jobs:
         # Also, we NEED the architecture value because some apps (like .NET and
         # Go) depend on this architecture value.
       - name: Build functions
-        run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }
+        run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: ${{ env.TEST_LANGUAGE }}
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
