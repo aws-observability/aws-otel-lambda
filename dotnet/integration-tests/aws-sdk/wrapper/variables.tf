@@ -7,11 +7,23 @@ variable "collector_layer_name" {
 variable "function_name" {
   type        = string
   description = "Name of sample app function / API gateway"
-  default     = "lambda-dotnet-awssdk-wrapper-amd64"
+  default     = "hello-dotnet-awssdk-wrapper"
+}
+
+variable "tracing_mode" {
+  type        = string
+  description = "Lambda function tracing mode"
+  default     = "Active"
+}
+
+variable "enable_collector_layer" {
+  type        = bool
+  description = "Enables building and usage of a layer for the collector. If false, it means either the SDK layer includes the collector or it is not used."
+  default     = true
 }
 
 variable "architecture" {
   type        = string
-  description = "Lambda function architecture, either arm64 or x86_64"
+  description = "Lambda function architecture, valid values are arm64 or x86_64"
   default     = "x86_64"
 }

@@ -1,0 +1,6 @@
+# Ignore node_modules cache directory
+node_modules
+
+
+# Ignore package-lock.json output directory
+package-lock.json
