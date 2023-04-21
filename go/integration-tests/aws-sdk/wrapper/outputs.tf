@@ -1,9 +1,3 @@
-
-
-output "collector-layer-arn" {
-  value = module.test.collector_layer_arn
-}
-
 output "api-gateway-url" {
   value = module.hello-lambda-function.api-gateway-url
 }
