@@ -5,10 +5,10 @@ locals {
 resource "aws_lambda_layer_version" "collector_layer" {
   count               = var.enable_collector_layer ? 1 : 0
   layer_name          = var.collector_layer_name
-  filename            = "${path.module}/../../../../collector/build/collector-extension-${local.architecture}.zip"
+  filename            = "../../../../opentelemetry-lambda/collector/build/collector-extension-${local.architecture}.zip"
   compatible_runtimes = ["dotnet6", "dotnetcore3.1"]
   license_info        = "Apache-2.0"
-  source_code_hash    = filebase64sha256("${path.module}/../../../../collector/build/collector-extension-${local.architecture}.zip")
+  source_code_hash    = filebase64sha256("../../../../opentelemetry-lambda/collector/build/collector-extension-${local.architecture}.zip")
 }
 
 module "hello-lambda-function" {
