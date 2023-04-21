@@ -196,7 +196,7 @@ jobs:
       - name: Extract Collector layer arn
         id: extract-collector-layer-arn
         if: ${{ matrix.language == 'dotnet' || matrix.language == 'go' }}
-        run: terraform output -raw collector-layer-arn
+        run: terraform output -raw collector_layer_arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
           # NOTE: (enowell) `terraform output` outputs additional text we are
           # not interested in because the `hashicorp/setup-terraform@v1` has a
