@@ -184,6 +184,8 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
   publish-canary-status:
     needs: [canary-test]
     if: ${{ always() }}
