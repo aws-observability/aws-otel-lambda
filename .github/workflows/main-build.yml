@@ -186,7 +186,7 @@ jobs:
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
-        run: terraform output -raw sdk-layer-arn
+        run: terraform output -raw sdk_layer_arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Output annotations
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
@@ -217,6 +217,8 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
   publish-build-status:
     needs: [integration-test]
     if: ${{ always() }}

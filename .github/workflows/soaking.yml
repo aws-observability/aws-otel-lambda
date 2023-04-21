@@ -191,7 +191,7 @@ jobs:
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
-        run: terraform output -raw sdk-layer-arn
+        run: terraform output -raw sdk_layer_arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract Collector layer arn
         id: extract-collector-layer-arn
@@ -271,6 +271,8 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
   output-keywords:
     if: ${{ always() }}
     name: Output (${{ matrix.language }}, ${{ matrix.instrumentation-type }}) Layer Keyword
