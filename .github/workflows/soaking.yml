@@ -261,11 +261,11 @@ jobs:
         run: echo "${{ matrix.language }}-${{ matrix.instrumentation-type }}-error=FAILED" >> $GITHUB_OUTPUT
       - name: Remove sdk layers from terraform management to prevent deletion.
         if: ${{ matrix.language != 'go' }}
-        run:  terraform state rm module.test.aws_lambda_layer_version.sdk_layer
+        run:  terraform state rm aws_lambda_layer_version.sdk_layer
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Remove collector layers from terraform management to prevent deletion.
         if: ${{ matrix.language == 'go' }}
-        run: terraform state rm module.test.aws_lambda_layer_version.collector_layer
+        run: terraform state rm aws_lambda_layer_version.collector_layer
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Destroy terraform
         if: always()
