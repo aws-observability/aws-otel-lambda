@@ -4,11 +4,12 @@ updates:
     directory: "/java"
     schedule:
       interval: "weekly"
-      day: sunday
+      day: "sunday"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
   - package-ecosystem: "npm"
     directory: "/nodejs/wrapper-adot"
     schedule:
