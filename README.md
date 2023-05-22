@@ -7,6 +7,10 @@ As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry
 - Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-24-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.24.0` and ADOT Collector for Lambda `v0.28.0`
 - Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-74-0** contains ADOT Collector for Lambda `v0.28.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
 
+## Notice: ADOT Collector v0.31.0 Breaking Change
+Users of the `prometheusremotewrite` exporter please reference GitHub Issue [Warning: ADOT Collector v0.31.0 breaking change](https://github.com/aws-observability/aws-otel-collector/issues/2043)
+for information on an upcoming breaking change.
+
 ## Sample Apps
 We provide [SAM and Terraform sample applications](sample-apps/) for AWS managed OpenTelemetry Lambda layers. You can play with these samples by the following:
 1. Install AWS Cli, AWS SAM, Terraform, and configure AWS credentials correctly.
