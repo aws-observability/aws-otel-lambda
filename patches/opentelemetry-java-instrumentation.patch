@@ -1,0 +1,562 @@
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ApiGatewayProxyRequest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ApiGatewayProxyRequest.java
+index a96fa5e3f9..df5bcec438 100644
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ApiGatewayProxyRequest.java
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ApiGatewayProxyRequest.java
+@@ -30,7 +30,14 @@ public abstract class ApiGatewayProxyRequest {
+   private static boolean noHttpPropagationNeeded() {
+     Collection<String> fields =
+         GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields();
+-    return fields.isEmpty();
++    return fields.isEmpty() || xrayPropagationFieldsOnly(fields);
++  }
++
++  private static boolean xrayPropagationFieldsOnly(Collection<String> fields) {
++    // ugly but faster than typical convert-to-set-and-check-contains-only
++    return (fields.size() == 1)
++        && ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(
++            fields.iterator().next());
+   }
+ 
+   public static ApiGatewayProxyRequest forStream(InputStream source) {
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenter.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenter.java
+index 4136e7bed9..dbbcb1c99d 100644
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenter.java
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenter.java
+@@ -11,7 +11,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
+ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+ import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
+ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+-import java.util.Locale;
+ import java.util.Map;
+ import javax.annotation.Nullable;
+ 
+@@ -47,25 +46,15 @@ public class AwsLambdaFunctionInstrumenter {
+   }
+ 
+   public Context extract(AwsLambdaRequest input) {
++    return ParentContextExtractor.extract(input.getHeaders(), this);
++  }
++
++  public Context extract(Map<String, String> headers, TextMapGetter<Map<String, String>> getter) {
+     ContextPropagationDebug.debugContextLeakIfEnabled();
+ 
+     return openTelemetry
+         .getPropagators()
+         .getTextMapPropagator()
+-        .extract(Context.root(), input.getHeaders(), MapGetter.INSTANCE);
+-  }
+-
+-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
+-    INSTANCE;
+-
+-    @Override
+-    public Iterable<String> keys(Map<String, String> map) {
+-      return map.keySet();
+-    }
+-
+-    @Override
+-    public String get(Map<String, String> map, String s) {
+-      return map.get(s.toLowerCase(Locale.ROOT));
+-    }
++        .extract(Context.root(), headers, getter);
+   }
+ }
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenterFactory.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenterFactory.java
+index aeb828b8e7..277c358ca8 100644
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenterFactory.java
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsLambdaFunctionInstrumenterFactory.java
+@@ -23,7 +23,6 @@ public final class AwsLambdaFunctionInstrumenterFactory {
+                 openTelemetry,
+                 "io.opentelemetry.aws-lambda-core-1.0",
+                 AwsLambdaFunctionInstrumenterFactory::spanName)
+-            .addSpanLinksExtractor(new AwsXrayEnvSpanLinksExtractor())
+             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+             .buildInstrumenter(SpanKindExtractor.alwaysServer()));
+   }
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java
+deleted file mode 100644
+index 342f65b50a..0000000000
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java
++++ /dev/null
+@@ -1,74 +0,0 @@
+-/*
+- * Copyright The OpenTelemetry Authors
+- * SPDX-License-Identifier: Apache-2.0
+- */
+-
+-package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
+-
+-import io.opentelemetry.api.common.AttributeKey;
+-import io.opentelemetry.api.common.Attributes;
+-import io.opentelemetry.api.trace.Span;
+-import io.opentelemetry.api.trace.SpanContext;
+-import io.opentelemetry.context.Context;
+-import io.opentelemetry.context.propagation.TextMapGetter;
+-import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
+-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+-import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+-import java.util.Collections;
+-import java.util.Locale;
+-import java.util.Map;
+-
+-/**
+- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+- * any time.
+- */
+-final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
+-
+-  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
+-
+-  // lower-case map getter used for extraction
+-  private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
+-
+-  private static final Attributes LINK_ATTRIBUTES =
+-      Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
+-
+-  @Override
+-  public void extract(
+-      SpanLinksBuilder spanLinks,
+-      io.opentelemetry.context.Context parentContext,
+-      AwsLambdaRequest awsLambdaRequest) {
+-    extract(spanLinks);
+-  }
+-
+-  public static void extract(SpanLinksBuilder spanLinks) {
+-    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+-    if (parentTraceHeader == null || parentTraceHeader.isEmpty()) {
+-      return;
+-    }
+-    Context xrayContext =
+-        AwsXrayPropagator.getInstance()
+-            .extract(
+-                Context.root(),
+-                Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
+-                MapGetter.INSTANCE);
+-    SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+-    if (envVarSpanCtx.isValid()) {
+-      spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);
+-    }
+-  }
+-
+-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
+-    INSTANCE;
+-
+-    @Override
+-    public Iterable<String> keys(Map<String, String> map) {
+-      return map.keySet();
+-    }
+-
+-    @Override
+-    public String get(Map<String, String> map, String s) {
+-      return map.get(s.toLowerCase(Locale.ROOT));
+-    }
+-  }
+-}
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractor.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractor.java
+new file mode 100644
+index 0000000000..72d4f9253b
+--- /dev/null
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractor.java
+@@ -0,0 +1,81 @@
++/*
++ * Copyright The OpenTelemetry Authors
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
++
++import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
++
++import io.opentelemetry.api.trace.Span;
++import io.opentelemetry.api.trace.SpanContext;
++import io.opentelemetry.context.Context;
++import io.opentelemetry.context.propagation.TextMapGetter;
++import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
++import java.util.Collections;
++import java.util.Locale;
++import java.util.Map;
++
++/**
++ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
++ * any time.
++ */
++public final class ParentContextExtractor {
++
++  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
++
++  static Context extract(Map<String, String> headers, AwsLambdaFunctionInstrumenter instrumenter) {
++    Context parentContext = null;
++    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
++    if (parentTraceHeader != null) {
++      parentContext = fromXrayHeader(parentTraceHeader);
++    }
++    if (!isValidAndSampled(parentContext)) {
++      // try http
++      parentContext = fromHttpHeaders(headers, instrumenter);
++    }
++    return parentContext;
++  }
++
++  private static boolean isValidAndSampled(Context context) {
++    if (context == null) {
++      return false;
++    }
++    Span parentSpan = Span.fromContext(context);
++    SpanContext parentSpanContext = parentSpan.getSpanContext();
++    return (parentSpanContext.isValid() && parentSpanContext.isSampled());
++  }
++
++  private static Context fromHttpHeaders(
++      Map<String, String> headers, AwsLambdaFunctionInstrumenter instrumenter) {
++    return instrumenter.extract(lowercaseMap(headers), MapGetter.INSTANCE);
++  }
++
++  // lower-case map getter used for extraction
++  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
++
++  public static Context fromXrayHeader(String parentHeader) {
++    return AwsXrayPropagator.getInstance()
++        .extract(
++            // see BaseTracer#extract() on why we're using root() here
++            Context.root(),
++            Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
++            MapGetter.INSTANCE);
++  }
++
++  private enum MapGetter implements TextMapGetter<Map<String, String>> {
++    INSTANCE;
++
++    @Override
++    public Iterable<String> keys(Map<String, String> map) {
++      return map.keySet();
++    }
++
++    @Override
++    public String get(Map<String, String> map, String s) {
++      return map.get(s.toLowerCase(Locale.ROOT));
++    }
++  }
++
++  private ParentContextExtractor() {}
++}
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java
+deleted file mode 100644
+index 061f59cdf9..0000000000
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java
++++ /dev/null
+@@ -1,87 +0,0 @@
+-/*
+- * Copyright The OpenTelemetry Authors
+- * SPDX-License-Identifier: Apache-2.0
+- */
+-
+-package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
+-
+-import static org.assertj.core.api.Assertions.assertThat;
+-import static org.mockito.ArgumentMatchers.eq;
+-import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.verify;
+-import static org.mockito.Mockito.verifyNoInteractions;
+-
+-import io.opentelemetry.api.common.AttributeKey;
+-import io.opentelemetry.api.common.Attributes;
+-import io.opentelemetry.api.trace.SpanContext;
+-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+-import org.junit.jupiter.api.Test;
+-import org.junit.jupiter.api.extension.ExtendWith;
+-import org.mockito.ArgumentCaptor;
+-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+-
+-/**
+- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+- * any time.
+- */
+-@ExtendWith(SystemStubsExtension.class)
+-class AwsXrayEnvSpanLinksExtractorTest {
+-  private static final Attributes EXPECTED_LINK_ATTRIBUTES =
+-      Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
+-
+-  @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+-
+-  @Test
+-  void shouldIgnoreIfEnvVarEmpty() {
+-    // given
+-    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+-    environmentVariables.set("_X_AMZN_TRACE_ID", "");
+-
+-    // when
+-    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+-    // then
+-    verifyNoInteractions(spanLinksBuilder);
+-  }
+-
+-  @Test
+-  void shouldLinkAwsParentHeaderIfValidAndNotSampled() {
+-    // given
+-    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+-    environmentVariables.set(
+-        "_X_AMZN_TRACE_ID",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
+-
+-    // when
+-    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+-    // then
+-    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+-    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+-    SpanContext spanContext = captor.getValue();
+-    assertThat(spanContext.isValid()).isTrue();
+-    assertThat(spanContext.isSampled()).isFalse();
+-    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
+-    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+-  }
+-
+-  @Test
+-  void shouldLinkAwsParentHeaderIfValidAndSampled() {
+-    // given
+-    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+-    environmentVariables.set(
+-        "_X_AMZN_TRACE_ID",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
+-
+-    // when
+-    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+-    // then
+-    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+-    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+-    SpanContext spanContext = captor.getValue();
+-    assertThat(spanContext.isValid()).isTrue();
+-    assertThat(spanContext.isSampled()).isTrue();
+-    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
+-    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+-  }
+-}
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractorTest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractorTest.java
+new file mode 100644
+index 0000000000..1fa0b6e536
+--- /dev/null
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractorTest.java
+@@ -0,0 +1,113 @@
++/*
++ * Copyright The OpenTelemetry Authors
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++import com.google.common.collect.ImmutableMap;
++import io.opentelemetry.api.OpenTelemetry;
++import io.opentelemetry.api.trace.Span;
++import io.opentelemetry.api.trace.SpanContext;
++import io.opentelemetry.context.Context;
++import io.opentelemetry.context.propagation.ContextPropagators;
++import io.opentelemetry.extension.trace.propagation.B3Propagator;
++import java.util.Map;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.ExtendWith;
++import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
++import uk.org.webcompere.systemstubs.jupiter.SystemStub;
++import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
++
++/**
++ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
++ * any time.
++ */
++@ExtendWith(SystemStubsExtension.class)
++class ParentContextExtractorTest {
++
++  @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
++
++  private static final OpenTelemetry OTEL =
++      OpenTelemetry.propagating(ContextPropagators.create(B3Propagator.injectingSingleHeader()));
++
++  private static final AwsLambdaFunctionInstrumenter INSTRUMENTER =
++      AwsLambdaFunctionInstrumenterFactory.createInstrumenter(OTEL);
++
++  @Test
++  void shouldUseHttpIfAwsParentNotSampled() {
++    // given
++    Map<String, String> headers =
++        ImmutableMap.of(
++            "X-b3-traceId",
++            "4fd0b6131f19f39af59518d127b0cafe",
++            "x-b3-spanid",
++            "0000000000000123",
++            "X-B3-Sampled",
++            "true");
++    environmentVariables.set(
++        "_X_AMZN_TRACE_ID",
++        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
++
++    // when
++    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
++    // then
++    Span span = Span.fromContext(context);
++    SpanContext spanContext = span.getSpanContext();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000123");
++    assertThat(spanContext.getTraceId()).isEqualTo("4fd0b6131f19f39af59518d127b0cafe");
++  }
++
++  @Test
++  void shouldPreferAwsParentHeaderIfValidAndSampled() {
++    // given
++    Map<String, String> headers =
++        ImmutableMap.of(
++            "X-b3-traceId",
++            "4fd0b6131f19f39af59518d127b0cafe",
++            "x-b3-spanid",
++            "0000000000000456",
++            "X-B3-Sampled",
++            "true");
++    environmentVariables.set(
++        "_X_AMZN_TRACE_ID",
++        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
++
++    // when
++    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
++    // then
++    Span span = Span.fromContext(context);
++    SpanContext spanContext = span.getSpanContext();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
++    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
++  }
++
++  @Test
++  void shouldExtractCaseInsensitiveHeaders() {
++    // given
++    Map<String, String> headers =
++        ImmutableMap.of(
++            "X-b3-traceId",
++            "4fd0b6131f19f39af59518d127b0cafe",
++            "x-b3-spanid",
++            "0000000000000456",
++            "X-B3-Sampled",
++            "true");
++
++    // when
++    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
++    // then
++    Span span = Span.fromContext(context);
++    SpanContext spanContext = span.getSpanContext();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
++    assertThat(spanContext.getTraceId()).isEqualTo("4fd0b6131f19f39af59518d127b0cafe");
++  }
++}
+diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java
+index e088efa906..544da9b1bb 100644
+--- a/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java
++++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java
+@@ -12,8 +12,6 @@ import static org.mockito.Mockito.when;
+ 
+ import com.amazonaws.services.lambda.runtime.Context;
+ import com.amazonaws.services.lambda.runtime.RequestHandler;
+-import io.opentelemetry.api.common.AttributeKey;
+-import io.opentelemetry.api.common.Attributes;
+ import io.opentelemetry.api.trace.SpanKind;
+ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+ import io.opentelemetry.sdk.trace.data.StatusData;
+@@ -102,22 +100,8 @@ public abstract class AbstractAwsLambdaTest {
+                     span ->
+                         span.hasName("my_function")
+                             .hasKind(SpanKind.SERVER)
+-                            .hasLinksSatisfying(
+-                                links ->
+-                                    assertThat(links)
+-                                        .singleElement()
+-                                        .satisfies(
+-                                            link -> {
+-                                              assertThat(link.getSpanContext().getTraceId())
+-                                                  .isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+-                                              assertThat(link.getSpanContext().getSpanId())
+-                                                  .isEqualTo("0000000000000456");
+-                                              assertThat(link.getAttributes())
+-                                                  .isEqualTo(
+-                                                      Attributes.of(
+-                                                          AttributeKey.stringKey("source"),
+-                                                          "x-ray-env"));
+-                                            }))
++                            .hasTraceId("8a3c60f7d188f8fa79d48a391a778fa6")
++                            .hasParentSpanId("0000000000000456")
+                             .hasAttributesSatisfyingExactly(
+                                 equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+   }
+diff --git a/instrumentation/aws-lambda/aws-lambda-events-2.2/library/src/main/java/io/opentelemetry/instrumentation/awslambdaevents/v2_2/internal/SqsMessageSpanLinksExtractor.java b/instrumentation/aws-lambda/aws-lambda-events-2.2/library/src/main/java/io/opentelemetry/instrumentation/awslambdaevents/v2_2/internal/SqsMessageSpanLinksExtractor.java
+index 305e3e62a0..844ee31899 100644
+--- a/instrumentation/aws-lambda/aws-lambda-events-2.2/library/src/main/java/io/opentelemetry/instrumentation/awslambdaevents/v2_2/internal/SqsMessageSpanLinksExtractor.java
++++ b/instrumentation/aws-lambda/aws-lambda-events-2.2/library/src/main/java/io/opentelemetry/instrumentation/awslambdaevents/v2_2/internal/SqsMessageSpanLinksExtractor.java
+@@ -9,48 +9,22 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
+ import io.opentelemetry.api.trace.Span;
+ import io.opentelemetry.api.trace.SpanContext;
+ import io.opentelemetry.context.Context;
+-import io.opentelemetry.context.propagation.TextMapGetter;
+-import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
+ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+-import java.util.Collections;
+-import java.util.Locale;
+-import java.util.Map;
++import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.ParentContextExtractor;
+ 
+ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
+   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
+ 
+-  // lower-case map getter used for extraction
+-  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
+-
+   @Override
+   public void extract(SpanLinksBuilder spanLinks, Context parentContext, SQSMessage message) {
+     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+     if (parentHeader != null) {
+-      Context xrayContext =
+-          AwsXrayPropagator.getInstance()
+-              .extract(
+-                  Context.root(), // We don't want the ambient context.
+-                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+-                  MapGetter.INSTANCE);
+-      SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+-      if (messageSpanCtx.isValid()) {
+-        spanLinks.addLink(messageSpanCtx);
++      SpanContext parentCtx =
++          Span.fromContext(ParentContextExtractor.fromXrayHeader(parentHeader)).getSpanContext();
++      if (parentCtx.isValid()) {
++        spanLinks.addLink(parentCtx);
+       }
+     }
+   }
+-
+-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
+-    INSTANCE;
+-
+-    @Override
+-    public Iterable<String> keys(Map<String, String> map) {
+-      return map.keySet();
+-    }
+-
+-    @Override
+-    public String get(Map<String, String> map, String s) {
+-      return map.get(s.toLowerCase(Locale.ROOT));
+-    }
+-  }
+ }
+diff --git a/version.gradle.kts b/version.gradle.kts
+index 0978e54cd3..9ff8f9730f 100644
+--- a/version.gradle.kts
++++ b/version.gradle.kts
+@@ -1,5 +1,5 @@
+-val stableVersion = "1.26.0"
+-val alphaVersion = "1.26.0-alpha"
++val stableVersion = "1.26.0-adot-lambda1"
++val alphaVersion = "1.26.0-adot-lambda1-alpha"
+ 
+ allprojects {
+   if (findProperty("otel.stable") != "true") {
