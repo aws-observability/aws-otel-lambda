@@ -37,3 +37,16 @@ index 7cdea69..553e649 100644
  			Version:     c.version,
  		},
  		ConfigProvider: c.configProvider,
+diff --git a/collector/Makefile b/collector/Makefile
+index 8a3d532..e272d83 100644
+--- a/collector/Makefile
++++ b/collector/Makefile
+@@ -44,7 +44,7 @@ package: build
+ 	@echo Package zip file for collector extension layer
+ 	mkdir -p $(BUILD_SPACE)/collector-config
+ 	cp config* $(BUILD_SPACE)/collector-config
+-	cd $(BUILD_SPACE) && zip -r opentelemetry-collector-layer-$(GOARCH).zip collector-config extensions
++	cd $(BUILD_SPACE) && zip -r collector-extension-$(GOARCH).zip collector-config extensions
+ 
+ .PHONY: publish
+ publish:
