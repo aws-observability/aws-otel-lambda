@@ -25,7 +25,7 @@ git checkout v1.26.0 -b tag-v1.26.0
 patch -p1 < "${SOURCEDIR}"/../patches/aws-otel-java-instrumentation.patch
 git add -A
 git commit -a -m "Create patch version"
-./gradlew publishToMavenLocal -Prelease.version=1.26.0-adot-lambda1
+CI=false ./gradlew publishToMavenLocal -Prelease.version=1.26.0-adot-lambda1
 popd
 
 rm -rf aws-otel-java-instrumentation
