@@ -5,7 +5,7 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 ## revert https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7970
 
-git clone git@github.com:open-telemetry/opentelemetry-java-instrumentation.git
+git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
 git checkout v1.26.0 -b tag-v1.26.0
 patch -p1 < "$SOURCEDIR"/../patches/opentelemetry-java-instrumentation.patch
@@ -16,7 +16,8 @@ popd
 
 rm -rf opentelemetry-java-instrumentation
 
-git clone git@github.com:aws-observability/aws-otel-java-instrumentation.git
+
+git clone https://github.com/aws-observability/aws-otel-java-instrumentation.git
 
 pushd aws-otel-java-instrumentation
 
