@@ -11,7 +11,9 @@ popd || exit
 cd ../opentelemetry-lambda/python/src || exit
 ./build.sh
 
-pushd ../sample-apps || exit
+# Build sample app
+
+pushd ../../../python/sample-apps || exit
 ./build.sh
 popd || exit
 

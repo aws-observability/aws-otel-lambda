@@ -1,9 +1,9 @@
 output "api-gateway-url" {
-  value = module.hello-lambda-function.api-gateway-url
+  value = module.api-gateway.api_gateway_url
 }
 
 output "function_role_name" {
-  value = module.hello-lambda-function.function_role_name
+  value = module.test-function.lambda_role_name
 }
 
 output "collector_layer_arn" {
