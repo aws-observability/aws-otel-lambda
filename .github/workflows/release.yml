@@ -218,7 +218,7 @@ jobs:
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           distribution: corretto
-          java-version: '11'
+          java-version: '17'
       - name: Cache (Java)
         uses: actions/cache@v3
         if: ${{ env.TEST_LANGUAGE == 'java' }}
