@@ -28,7 +28,7 @@
     "inferred":true,
     "http":{
       "request":{
-        "url":"http://httpbin\\.org/",
+        "url":"https://aws.amazon.com/",
         "method":"GET"
       }
     }
