@@ -1,0 +1,13 @@
+diff --git a/dependencyManagement/build.gradle.kts b/dependencyManagement/build.gradle.kts
+index edf21b4..c5eb1c3 100644
+--- a/dependencyManagement/build.gradle.kts
++++ b/dependencyManagement/build.gradle.kts
+@@ -27,7 +27,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
+ val TEST_SNAPSHOTS = rootProject.findProperty("testUpstreamSnapshots") == "true"
+ 
+ // This is the version of the upstream instrumentation BOM
+-val otelVersion = "1.26.0"
++val otelVersion = "1.26.0-adot-lambda1"
+ val otelSnapshotVersion = "1.27.0"
+ 
+ // All versions below are only used in testing and do not affect the released artifact.

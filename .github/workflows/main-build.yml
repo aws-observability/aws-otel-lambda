@@ -89,7 +89,7 @@ jobs:
         if: ${{ matrix.language == 'java' }}
         with:
           distribution: corretto
-          java-version: '11'
+          java-version: '17'
       - name: Cache (Java)
         uses: actions/cache@v3
         if: ${{ matrix.language == 'java' }}
@@ -136,7 +136,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
-          role-duration-seconds: 1200
+          role-duration-seconds: 7200
           aws-region: us-east-1
       - name: Patch ADOT
         run: ./patch-upstream.sh
