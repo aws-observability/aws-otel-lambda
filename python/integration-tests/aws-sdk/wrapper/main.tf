@@ -30,6 +30,7 @@ module "test-function" {
   create_package         = false
   local_existing_package = "${path.module}/../../../sample-apps/build/function.zip"
 
+  memory_size = 512
   timeout     = 20
 
   layers = compact([
