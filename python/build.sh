@@ -26,7 +26,7 @@ pip install opentelemetry-sdk-extension-aws -t python/
 # Combine the layers
 unzip -qo layer.zip
 rm layer.zip
-unzip -qo ../../../collector/build/collector-extension-$1.zip
+unzip -qo ../../../collector/build/opentelemetry-collector-layer-$1.zip
 
 # Use our AWS scripts instead which extend and call OTel Lambda scripts
 mv otel-instrument otel-instrument-upstream-lambda
