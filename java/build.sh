@@ -57,7 +57,7 @@ mv otel-handler otel-handler-upstream
 cp "$SOURCEDIR"/scripts/otel-handler .
 # Copy ADOT Java Agent downloaded using Gradle task
 cp "$SOURCEDIR"/build/javaagent/aws-opentelemetry-agent*.jar ./opentelemetry-javaagent.jar
-unzip -qo ../../../../collector/build/collector-extension-$1.zip
+unzip -qo ../../../../collector/build/opentelemetry-collector-layer-$1.zip
 zip -qr opentelemetry-javaagent-layer.zip *
 popd || exit
 
@@ -69,6 +69,6 @@ mv otel-handler otel-handler-upstream
 mv otel-stream-handler otel-stream-handler-upstream
 mv otel-proxy-handler otel-proxy-handler-upstream
 cp "$SOURCEDIR"/scripts/* .
-unzip -qo ${SOURCEDIR}/../opentelemetry-lambda/collector/build/collector-extension-$1.zip
+unzip -qo ${SOURCEDIR}/../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-$1.zip
 zip -qr opentelemetry-java-wrapper.zip *
 popd || exit
