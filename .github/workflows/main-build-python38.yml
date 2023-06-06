@@ -34,6 +34,20 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: '^1.20.2'
+      - uses: actions/setup-python@v4
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v3
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
       - uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
