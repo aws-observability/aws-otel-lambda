@@ -124,7 +124,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
-          role-duration-seconds: 1200
+          role-duration-seconds: 7200
           aws-region: ${{ matrix.aws_region }}
       - name: Get terraform directory
         run: |
