@@ -4,15 +4,15 @@ updates:
     directory: "/java"
     schedule:
       interval: "weekly"
-      day: "sunday"
+      day: "tuesday"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "sunday"
+      day: "tuesday"
   - package-ecosystem: "npm"
     directory: "/nodejs/wrapper-adot"
     schedule:
       interval: "weekly"
-      day: "sunday"
+      day: "tuesday"
     rebase-strategy: "auto"
