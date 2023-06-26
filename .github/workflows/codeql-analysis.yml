@@ -43,6 +43,11 @@ jobs:
         distribution: temurin
       if: ${{ matrix.language == 'java' }}
 
+    - run: |
+        ./gradlew build
+      working-directory: java
+      if: ${{ matrix.language == 'java' }}
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
