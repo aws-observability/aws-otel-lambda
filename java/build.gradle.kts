@@ -12,9 +12,16 @@ repositories {
     mavenLocal()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+allprojects {
+
+    plugins.apply("com.diffplug.spotless")
+
+    plugins.withId("java") { // Apply restriction on the project
+        configure<JavaPluginExtension> {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+    }
 }
 
 spotless {
