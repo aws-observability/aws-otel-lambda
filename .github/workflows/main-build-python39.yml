@@ -85,7 +85,7 @@ jobs:
           TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
-          TF_VAR_runtime: 'python3.8'
+          TF_VAR_runtime: 'python3.9'
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url

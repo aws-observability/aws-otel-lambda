@@ -5,7 +5,7 @@ locals {
 resource "aws_lambda_layer_version" "sdk_layer" {
   layer_name          = var.sdk_layer_name
   filename            = "${path.module}/../../../../opentelemetry-lambda/python/src/build/layer.zip"
-  compatible_runtimes = ["python3.8", "python3.9"]
+  compatible_runtimes = ["python3.10", "python3.9"]
   license_info        = "Apache-2.0"
   source_code_hash    = filebase64sha256("${path.module}/../../../../opentelemetry-lambda/python/src/build/layer.zip")
 }
