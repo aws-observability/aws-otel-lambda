@@ -7,7 +7,7 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
-git checkout v1.26.0 -b tag-v1.26.0
+git checkout v1.28.0 -b tag-v1.28.0
 patch -p1 < "$SOURCEDIR"/../patches/opentelemetry-java-instrumentation.patch
 git add -A
 git commit -m "Create patch version"
@@ -21,7 +21,7 @@ git clone https://github.com/aws-observability/aws-otel-java-instrumentation.git
 
 pushd aws-otel-java-instrumentation
 
-git checkout v1.26.0 -b tag-v1.26.0
+git checkout v1.28.0 -b tag-v1.28.0
 patch -p1 < "${SOURCEDIR}"/../patches/aws-otel-java-instrumentation.patch
 git add -A
 git commit -a -m "Create patch version"
