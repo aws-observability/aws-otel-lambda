@@ -7,12 +7,12 @@ on:
       - release/*
     paths-ignore:
       - '.github/**'
-      - '!.github/workflows/main-build-python38.yml'
+      - '!.github/workflows/main-build-python39.yml'
       - '**.md'
   workflow_dispatch:
 
 concurrency:
-  group: main-build-python38-${{ github.ref_name }}
+  group: main-build-python39-${{ github.ref_name }}
   cancel-in-progress: true
 
 
@@ -22,7 +22,7 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Python38-${{ matrix.architecture }}-IntegrationTest
+    name: Python39-${{ matrix.architecture }}-IntegrationTest
     strategy:
       fail-fast: false
       matrix:

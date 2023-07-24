@@ -12,7 +12,7 @@
     "name":"lambda-python.*",
     "subsegments": [
       {
-          "name": "HTTP GET"
+          "name": "GET"
       },
       {
           "name": "S3",
@@ -24,7 +24,7 @@
     ]
   },
   {
-    "name":"HTTP GET",
+    "name":"GET",
     "inferred":true,
     "http":{
       "request":{
