@@ -1,5 +1,5 @@
 diff --git a/java/build.gradle.kts b/java/build.gradle.kts
-index 3e862e7..b95ee01 100644
+index 3e862e7..d3941ac 100644
 --- a/java/build.gradle.kts
 +++ b/java/build.gradle.kts
 @@ -15,7 +15,7 @@ allprojects {
@@ -12,15 +12,15 @@ index 3e862e7..b95ee01 100644
          }
  
 diff --git a/java/dependencyManagement/build.gradle.kts b/java/dependencyManagement/build.gradle.kts
-index 67f1953..748bb3b 100644
+index b0ec233..5c2f919 100644
 --- a/java/dependencyManagement/build.gradle.kts
 +++ b/java/dependencyManagement/build.gradle.kts
 @@ -9,7 +9,7 @@ plugins {
  data class DependencySet(val group: String, val version: String, val modules: List<String>)
  
  val DEPENDENCY_BOMS = listOf(
--    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.26.0-alpha",
-+    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.26.0-adot-lambda1-alpha",
+-    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.28.0-alpha",
++    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.28.0-adot-lambda1-alpha",
      "org.apache.logging.log4j:log4j-bom:2.20.0",
      "software.amazon.awssdk:bom:2.20.69"
  )
@@ -28,8 +28,8 @@ index 67f1953..748bb3b 100644
      "com.amazonaws:aws-lambda-java-core:1.2.2",
      "com.amazonaws:aws-lambda-java-events:3.11.2",
      "com.squareup.okhttp3:okhttp:4.11.0",
--    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.26.0"
-+    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.26.0-adot-lambda1"
+-    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.28.0"
++    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.28.0-adot-lambda1"
  )
  
  javaPlatform {

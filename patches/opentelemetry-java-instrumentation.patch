@@ -75,10 +75,10 @@ index aeb828b8e7..277c358ca8 100644
    }
 diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java
 deleted file mode 100644
-index 342f65b50a..0000000000
+index c88cf20c91..0000000000
 --- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractor.java
 +++ /dev/null
-@@ -1,74 +0,0 @@
+@@ -1,84 +0,0 @@
 -/*
 - * Copyright The OpenTelemetry Authors
 - * SPDX-License-Identifier: Apache-2.0
@@ -107,7 +107,7 @@ index 342f65b50a..0000000000
 -final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
 -
 -  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
--
+-  private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
 -  // lower-case map getter used for extraction
 -  private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 -
@@ -123,20 +123,30 @@ index 342f65b50a..0000000000
 -  }
 -
 -  public static void extract(SpanLinksBuilder spanLinks) {
--    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
--    if (parentTraceHeader == null || parentTraceHeader.isEmpty()) {
+-    Map<String, String> contextMap = getTraceHeaderMap();
+-    if (contextMap.isEmpty()) {
 -      return;
 -    }
 -    Context xrayContext =
--        AwsXrayPropagator.getInstance()
--            .extract(
--                Context.root(),
--                Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
--                MapGetter.INSTANCE);
+-        AwsXrayPropagator.getInstance().extract(Context.root(), contextMap, MapGetter.INSTANCE);
 -    SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
 -    if (envVarSpanCtx.isValid()) {
 -      spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);
 -    }
+-  }
+-
+-  private static Map<String, String> getTraceHeaderMap() {
+-    String traceHeader = System.getProperty(AWS_TRACE_HEADER_PROP);
+-    if (isEmptyOrNull(traceHeader)) {
+-      traceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+-    }
+-    return isEmptyOrNull(traceHeader)
+-        ? Collections.emptyMap()
+-        : Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, traceHeader);
+-  }
+-
+-  private static boolean isEmptyOrNull(String value) {
+-    return value == null || value.isEmpty();
 -  }
 -
 -  private enum MapGetter implements TextMapGetter<Map<String, String>> {
@@ -242,10 +252,10 @@ index 0000000000..72d4f9253b
 +}
 diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java
 deleted file mode 100644
-index 061f59cdf9..0000000000
+index 509bfbd05e..0000000000
 --- a/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/AwsXrayEnvSpanLinksExtractorTest.java
 +++ /dev/null
-@@ -1,87 +0,0 @@
+@@ -1,128 +0,0 @@
 -/*
 - * Copyright The OpenTelemetry Authors
 - * SPDX-License-Identifier: Apache-2.0
@@ -269,6 +279,7 @@ index 061f59cdf9..0000000000
 -import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 -import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 -import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+-import uk.org.webcompere.systemstubs.properties.SystemProperties;
 -
 -/**
 - * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -280,17 +291,40 @@ index 061f59cdf9..0000000000
 -      Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
 -
 -  @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+-  @SystemStub final SystemProperties systemProperties = new SystemProperties();
 -
 -  @Test
--  void shouldIgnoreIfEnvVarEmpty() {
+-  void shouldIgnoreIfEnvVarAndSystemPropertyEmpty() {
 -    // given
 -    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
 -    environmentVariables.set("_X_AMZN_TRACE_ID", "");
--
+-    systemProperties.set("com.amazonaws.xray.traceHeader", "");
 -    // when
 -    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
 -    // then
 -    verifyNoInteractions(spanLinksBuilder);
+-  }
+-
+-  @Test
+-  void shouldLinkAwsParentHeaderAndChooseSystemPropertyIfValidAndNotSampled() {
+-    // given
+-    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+-    environmentVariables.set(
+-        "_X_AMZN_TRACE_ID",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
+-    systemProperties.set(
+-        "com.amazonaws.xray.traceHeader",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa7;Parent=0000000000000789;Sampled=0");
+-    // when
+-    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+-    // then
+-    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+-    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+-    SpanContext spanContext = captor.getValue();
+-    assertThat(spanContext.isValid()).isTrue();
+-    assertThat(spanContext.isSampled()).isFalse();
+-    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000789");
+-    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa7");
 -  }
 -
 -  @Test
@@ -300,7 +334,6 @@ index 061f59cdf9..0000000000
 -    environmentVariables.set(
 -        "_X_AMZN_TRACE_ID",
 -        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
--
 -    // when
 -    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
 -    // then
@@ -314,13 +347,31 @@ index 061f59cdf9..0000000000
 -  }
 -
 -  @Test
--  void shouldLinkAwsParentHeaderIfValidAndSampled() {
+-  void shouldLinkAwsParentHeaderIfValidAndNotSampledSystemProperty() {
 -    // given
 -    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
--    environmentVariables.set(
--        "_X_AMZN_TRACE_ID",
--        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
+-    systemProperties.set(
+-        "com.amazonaws.xray.traceHeader",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
+-    // when
+-    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+-    // then
+-    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+-    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+-    SpanContext spanContext = captor.getValue();
+-    assertThat(spanContext.isValid()).isTrue();
+-    assertThat(spanContext.isSampled()).isFalse();
+-    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
+-    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+-  }
 -
+-  @Test
+-  void shouldLinkAwsParentHeaderIfValidAndSampledSystemProperty() {
+-    // given
+-    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+-    systemProperties.set(
+-        "com.amazonaws.xray.traceHeader",
+-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
 -    // when
 -    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
 -    // then
@@ -549,14 +600,14 @@ index 305e3e62a0..844ee31899 100644
 -  }
  }
 diff --git a/version.gradle.kts b/version.gradle.kts
-index 0978e54cd3..9ff8f9730f 100644
+index cc1414c0bf..db8a59b046 100644
 --- a/version.gradle.kts
 +++ b/version.gradle.kts
 @@ -1,5 +1,5 @@
--val stableVersion = "1.26.0"
--val alphaVersion = "1.26.0-alpha"
-+val stableVersion = "1.26.0-adot-lambda1"
-+val alphaVersion = "1.26.0-adot-lambda1-alpha"
+-val stableVersion = "1.28.0"
+-val alphaVersion = "1.28.0-alpha"
++val stableVersion = "1.28.0-adot-lambda1"
++val alphaVersion = "1.28.0-adot-lambda1-alpha"
  
  allprojects {
    if (findProperty("otel.stable") != "true") {
