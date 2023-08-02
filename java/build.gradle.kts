@@ -1,7 +1,7 @@
 plugins {
     java
 
-    id("com.diffplug.spotless")
+    id("com.diffplug.gradle.spotless")
 }
 
 base.archivesBaseName = "aws-otel-lambda-java-extensions"
