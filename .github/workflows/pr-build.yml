@@ -79,6 +79,7 @@ jobs:
         if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: GOARCH=${{ matrix.architecture }} ${{ matrix.build_command }} ${{ matrix.architecture }}
         working-directory: ${{ matrix.language }}
+
       - name: Build collector
         if: ${{ matrix.language == 'dotnet' || matrix.language == 'go' }}
         run: GOARCH=${{ matrix.architecture }} make package
