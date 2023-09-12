@@ -29,7 +29,7 @@ val javaagentDependency by configurations.creating {
 
 dependencies {
     compileOnly(platform("io.opentelemetry:opentelemetry-bom:1.29.0"))
-    compileOnly(platform("io.opentelemetry:opentelemetry-bom-alpha:1.29.0-alpha"))
+    compileOnly(platform("io.opentelemetry:opentelemetry-bom-alpha:1.30.1-alpha"))
     // Already included in wrapper so compileOnly
     compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
     compileOnly("io.opentelemetry:opentelemetry-sdk-extension-aws")
