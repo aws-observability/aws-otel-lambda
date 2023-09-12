@@ -62,7 +62,7 @@ jobs:
       java-agent-version: ${{ steps.set-sdk-layer-version-output.outputs.java-agent-version }}
       java-wrapper-version: ${{ steps.set-sdk-layer-version-output.outputs.java-wrapper-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/setup-go@v4
@@ -223,7 +223,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Checkout test framework
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: aws-observability/aws-otel-test-framework
           path: test-framework
