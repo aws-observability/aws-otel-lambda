@@ -4,10 +4,12 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
 ## revert https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7970
+OTEL_VERSION="1.30.0"
+ADOT_VERSION="1.30.0"
 
 git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
-git checkout v1.29.0 -b tag-v1.29.0
+git checkout v${OTEL_VERSION} -b tag-v${OTEL_VERSION}
 patch -p1 < "$SOURCEDIR"/../patches/opentelemetry-java-instrumentation.patch
 git add -A
 git commit -m "Create patch version"
@@ -21,11 +23,11 @@ git clone https://github.com/aws-observability/aws-otel-java-instrumentation.git
 
 pushd aws-otel-java-instrumentation
 
-git checkout v1.29.0 -b tag-v1.29.0
+git checkout v${ADOT_VERSION} -b tag-v${ADOT_VERSION}
 patch -p1 < "${SOURCEDIR}"/../patches/aws-otel-java-instrumentation.patch
 git add -A
 git commit -a -m "Create patch version"
-CI=false ./gradlew publishToMavenLocal -Prelease.version=1.29.0-adot-lambda1
+CI=false ./gradlew publishToMavenLocal -Prelease.version=${ADOT_VERSION}-adot-lambda1
 popd
 
 rm -rf aws-otel-java-instrumentation
