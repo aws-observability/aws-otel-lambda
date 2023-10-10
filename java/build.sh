@@ -7,7 +7,7 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
-git checkout v1.28.0 -b tag-v1.28.0
+git checkout v1.29.0 -b tag-v1.29.0
 patch -p1 < "$SOURCEDIR"/../patches/opentelemetry-java-instrumentation.patch
 git add -A
 git commit -m "Create patch version"
@@ -21,11 +21,11 @@ git clone https://github.com/aws-observability/aws-otel-java-instrumentation.git
 
 pushd aws-otel-java-instrumentation
 
-git checkout v1.28.1 -b tag-v1.28.1
+git checkout v1.29.0 -b tag-v1.29.0
 patch -p1 < "${SOURCEDIR}"/../patches/aws-otel-java-instrumentation.patch
 git add -A
 git commit -a -m "Create patch version"
-CI=false ./gradlew publishToMavenLocal -Prelease.version=1.28.0-adot-lambda1
+CI=false ./gradlew publishToMavenLocal -Prelease.version=1.29.0-adot-lambda1
 popd
 
 rm -rf aws-otel-java-instrumentation
