@@ -95,7 +95,7 @@ jobs:
         if: ${{ matrix.language == 'java' }}
         run: |
           echo SOAKING_TEST_CONFIG="-c 200 -m 90" | tee --append $GITHUB_ENV
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         if: ${{ matrix.language == 'nodejs' }}
         with:
           node-version: '14'

@@ -102,7 +102,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         if: ${{ matrix.language == 'nodejs' }}
         with:
           node-version: '14'
