@@ -131,7 +131,7 @@ jobs:
         run: |
           echo TERRAFORM_DIRECTORY=${{ matrix.language }}/sample-apps/${{ matrix.sample-app }}/deploy/${{ matrix.instrumentation-type }} |
           tee --append $GITHUB_ENV
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
