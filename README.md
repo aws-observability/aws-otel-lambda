@@ -5,7 +5,7 @@ As a downstream Repo of [opentelemetry-lambda](https://github.com/open-telemetry
 - Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-16-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.16.0` with AWS Lambda Instrumentation `v0.37.0` and ADOT Collector for Lambda `v0.33.0`
 - Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-30-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.30.0` and ADOT Collector for Lambda `v0.33.0`
 - Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-30-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.30.0` and ADOT Collector for Lambda `v0.33.0`
-- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-84-0** contains ADOT Collector for Lambda `v0.33.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-84-0** contains ADOT Collector for Lambda `v0.33.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes. This collector will also work with natively compiled lambdas that have been instrumented.
 
 ## Notice: ADOT Collector v0.35.0 Breaking Change
 Users of the `prometheusremotewrite` exporter please reference GitHub Issue [Warning: ADOT Collector v0.35.0 breaking change](https://github.com/aws-observability/aws-otel-collector/issues/2367)
