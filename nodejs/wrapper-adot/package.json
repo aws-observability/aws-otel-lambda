@@ -32,7 +32,7 @@
     "eslint": "8.49.0",
     "eslint-plugin-header": "3.1.1",
     "eslint-plugin-import": "2.29.0",
-    "gts": "5.0.1",
+    "gts": "5.2.0",
     "rimraf": "5.0.5",
     "typescript": "5.2.2"
   },
