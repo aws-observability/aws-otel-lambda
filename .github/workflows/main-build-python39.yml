@@ -71,7 +71,7 @@ jobs:
         run: |
           echo TERRAFORM_DIRECTORY=python/integration-tests/aws-sdk/wrapper |
           tee --append $GITHUB_ENV
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
