@@ -70,7 +70,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         if: ${{ matrix.language == 'dotnet' }}
         with:
           dotnet-version: '6.0.405'
