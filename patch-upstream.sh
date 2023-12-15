@@ -24,7 +24,7 @@ CURRENT_DIR=$PWD
 cd opentelemetry-lambda/collector
 
 # patch otel version on collector/go.mod
-PATCH_OTEL_VERSION="../../OTEL_Version.patch"
+PATCH_OTEL_VERSION="../../patches/OTEL_Version.patch"
 
 if [ -f $PATCH_OTEL_VERSION ]; then
     patch -p2 < $PATCH_OTEL_VERSION;
