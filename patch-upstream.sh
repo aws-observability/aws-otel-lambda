@@ -10,6 +10,18 @@ their Lambdas with Lambda Layers configured to export to the X-Ray backend.
 
 END_DOCUMENTATION
 
+# patch otel version on collector
+cd opentelemetry-lambda/collector
+
+PATCH_OTEL_VERSION="../../OTEL_Version.patch"
+
+if [ -f $PATCH_OTEL_VERSION ]; then
+    patch -p2 < $PATCH_OTEL_VERSION;
+fi
+
+# return to root directory after patch
+cd ../..
+
 # Run unit tests on ADOT lambdacomponents
 make --directory=adot/collector/lambdacomponents
 
@@ -22,13 +34,6 @@ CURRENT_DIR=$PWD
 # Move to the upstream OTel Lambda Collector folder where we will build a
 # collector used in each Lambda layer
 cd opentelemetry-lambda/collector
-
-# patch otel version on collector/go.mod
-PATCH_OTEL_VERSION="../../OTEL_Version.patch"
-
-if [ -f $PATCH_OTEL_VERSION ]; then
-    patch -p2 < $PATCH_OTEL_VERSION;
-fi
 
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
