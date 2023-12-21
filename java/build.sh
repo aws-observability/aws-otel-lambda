@@ -4,8 +4,8 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
 ## revert https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7970
-OTEL_VERSION="1.31.0"
-ADOT_VERSION="1.31.0"
+OTEL_VERSION="1.32.0"
+ADOT_VERSION="1.32.0"
 
 git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
