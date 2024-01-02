@@ -266,7 +266,7 @@ jobs:
       #   with:
       #     dotnet-version: '3.1.x'
       - name: Use Go Language
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         # NOTE: (enowell) In case the languages below need to build the
         # collector, and because building the collector requires go 1.18 and
         # above, always setup go 1.18.
