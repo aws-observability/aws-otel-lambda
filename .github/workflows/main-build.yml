@@ -116,7 +116,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         if: ${{ matrix.language == 'python' }}
         with:
           python-version: '3.x'
