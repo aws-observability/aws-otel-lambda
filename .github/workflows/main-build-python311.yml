@@ -1,5 +1,5 @@
-name: Python-3.11 Layer Integration Test
-# This workflow is for verifying python3.11 layer in Lambda python3.8 environment
+name: Python-3.[8,9,10] Layer Integration Test
+# This workflow is for verifying ADOT Python Lambda layer in Lambda Python3.[8,9,10] runtimes environment
 on:
   push:
     branches: 
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: main-build-python311-${{ github.ref_name }}
+  group: main-build-python3.[8,9,10]-${{ github.ref_name }}
   cancel-in-progress: true
 
 
@@ -22,11 +22,12 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Python311-${{ matrix.architecture }}-IntegrationTest
+    name: Python3.[8,9,10]-${{ matrix.architecture }}-IntegrationTest
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
+        runtime: ["python3.8", "python3.9", "python3.10"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,7 +87,7 @@ jobs:
           TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
-          TF_VAR_runtime: 'python3.11'
+          TF_VAR_runtime: ${{ matrix.runtime }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
