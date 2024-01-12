@@ -22,7 +22,7 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Python3.[8,9,10]-${{ matrix.architecture }}-IntegrationTest
+    name: ${{ matrix.runtime }}-${{ matrix.architecture }}-IntegrationTest
     strategy:
       fail-fast: false
       matrix:
