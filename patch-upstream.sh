@@ -19,6 +19,15 @@ cp -rf adot/* opentelemetry-lambda/
 # Get current repo path
 CURRENT_DIR=$PWD
 
+cd opentelemetry-lambda/java
+# patch otel version on collector/go.mod
+PATCH_JAVA_VERSION="../../OTEL_Java_Version.patch"
+
+if [ -f $PATCH_JAVA_VERSION ]; then
+    patch -p2 < $PATCH_JAVA_VERSION;
+fi
+    cd ../..
+
 # Move to the upstream OTel Lambda Collector folder where we will build a
 # collector used in each Lambda layer
 cd opentelemetry-lambda/collector
@@ -29,6 +38,8 @@ PATCH_OTEL_VERSION="../../OTEL_Version.patch"
 if [ -f $PATCH_OTEL_VERSION ]; then
     patch -p2 < $PATCH_OTEL_VERSION;
 fi
+
+
 
 # patch collector startup to remove HTTP and S3 confmap providers
 # and set ADOT-specific BuildInfo
