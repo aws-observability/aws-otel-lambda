@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: ${{ matrix.language == 'nodejs' }}
         with:
-          node-version: '18'
+          node-version: '16'
       - name: Cache (NodeJS)
         uses: actions/cache@v3
         if: ${{ matrix.language == 'nodejs' }}
