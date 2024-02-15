@@ -1,20 +1,17 @@
 diff --git a/java/dependencyManagement/build.gradle.kts b/java/dependencyManagement/build.gradle.kts
-index 4d7087a..62dcbb7 100644
+index 2d5f860..11a4aa8 100644
 --- a/java/dependencyManagement/build.gradle.kts
 +++ b/java/dependencyManagement/build.gradle.kts
-@@ -9,16 +9,16 @@ plugins {
+@@ -9,7 +9,7 @@ plugins {
  data class DependencySet(val group: String, val version: String, val modules: List<String>)
  
  val DEPENDENCY_BOMS = listOf(
 -    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.0.0-alpha",
--    "org.apache.logging.log4j:log4j-bom:2.22.1",
--    "software.amazon.awssdk:bom:2.23.7"
 +    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.32.0-alpha",
-+    "org.apache.logging.log4j:log4j-bom:2.22.0",
-+    "software.amazon.awssdk:bom:2.21.42"
+     "org.apache.logging.log4j:log4j-bom:2.22.1",
+     "software.amazon.awssdk:bom:2.24.2"
  )
- 
- val DEPENDENCIES = listOf(
+@@ -18,7 +18,7 @@ val DEPENDENCIES = listOf(
      "com.amazonaws:aws-lambda-java-core:1.2.3",
      "com.amazonaws:aws-lambda-java-events:3.11.4",
      "com.squareup.okhttp3:okhttp:4.12.0",
