@@ -127,7 +127,7 @@ jobs:
         if: ${{ matrix.language == 'dotnet' }}
         with:
           dotnet-version: '6.0.405'
-      - uses: aws-actions/configure-aws-credentials@v4.0.1
+      - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           mask-aws-account-id: false
