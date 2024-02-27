@@ -220,7 +220,7 @@ jobs:
           distribution: corretto
           java-version: '17'
       - name: Cache (Java)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           path: |
@@ -235,7 +235,7 @@ jobs:
         with:
           node-version: '16'
       - name: Cache (NodeJS)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'nodejs' }}
         with:
           path: |
@@ -249,7 +249,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'python' }}
         with:
           path: |
