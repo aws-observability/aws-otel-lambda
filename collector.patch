@@ -1,5 +1,5 @@
 diff --git a/collector/internal/collector/collector.go b/collector/internal/collector/collector.go
-index 7cdea69..553e649 100644
+index 35aaa18..46af9b7 100644
 --- a/collector/internal/collector/collector.go
 +++ b/collector/internal/collector/collector.go
 @@ -26,6 +26,7 @@ import (
@@ -10,23 +10,24 @@ index 7cdea69..553e649 100644
  	"go.opentelemetry.io/collector/confmap/provider/yamlprovider"
  	"go.opentelemetry.io/collector/otelcol"
  	"go.uber.org/zap"
-@@ -57,7 +58,14 @@ func getConfig(logger *zap.Logger) string {
-
+@@ -59,7 +60,15 @@ func getConfig(logger *zap.Logger) string {
  func NewCollector(logger *zap.Logger, factories otelcol.Factories, version string) *Collector {
  	l := logger.Named("NewCollector")
--	providers := []confmap.Provider{fileprovider.New(), envprovider.New(), yamlprovider.New(), httpprovider.New(), s3provider.New()}
+ 	providerSettings := confmap.ProviderSettings{Logger: l}
+-	providers := []confmap.Provider{fileprovider.NewWithSettings(providerSettings), envprovider.NewWithSettings(providerSettings), yamlprovider.NewWithSettings(providerSettings), httpprovider.NewWithSettings(providerSettings), s3provider.New()}
 +	providers := []confmap.Provider{
-+		fileprovider.New(),
-+		envprovider.New(),
-+		yamlprovider.New(),
-+		httpprovider.New(),
++		fileprovider.NewWithSettings(providerSettings),
++		envprovider.NewWithSettings(providerSettings),
++		yamlprovider.NewWithSettings(providerSettings),
++		httpprovider.NewWithSettings(providerSettings),
++		httpsprovider.NewWithSettings(providerSettings),
 +		s3provider.New(),
-+		httpsprovider.New(),
 +	}
++
  	mapProvider := make(map[string]confmap.Provider, len(providers))
-
+ 
  	for _, provider := range providers {
-@@ -89,8 +97,8 @@ func NewCollector(logger *zap.Logger, factories otelcol.Factories, version strin
+@@ -93,8 +102,8 @@ func NewCollector(logger *zap.Logger, factories otelcol.Factories, version strin
  func (c *Collector) Start(ctx context.Context) error {
  	params := otelcol.CollectorSettings{
  		BuildInfo: component.BuildInfo{

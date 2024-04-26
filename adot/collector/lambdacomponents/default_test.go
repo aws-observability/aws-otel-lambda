@@ -18,6 +18,7 @@ package lambdacomponents
 //github.com/aws-observability/aws-otel-lambda/adot/collector/lambdacomponents
 
 import (
+	"go.opentelemetry.io/collector/component"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,22 +36,22 @@ func TestComponents(t *testing.T) {
 	exporters := factories.Exporters
 	assert.Len(t, exporters, exportersCount)
 	// aws exporters
-	assert.NotNil(t, exporters["awsxray"])
-	assert.NotNil(t, exporters["awsemf"])
+	assert.NotNil(t, exporters[component.MustNewType("awsxray")])
+	assert.NotNil(t, exporters[component.MustNewType("awsemf")])
 	// core exporters
-	assert.NotNil(t, exporters["logging"])
-	assert.NotNil(t, exporters["otlp"])
-	assert.NotNil(t, exporters["otlphttp"])
+	assert.NotNil(t, exporters[component.MustNewType("logging")])
+	assert.NotNil(t, exporters[component.MustNewType("otlp")])
+	assert.NotNil(t, exporters[component.MustNewType("otlphttp")])
 	// other exporters
-	assert.NotNil(t, exporters["prometheusremotewrite"])
+	assert.NotNil(t, exporters[component.MustNewType("prometheusremotewrite")])
 
 	receivers := factories.Receivers
 	assert.Len(t, receivers, receiversCount)
 	// core receivers
-	assert.NotNil(t, receivers["otlp"])
+	assert.NotNil(t, receivers[component.MustNewType("otlp")])
 
 	extensions := factories.Extensions
 	assert.Len(t, extensions, extensionsCount)
 	// aws extensions
-	assert.NotNil(t, extensions["sigv4auth"])
+	assert.NotNil(t, extensions[component.MustNewType("sigv4auth")])
 }
