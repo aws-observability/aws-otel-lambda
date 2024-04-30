@@ -36,7 +36,7 @@ index f1241db..c7b756e 100644
  
  javaPlatform {
 diff --git a/java/layer-wrapper/build.gradle.kts b/java/layer-wrapper/build.gradle.kts
-index 756ef1b..9fd1b78 100644
+index 756ef1b..0521724 100644
 --- a/java/layer-wrapper/build.gradle.kts
 +++ b/java/layer-wrapper/build.gradle.kts
 @@ -10,7 +10,7 @@ dependencies {
@@ -44,7 +44,7 @@ index 756ef1b..9fd1b78 100644
      runtimeOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
      runtimeOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 -    runtimeOnly("io.opentelemetry.contrib:opentelemetry-aws-resources")
-+    runtimeOnly("io.opentelemetry.contrib:opentelemetry-sdk-extension-aws")
++    runtimeOnly("io.opentelemetry:opentelemetry-sdk-extension-aws")
  }
  
  tasks {
