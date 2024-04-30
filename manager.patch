@@ -1,8 +1,24 @@
 diff --git a/collector/internal/lifecycle/manager.go b/collector/internal/lifecycle/manager.go
-index 5ec1b6a..d7bf7d2 100644
+index 68f6939..2f8ab1e 100644
 --- a/collector/internal/lifecycle/manager.go
 +++ b/collector/internal/lifecycle/manager.go
-@@ -90,7 +90,7 @@
+@@ -17,13 +17,14 @@ package lifecycle
+ import (
+ 	"context"
+ 	"fmt"
+-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
+ 	"os"
+ 	"os/signal"
+ 	"path/filepath"
+ 	"sync"
+ 	"syscall"
+ 
++	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
++
+ 	"go.uber.org/multierr"
+ 	"go.uber.org/zap"
+ 
+@@ -92,7 +93,7 @@ func NewManager(ctx context.Context, logger *zap.Logger, version string) (contex
  		}
  	}()
  

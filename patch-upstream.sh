@@ -31,10 +31,7 @@ if [ -f $PATCH_OTEL_VERSION ]; then
     patch -p2 < $PATCH_OTEL_VERSION;
 fi
 
-
-
-# patch collector startup to remove HTTP and S3 confmap providers
-# and set ADOT-specific BuildInfo
+# patch collector startup to add httpsprovider
 patch -p2 < ../../collector.patch
 
 # patch manager.go to remove lambdacomponents attribute
