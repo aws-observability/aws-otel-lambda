@@ -1,3 +1,31 @@
+diff --git a/java/README.md b/java/README.md
+index dfecf2c..ced8634 100644
+--- a/java/README.md
++++ b/java/README.md
+@@ -21,23 +21,6 @@ Note, automatic instrumentation has a notable impact on startup time on AWS Lamb
+ generally need to use this along with provisioned concurrency and warmup requests to serve production
+ requests without causing timeouts on initial requests while it initializes.
+ 
+-#### Fast startup for Java agent
+-
+-Fast startup mode is disabled by default but can be enabled by specifying the `OTEL_JAVA_AGENT_FAST_STARTUP_ENABLED=true`
+-in your Lambda configuration.
+-
+-When fast startup mode is enabled, **JIT** (Just-In-Time) **Tiered compilation** is configured to stop at level 1 
+-and bytecode verification is disabled. So, the JVM uses the **C1** compiler which is optimized for fast start-up time. 
+-This compiler (**C1**) quickly produces optimized native code 
+-but it does not generate any profiling data and never uses the **C2** compiler 
+-which optimized for the best overall performance but uses more memory and takes a longer time to achieve it.
+-Therefore, this option is not enabled by default and needs to be enabled by the user explicitly 
+-by taking care of the behavioural change mentioned above.
+-
+-For more information about the idea behind this optimization, you can check the following resources:
+-- https://aws.amazon.com/tr/blogs/compute/optimizing-aws-lambda-function-performance-for-java/
+-- https://aws.amazon.com/tr/blogs/compute/increasing-performance-of-java-aws-lambda-functions-using-tiered-compilation/
+-
+ ### Wrapper
+ 
+ [OpenTelemetry Lambda Instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/aws-lambda-1.0/library)
 diff --git a/java/build.gradle.kts b/java/build.gradle.kts
 index 3e862e7..d3941ac 100644
 --- a/java/build.gradle.kts
@@ -12,31 +40,81 @@ index 3e862e7..d3941ac 100644
          }
  
 diff --git a/java/dependencyManagement/build.gradle.kts b/java/dependencyManagement/build.gradle.kts
-index f1241db..c7b756e 100644
+index f1241db..cceb485 100644
 --- a/java/dependencyManagement/build.gradle.kts
 +++ b/java/dependencyManagement/build.gradle.kts
-@@ -9,7 +9,7 @@ plugins {
+@@ -9,18 +9,16 @@ plugins {
  data class DependencySet(val group: String, val version: String, val modules: List<String>)
  
  val DEPENDENCY_BOMS = listOf(
 -    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.3.0-alpha",
+-    "org.apache.logging.log4j:log4j-bom:2.23.1",
+-    "software.amazon.awssdk:bom:2.25.35"
 +    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.32.0-adot-lambda1-alpha",
-     "org.apache.logging.log4j:log4j-bom:2.23.1",
-     "software.amazon.awssdk:bom:2.25.35"
++    "org.apache.logging.log4j:log4j-bom:2.22.1",
++    "software.amazon.awssdk:bom:2.24.2"
  )
-@@ -18,9 +18,7 @@ val DEPENDENCIES = listOf(
+ 
+ val DEPENDENCIES = listOf(
      "com.amazonaws:aws-lambda-java-core:1.2.3",
-     "com.amazonaws:aws-lambda-java-events:3.11.5",
+-    "com.amazonaws:aws-lambda-java-events:3.11.5",
++    "com.amazonaws:aws-lambda-java-events:3.11.4",
      "com.squareup.okhttp3:okhttp:4.12.0",
 -    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.3.0",
 -    "io.opentelemetry:opentelemetry-sdk-extension-aws:1.19.0",
 -    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.35.0-alpha",
-+    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.32.0-adot-lambda1",
++    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.32.0-adot-lambda1"
  )
  
  javaPlatform {
+diff --git a/java/layer-javaagent/scripts/otel-handler b/java/layer-javaagent/scripts/otel-handler
+index adb31a2..6e4cd91 100755
+--- a/java/layer-javaagent/scripts/otel-handler
++++ b/java/layer-javaagent/scripts/otel-handler
+@@ -1,40 +1,11 @@
+ #!/bin/bash
+ 
+-set -ef -o pipefail
+-
+ export JAVA_TOOL_OPTIONS="-javaagent:/opt/opentelemetry-javaagent.jar ${JAVA_TOOL_OPTIONS}"
+ 
+ if [[ $OTEL_RESOURCE_ATTRIBUTES != *"service.name="* ]]; then
+   export OTEL_RESOURCE_ATTRIBUTES="service.name=${AWS_LAMBDA_FUNCTION_NAME},${OTEL_RESOURCE_ATTRIBUTES}"
+ fi
+ 
+-if [[ -z "$OTEL_PROPAGATORS" ]]; then
+-  export OTEL_PROPAGATORS="tracecontext,baggage,xray"
+-fi
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+ 
+-########################################
+-
+-ARGS=("$@")
+-EXTRA_ARGS=()
+-
+-if [ "${OTEL_JAVA_AGENT_FAST_STARTUP_ENABLED}" == "true" ]; then
+-  echo "[OTEL] Enabling fast startup mode ..."
+-  # Disable bytecode verification
+-  EXTRA_ARGS+=("-Xverify:none")
+-  # Be sure that tiered compilation is enabled
+-  EXTRA_ARGS+=("-XX:+TieredCompilation")
+-  # Stop tiered compilation at level 1
+-  EXTRA_ARGS+=("-XX:TieredStopAtLevel=1")
+-  for i in "${!ARGS[@]}"; do
+-    # If tiered compilation is disabled, ignore it as we enable it at level 1 for fast startup
+-    if [[ ${ARGS[i]} = "-XX:-TieredCompilation" ]]; then
+-      unset 'ARGS[i]'
+-    fi
+-  done
+-fi
+-
+-ARGS=("${ARGS[0]}" "${EXTRA_ARGS[@]}" "${ARGS[@]:1}")
+-
+-exec "${ARGS[@]}"
++exec "$@"
 diff --git a/java/layer-wrapper/build.gradle.kts b/java/layer-wrapper/build.gradle.kts
-index 756ef1b..0521724 100644
+index 756ef1b..bd7b6e9 100644
 --- a/java/layer-wrapper/build.gradle.kts
 +++ b/java/layer-wrapper/build.gradle.kts
 @@ -10,7 +10,7 @@ dependencies {
@@ -48,3 +126,95 @@ index 756ef1b..0521724 100644
  }
  
  tasks {
+diff --git a/java/layer-wrapper/scripts/otel-handler b/java/layer-wrapper/scripts/otel-handler
+index 0bc9d33..8138f12 100755
+--- a/java/layer-wrapper/scripts/otel-handler
++++ b/java/layer-wrapper/scripts/otel-handler
+@@ -1,7 +1,5 @@
+ #!/bin/bash
+ 
+-set -ef -o pipefail
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER="$_HANDLER"
+ export _HANDLER="io.opentelemetry.instrumentation.awslambdaevents.v2_2.TracingRequestWrapper"
+ 
+@@ -9,10 +7,6 @@ if [[ $OTEL_RESOURCE_ATTRIBUTES != *"service.name="* ]]; then
+   export OTEL_RESOURCE_ATTRIBUTES="service.name=${AWS_LAMBDA_FUNCTION_NAME},${OTEL_RESOURCE_ATTRIBUTES}"
+ fi
+ 
+-if [[ -z "$OTEL_PROPAGATORS" ]]; then
+-  export OTEL_PROPAGATORS="tracecontext,baggage,xray"
+-fi
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+ 
+ # java17 runtime puts the handler to run as a command line argument and seems to prefer
+diff --git a/java/layer-wrapper/scripts/otel-proxy-handler b/java/layer-wrapper/scripts/otel-proxy-handler
+index 86de184..ee4e8e9 100755
+--- a/java/layer-wrapper/scripts/otel-proxy-handler
++++ b/java/layer-wrapper/scripts/otel-proxy-handler
+@@ -1,7 +1,5 @@
+ #!/bin/bash
+ 
+-set -ef -o pipefail
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER="$_HANDLER"
+ export _HANDLER="io.opentelemetry.instrumentation.awslambdaevents.v2_2.TracingRequestApiGatewayWrapper"
+ 
+@@ -9,10 +7,6 @@ if [[ $OTEL_RESOURCE_ATTRIBUTES != *"service.name="* ]]; then
+   export OTEL_RESOURCE_ATTRIBUTES="service.name=${AWS_LAMBDA_FUNCTION_NAME},${OTEL_RESOURCE_ATTRIBUTES}"
+ fi
+ 
+-if [[ -z "$OTEL_PROPAGATORS" ]]; then
+-  export OTEL_PROPAGATORS="tracecontext,baggage,xray"
+-fi
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+ 
+ # java17 runtime puts the handler to run as a command line argument and seems to prefer
+diff --git a/java/layer-wrapper/scripts/otel-sqs-handler b/java/layer-wrapper/scripts/otel-sqs-handler
+index 11138fa..6955356 100755
+--- a/java/layer-wrapper/scripts/otel-sqs-handler
++++ b/java/layer-wrapper/scripts/otel-sqs-handler
+@@ -1,7 +1,5 @@
+ #!/bin/bash
+ 
+-set -ef -o pipefail
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER="$_HANDLER"
+ export _HANDLER="io.opentelemetry.instrumentation.awslambdaevents.v2_2.TracingSqsEventWrapper"
+ 
+@@ -9,10 +7,6 @@ if [[ $OTEL_RESOURCE_ATTRIBUTES != *"service.name="* ]]; then
+   export OTEL_RESOURCE_ATTRIBUTES="service.name=${AWS_LAMBDA_FUNCTION_NAME},${OTEL_RESOURCE_ATTRIBUTES}"
+ fi
+ 
+-if [[ -z "$OTEL_PROPAGATORS" ]]; then
+-  export OTEL_PROPAGATORS="tracecontext,baggage,xray"
+-fi
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+ 
+ # java17 runtime puts the handler to run as a command line argument and seems to prefer
+diff --git a/java/layer-wrapper/scripts/otel-stream-handler b/java/layer-wrapper/scripts/otel-stream-handler
+index c48263b..1d3dcff 100755
+--- a/java/layer-wrapper/scripts/otel-stream-handler
++++ b/java/layer-wrapper/scripts/otel-stream-handler
+@@ -1,7 +1,5 @@
+ #!/bin/bash
+ 
+-set -ef -o pipefail
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER="$_HANDLER"
+ export _HANDLER="io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper"
+ 
+@@ -9,10 +7,6 @@ if [[ $OTEL_RESOURCE_ATTRIBUTES != *"service.name="* ]]; then
+   export OTEL_RESOURCE_ATTRIBUTES="service.name=${AWS_LAMBDA_FUNCTION_NAME},${OTEL_RESOURCE_ATTRIBUTES}"
+ fi
+ 
+-if [[ -z "$OTEL_PROPAGATORS" ]]; then
+-  export OTEL_PROPAGATORS="tracecontext,baggage,xray"
+-fi
+-
+ export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+ 
+ # java17 runtime puts the handler to run as a command line argument and seems to prefer
