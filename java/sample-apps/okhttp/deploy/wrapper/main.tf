@@ -11,6 +11,7 @@ module "app" {
   source = "../../../../../opentelemetry-lambda/java/sample-apps/okhttp/deploy/wrapper"
 
   name                = var.function_name
+  runtime             = var.runtime
   collector_layer_arn = null
   sdk_layer_arn       = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   tracing_mode        = "Active"

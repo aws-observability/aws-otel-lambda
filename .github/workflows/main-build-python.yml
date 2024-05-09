@@ -1,28 +1,28 @@
-name: Python-3.11 Layer Integration Test
+name: Python Layer Integration Test
 # This workflow is for verifying python3.11 layer in Lambda python3.8 environment
 on:
-  push:
-    branches: 
-      - main 
-      - release/*
-    paths-ignore:
-      - '.github/**'
-      - '!.github/workflows/main-build-python311.yml'
-      - '**.md'
+  workflow_call:
+    inputs:
+      aws-region:
+        required: true
+        type: string
+      caller-workflow-name:
+        required: true
+        type: string
   workflow_dispatch:
 
 concurrency:
-  group: main-build-python311-${{ github.ref_name }}
+  group: main-build-python3-${{ github.ref_name }}
   cancel-in-progress: true
-
 
 permissions:
   id-token: write
+  contents: read
 
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Python311-${{ matrix.architecture }}-IntegrationTest
+    name: Python-${{ matrix.architecture }}-IntegrationTest
     strategy:
       fail-fast: false
       matrix:
@@ -47,11 +47,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: aws-actions/configure-aws-credentials@v4.0.2
-        with:
-          role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
-          role-duration-seconds: 7200
-          aws-region: us-east-1
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Login to Public ECR

@@ -23,6 +23,7 @@ module "hello-lambda-function" {
   source              = "../../../../opentelemetry-lambda/java/sample-apps/aws-sdk/deploy/wrapper"
   name                = var.function_name
   architecture        = var.architecture
+  runtime             = var.runtime
   collector_layer_arn = var.enable_collector_layer ? aws_lambda_layer_version.collector_layer[0].arn : null
   sdk_layer_arn       = aws_lambda_layer_version.sdk_layer.arn
   tracing_mode        = var.tracing_mode

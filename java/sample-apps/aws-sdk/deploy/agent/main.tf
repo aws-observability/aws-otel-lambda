@@ -12,6 +12,7 @@ module "app" {
 
   name                       = var.function_name
   collector_layer_arn        = null
+  runtime                    = var.runtime
   sdk_layer_arn              = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   collector_config_layer_arn = length(aws_lambda_layer_version.collector_config_layer) > 0 ? aws_lambda_layer_version.collector_config_layer[0].arn : null
   tracing_mode               = "Active"

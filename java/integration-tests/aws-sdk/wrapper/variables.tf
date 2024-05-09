@@ -33,3 +33,9 @@ variable "enable_collector_layer" {
   description = "Enables building and usage of a layer for the collector. If false, it means either the SDK layer includes the collector or it is not used."
   default     = false
 }
+
+variable "runtime" {
+  type        = string
+  description = "java runtime used for Lambda Function"
+  default     = "java17"
+}

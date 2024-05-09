@@ -220,8 +220,18 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+
+  python-runtime-test:
+    concurrency:
+      group: e2e-adot-agent-operator-test
+      cancel-in-progress: false
+    uses: ./.github/workflows/main-build-python.yml
+    secrets: inherit
+    with:
+      caller-workflow-name: 'main-build'
+
   publish-build-status:
-    needs: [integration-test]
+    needs: [integration-test, python-runtime-test]
     if: ${{ always() }}
     uses: ./.github/workflows/publish-status.yml
     with:
@@ -229,7 +239,7 @@ jobs:
       repository: ${{ github.repository }}
       branch: ${{ github.ref_name }}
       workflow: main-build
-      success: ${{ needs.integration-test.result == 'success' }}
+      success: ${{ needs.integration-test.result == 'success' }} && ${{ needs.python-runtime-test.result == 'success' }}
       region: us-west-2
     secrets:
       roleArn: ${{ secrets.METRICS_ROLE_ARN }}
