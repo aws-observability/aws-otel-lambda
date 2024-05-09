@@ -1,18 +1,14 @@
-name: Main Build
-
+name: Java Layer Integration Test
 on:
-  push:
-    branches:
-      - main
-      - release/*
-    paths-ignore:
-      - '.github/**'
-      - '!.github/workflows/main-build.yml'
-      - '**.md'
+  workflow_call:
+    inputs:
+      caller-workflow-name:
+        required: true
+        type: string
   workflow_dispatch:
 
 concurrency:
-  group: main-build-${{ github.ref_name }}
+  group: main-build-java-${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -22,62 +18,47 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Integration - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
+    name: Java-11${{ matrix.architecture }}-{{matrix.runtime}}-IntegrationTest
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        language: [ dotnet, go, nodejs, python ]
-        sample-app: [ aws-sdk ]
+        runtime: [java17, java11, java8.al2]
+        sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ wrapper ]
-        confmap: ["noop"]
+        confmap: [ "noop" ]
         include:
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent
             architecture: amd64
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent
             architecture: arm64
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: s3
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: s3
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: http
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: http
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: https
-          - language: java
-            sample-app: aws-sdk
+          - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: https
-          - language: java
-            sample-app: okhttp
-            instrumentation-type: wrapper
-            architecture: amd64
-          - language: java
-            sample-app: okhttp
-            instrumentation-type: wrapper
-            architecture: arm64
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,13 +68,11 @@ jobs:
           go-version: '~1.21.3'
           check-latest: true
       - uses: actions/setup-java@v4
-        if: ${{ matrix.language == 'java' }}
         with:
           distribution: corretto
           java-version: '17'
       - name: Cache (Java)
         uses: actions/cache@v3
-        if: ${{ matrix.language == 'java' }}
         with:
           path: |
             ~/go/pkg/mod
@@ -102,38 +81,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - uses: actions/setup-node@v4
-        if: ${{ matrix.language == 'nodejs' }}
-        with:
-          node-version: '16'
-      - name: Cache (NodeJS)
-        uses: actions/cache@v3
-        if: ${{ matrix.language == 'nodejs' }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - uses: actions/setup-python@v5
-        if: ${{ matrix.language == 'python' }}
-        with:
-          python-version: '3.x'
-      - name: Cache (Python)
-        uses: actions/cache@v3
-        if: ${{ matrix.language == 'python' }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - uses: actions/setup-dotnet@v4
-        if: ${{ matrix.language == 'dotnet' }}
-        with:
-          dotnet-version: '6.0.405'
+
       - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
@@ -141,14 +89,9 @@ jobs:
           aws-region: us-east-1
       - name: Patch ADOT
         run: ./patch-upstream.sh
-      # Login to ECR since may be needed for Python build image.
-      - name: Login to Public ECR
-        uses: docker/login-action@v3
-        with:
-          registry: public.ecr.aws
       - name: Build layers / functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
-        working-directory: ${{ matrix.language }}
+        working-directory: java
       - name: Get Lambda Layer amd64 architecture value
         if: ${{ matrix.architecture == 'amd64' }}
         run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
@@ -157,7 +100,7 @@ jobs:
         run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Get terraform directory
         run: |
-          echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
+          echo TERRAFORM_DIRECTORY=java/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
           tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v2
       - name: Initialize terraform
@@ -165,16 +108,17 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{matrix.runtime}}-${{ github.run_id }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: opentelemetry-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{matrix.runtime}}-${{ github.run_id }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
           TF_VAR_configuration_source: ${{ matrix.confmap }}
+          TF_VAR_runtime: ${{matrix.runtime}}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -186,11 +130,9 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: terraform output -raw sdk_layer_arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Output annotations
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
           echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
@@ -208,7 +150,7 @@ jobs:
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: validate java agent metric sample
-        if: ${{ matrix.language == 'java' && matrix.sample-app == 'aws-sdk' && startsWith(matrix.instrumentation-type, 'agent') }}
+        if: ${{ matrix.sample-app == 'aws-sdk' && startsWith(matrix.instrumentation-type, 'agent') }}
         run: |
           cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
              test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
@@ -220,35 +162,3 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
-
-  python-runtime-test:
-    concurrency:
-      group: python-runtime-test
-      cancel-in-progress: false
-    uses: ./.github/workflows/main-build-python.yml
-    secrets: inherit
-    with:
-      caller-workflow-name: 'main-build'
-
-  java-runtime-test:
-    concurrency:
-      group: java-runtime-test
-      cancel-in-progress: false
-    uses: ./.github/workflows/main-build-java.yml
-    secrets: inherit
-    with:
-      caller-workflow-name: 'main-build'
-
-  publish-build-status:
-    needs: [integration-test, python-runtime-test, java-runtime-test]
-    if: ${{ always() }}
-    uses: ./.github/workflows/publish-status.yml
-    with:
-      namespace: 'ADOT/GitHubActions'
-      repository: ${{ github.repository }}
-      branch: ${{ github.ref_name }}
-      workflow: main-build
-      success: ${{ needs.integration-test.result == 'success' }} && ${{ needs.python-runtime-test.result == 'success' }} &&  ${{ needs.java-runtime-test.result == 'success' }}
-      region: us-west-2
-    secrets:
-      roleArn: ${{ secrets.METRICS_ROLE_ARN }}
