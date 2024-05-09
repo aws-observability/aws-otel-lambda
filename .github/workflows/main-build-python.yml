@@ -18,7 +18,7 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Python-${{ matrix.architecture }}-${{ matrix.runtime }}-IntegrationTest
+    name: python-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}
     strategy:
       fail-fast: false
       matrix:

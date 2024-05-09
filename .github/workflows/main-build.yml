@@ -24,7 +24,7 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Integration - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
+    name: ${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}
     strategy:
       fail-fast: false
       matrix:

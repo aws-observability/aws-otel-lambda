@@ -18,7 +18,7 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-20.04
-    name: Java-${{ matrix.architecture }}-${{matrix.runtime}}-IntegrationTest
+    name: java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{matrix.confmap}}
     strategy:
       fail-fast: false
       matrix:
