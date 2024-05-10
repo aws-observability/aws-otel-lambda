@@ -65,7 +65,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-go@v5
         with:
-          go-version: '~1.21.3'
+          go-version: '~1.21.10'
           check-latest: true
       - uses: actions/setup-java@v4
         with:
@@ -108,7 +108,7 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{matrix.runtime}}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{ github.run_id }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
@@ -118,7 +118,7 @@ jobs:
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
           TF_VAR_configuration_source: ${{ matrix.confmap }}
-          TF_VAR_runtime: ${{matrix.runtime}}
+          TF_VAR_runtime: ${{ matrix.runtime }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
@@ -145,14 +145,14 @@ jobs:
           path: test-framework
       - name: validate trace sample
         run: |
-          cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
+          cp adot/utils/expected-templates/java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
              test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
       - name: validate java agent metric sample
         if: ${{ matrix.sample-app == 'aws-sdk' && startsWith(matrix.instrumentation-type, 'agent') }}
         run: |
-          cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
+          cp adot/utils/expected-templates/java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-metric.json \
              test-framework/validator/src/main/resources/expected-data-template/ampExpectedMetric.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c prometheus-static-metric-validation.yml --cortex-instance-endpoint ${{ steps.extract-amp-endpoint.outputs.stdout }} --region $AWS_REGION"
