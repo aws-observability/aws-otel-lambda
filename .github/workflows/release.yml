@@ -272,7 +272,7 @@ jobs:
         # above, always setup go 1.18.
         # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
-          go-version: '~1.21.3'
+          go-version: '~1.21.10'
           check-latest: true
       - name: download layer tf file
         uses: actions/download-artifact@v4
