@@ -62,26 +62,32 @@ jobs:
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: s3
+            runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: s3
+            runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: http
+            runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: http
+            runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
             confmap: https
+            runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: arm64
             confmap: https
+            runtime: java11
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +120,7 @@ jobs:
       - name: Generate UUID
         id: generate-uuid
         run: |
-          UUID=$(uuidgen)
+          UUID=$(uuidgen | cut -c1-4)
           echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
@@ -143,7 +149,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: opentelemetry-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{matrix.runtime}}-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: opentelemetry-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
           TF_VAR_configuration_source: ${{ matrix.confmap }}
