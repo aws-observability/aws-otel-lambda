@@ -49,6 +49,11 @@ jobs:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 7200
           aws-region: us-east-1
+      - name: Generate UUID
+        id: generate-uuid
+        run: |
+          UUID=$(uuidgen)
+          echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Login to Public ECR
@@ -74,13 +79,13 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-python-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-python-${{ matrix.architecture }}-${{ steps.generate-uuid.outputs.uuid }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}-${{ matrix.runtime }}
+          TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
           TF_VAR_runtime: ${{ matrix.runtime }}

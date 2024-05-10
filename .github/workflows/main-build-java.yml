@@ -31,9 +31,33 @@ jobs:
           - sample-app: aws-sdk
             instrumentation-type: agent
             architecture: amd64
+            confmap: noop
+            runtime: java17
+          - sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: amd64
+            confmap: noop
+            runtime: java11
+          - sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: amd64
+            confmap: noop
+            runtime: java8.al2
           - sample-app: aws-sdk
             instrumentation-type: agent
             architecture: arm64
+            confmap: noop
+            runtime: java17
+          - sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: arm64
+            confmap: noop
+            runtime: java11
+          - sample-app: aws-sdk
+            instrumentation-type: agent
+            architecture: arm64
+            confmap: noop
+            runtime: java8.al2
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
@@ -87,6 +111,11 @@ jobs:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 7200
           aws-region: us-east-1
+      - name: Generate UUID
+        id: generate-uuid
+        run: |
+          UUID=$(uuidgen)
+          echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Build layers / functions
@@ -108,7 +137,7 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-java-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.confmap }}-${{ matrix.architecture }}-${{ steps.generate-uuid.outputs.uuid }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
