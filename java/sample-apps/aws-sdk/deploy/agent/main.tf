@@ -56,6 +56,7 @@ exporters:
   awsxray:
   prometheusremotewrite:
     endpoint: "${aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint}api/v1/remote_write"
+    add_metric_suffixes: false
     auth:
       authenticator: sigv4auth
 
