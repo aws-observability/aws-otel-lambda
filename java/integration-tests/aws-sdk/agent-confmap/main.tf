@@ -48,6 +48,7 @@ locals {
 auth:
   authenticator: sigv4auth
 endpoint: "${aws_prometheus_workspace.test_amp_workspace.prometheus_endpoint}api/v1/remote_write"
+add_metric_suffixes: false
 EOT
 }
 
