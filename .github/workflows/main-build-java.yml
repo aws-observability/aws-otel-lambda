@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        runtime: [java17, java11, java8.al2]
+        runtime: [java17, java11]
         sample-app: [ aws-sdk, okhttp ]
         instrumentation-type: [ wrapper ]
         confmap: [ "noop" ]
