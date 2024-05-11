@@ -40,11 +40,6 @@ jobs:
             runtime: java11
           - sample-app: aws-sdk
             instrumentation-type: agent
-            architecture: amd64
-            confmap: noop
-            runtime: java8.al2
-          - sample-app: aws-sdk
-            instrumentation-type: agent
             architecture: arm64
             confmap: noop
             runtime: java17
@@ -53,11 +48,6 @@ jobs:
             architecture: arm64
             confmap: noop
             runtime: java11
-          - sample-app: aws-sdk
-            instrumentation-type: agent
-            architecture: arm64
-            confmap: noop
-            runtime: java8.al2
           - sample-app: aws-sdk
             instrumentation-type: agent-confmap
             architecture: amd64
