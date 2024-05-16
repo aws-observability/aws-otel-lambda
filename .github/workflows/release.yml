@@ -107,6 +107,7 @@ jobs:
         with:
           name: ${{ env.LAYER_NAME }}
           path: ${{ env.LAYER_NAME }}/${{ matrix.aws_region }}
+          overwrite: true
       - name: clean s3
         if: always()
         run: |
@@ -174,6 +175,7 @@ jobs:
         with:
           name: layer_${{ matrix.architecture }}.tf
           path: layer.tf
+          overwrite: true
   smoke-test:
     name: Smoke Test - (${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name_keyword }} - ${{ matrix.architecture }})
     needs: generate-note
