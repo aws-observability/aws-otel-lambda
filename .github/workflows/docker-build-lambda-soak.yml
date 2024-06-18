@@ -34,7 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: Build docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           context: adot/utils/soak
