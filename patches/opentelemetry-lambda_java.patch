@@ -62,33 +62,34 @@ index 7693c66..d3941ac 100644
          }
  
 diff --git a/java/dependencyManagement/build.gradle.kts b/java/dependencyManagement/build.gradle.kts
-index ec7dc65..cceb485 100644
+index 6bf6c31..f96171e 100644
 --- a/java/dependencyManagement/build.gradle.kts
 +++ b/java/dependencyManagement/build.gradle.kts
 @@ -9,18 +9,16 @@ plugins {
  data class DependencySet(val group: String, val version: String, val modules: List<String>)
- 
+
  val DEPENDENCY_BOMS = listOf(
--    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.3.0-alpha",
+-    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.4.0-alpha",
 -    "org.apache.logging.log4j:log4j-bom:2.23.1",
--    "software.amazon.awssdk:bom:2.25.43"
+-    "software.amazon.awssdk:bom:2.25.64"
 +    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.32.0-adot-lambda1-alpha",
 +    "org.apache.logging.log4j:log4j-bom:2.22.1",
 +    "software.amazon.awssdk:bom:2.24.2"
  )
- 
+
  val DEPENDENCIES = listOf(
      "com.amazonaws:aws-lambda-java-core:1.2.3",
 -    "com.amazonaws:aws-lambda-java-events:3.11.5",
 +    "com.amazonaws:aws-lambda-java-events:3.11.4",
      "com.squareup.okhttp3:okhttp:4.12.0",
--    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.3.0",
+-    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.4.0",
 -    "io.opentelemetry:opentelemetry-sdk-extension-aws:1.19.0",
--    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.35.0-alpha",
+-    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.36.0-alpha",
 +    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.32.0-adot-lambda1"
  )
- 
+
  javaPlatform {
+
 diff --git a/java/gradle/wrapper/gradle-wrapper.jar b/java/gradle/wrapper/gradle-wrapper.jar
 index e644113..7454180 100644
 Binary files a/java/gradle/wrapper/gradle-wrapper.jar and b/java/gradle/wrapper/gradle-wrapper.jar differ
@@ -459,85 +460,6 @@ index 1aa94a4..4f906e0 100755
 +eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "\"$CLASSPATH\"" org.gradle.wrapper.GradleWrapperMain "$APP_ARGS"
  
  exec "$JAVACMD" "$@"
-diff --git a/java/gradlew.bat b/java/gradlew.bat
-index 7101f8e..ac1b06f 100644
---- a/java/gradlew.bat
-+++ b/java/gradlew.bat
-@@ -14,7 +14,7 @@
- @rem limitations under the License.
- @rem
- 
--@if "%DEBUG%"=="" @echo off
-+@if "%DEBUG%" == "" @echo off
- @rem ##########################################################################
- @rem
- @rem  Gradle startup script for Windows
-@@ -25,8 +25,7 @@
- if "%OS%"=="Windows_NT" setlocal
- 
- set DIRNAME=%~dp0
--if "%DIRNAME%"=="" set DIRNAME=.
--@rem This is normally unused
-+if "%DIRNAME%" == "" set DIRNAME=.
- set APP_BASE_NAME=%~n0
- set APP_HOME=%DIRNAME%
- 
-@@ -41,13 +40,13 @@ if defined JAVA_HOME goto findJavaFromJavaHome
- 
- set JAVA_EXE=java.exe
- %JAVA_EXE% -version >NUL 2>&1
--if %ERRORLEVEL% equ 0 goto execute
-+if "%ERRORLEVEL%" == "0" goto execute
- 
--echo. 1>&2
--echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 1>&2
--echo. 1>&2
--echo Please set the JAVA_HOME variable in your environment to match the 1>&2
--echo location of your Java installation. 1>&2
-+echo.
-+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
-+echo.
-+echo Please set the JAVA_HOME variable in your environment to match the
-+echo location of your Java installation.
- 
- goto fail
- 
-@@ -57,11 +56,11 @@ set JAVA_EXE=%JAVA_HOME%/bin/java.exe
- 
- if exist "%JAVA_EXE%" goto execute
- 
--echo. 1>&2
--echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME% 1>&2
--echo. 1>&2
--echo Please set the JAVA_HOME variable in your environment to match the 1>&2
--echo location of your Java installation. 1>&2
-+echo.
-+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
-+echo.
-+echo Please set the JAVA_HOME variable in your environment to match the
-+echo location of your Java installation.
- 
- goto fail
- 
-@@ -76,15 +75,13 @@ set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
- 
- :end
- @rem End local scope for the variables with windows NT shell
--if %ERRORLEVEL% equ 0 goto mainEnd
-+if "%ERRORLEVEL%"=="0" goto mainEnd
- 
- :fail
- rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
- rem the _cmd.exe /c_ return code!
--set EXIT_CODE=%ERRORLEVEL%
--if %EXIT_CODE% equ 0 set EXIT_CODE=1
--if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
--exit /b %EXIT_CODE%
-+if  not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
-+exit /b 1
- 
- :mainEnd
- if "%OS%"=="Windows_NT" endlocal
 diff --git a/java/layer-javaagent/scripts/otel-handler b/java/layer-javaagent/scripts/otel-handler
 index adb31a2..6e4cd91 100755
 --- a/java/layer-javaagent/scripts/otel-handler
