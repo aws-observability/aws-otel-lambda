@@ -33,7 +33,7 @@ dependencies {
     // Already included in wrapper so compileOnly
     compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
     compileOnly("io.opentelemetry:opentelemetry-sdk-extension-aws")
-    javaagentDependency("software.amazon.opentelemetry:aws-opentelemetry-agent:1.32.0-adot-lambda1")
+    javaagentDependency("software.amazon.opentelemetry:aws-opentelemetry-agent:1.32.3")
 }
 
 tasks.register<Copy>("download") {
