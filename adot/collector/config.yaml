@@ -9,6 +9,7 @@ receivers:
 exporters:
   logging:
   awsxray:
+  awsemf:
 
 service:
   pipelines:
@@ -17,7 +18,7 @@ service:
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging]
+      exporters: [logging, awsemf]
   telemetry:
     metrics:
       address: localhost:8888
