@@ -7,7 +7,6 @@ receivers:
         endpoint: "localhost:4318"
 
 exporters:
-  logging:
   awsxray:
   awsemf:
 
@@ -18,7 +17,7 @@ service:
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging, awsemf]
+      exporters: [awsemf]
   telemetry:
     metrics:
       address: localhost:8888
