@@ -16,10 +16,10 @@ on:
 permissions:
   id-token: write
   contents: read
-  
+
 jobs:
   soaking-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Soak Test - (${{ matrix.language }}, ${{ matrix.sample-app }}, ${{ matrix.instrumentation-type }}, ${{ matrix.architecture }})
     strategy:
       fail-fast: false
@@ -277,7 +277,7 @@ jobs:
   output-keywords:
     if: ${{ always() }}
     name: Output (${{ matrix.language }}, ${{ matrix.instrumentation-type }}) Layer Keyword
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - soaking-test
     strategy:
