@@ -32,13 +32,13 @@ permissions:
 
 jobs:
   validate-inputs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Validate `layer_name_keyword` (${{ github.event.inputs.layer_name_keyword }})
         run: |
           grep -Eq "aws-otel-(collector|java-agent|java-wrapper|nodejs|python)-<ARCHITECTURE>-ver-[0-9]+-[0-9]+-[0-9]+" <<< "${{ github.event.inputs.layer_name_keyword }}"
   publish-prod:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: validate-inputs
     strategy:
       matrix:
@@ -112,7 +112,7 @@ jobs:
         run: |
           aws s3 rb --force s3://${{ env.BUCKET_NAME }}
   generate-note:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: publish-prod
     strategy:
       matrix:
@@ -177,7 +177,7 @@ jobs:
   smoke-test:
     name: Smoke Test - (${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name_keyword }} - ${{ matrix.architecture }})
     needs: generate-note
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         architecture: ${{ fromJson(github.event.inputs.architecture) }}

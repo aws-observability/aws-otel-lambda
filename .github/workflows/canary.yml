@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   canary-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Canary Test - (${{ matrix.aws_region }} - ${{ matrix.language }} - ${{ matrix.sample-app }} - ${{ matrix.instrumentation-type }} - ${{ matrix.architecture }})
     strategy:
       fail-fast: false
