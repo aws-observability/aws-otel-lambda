@@ -7,7 +7,7 @@ index 7693c66..e66bcba 100644
          spotless {
              java {
 -                googleJavaFormat()
-+                googleJavaFormat("1.15.0"))
++                googleJavaFormat("1.15.0")
              }
          }
  
