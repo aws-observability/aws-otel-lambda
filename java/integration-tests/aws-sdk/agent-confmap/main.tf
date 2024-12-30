@@ -82,7 +82,7 @@ receivers:
       http:
         endpoint: "localhost:4318"
 exporters:
-  logging:
+  debug:
   awsxray:
   prometheusremotewrite: $${${module.remote_configuration.configuration_uri}}
 
@@ -95,7 +95,7 @@ service:
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging, prometheusremotewrite]
+      exporters: [debug, prometheusremotewrite]
   telemetry:
     metrics:
       address: localhost:8888
