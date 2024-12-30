@@ -19,7 +19,7 @@ END_DOCUMENTATION
 # - Set `OTEL_PROPAGATORS` if not yet set, and include the xray propagator
 
 if [ -z ${OTEL_PROPAGATORS} ]; then
-    export OTEL_PROPAGATORS="tracecontext,baggage,xray";
+    export OTEL_PROPAGATORS="tracecontext,baggage,xray-lambda";
 fi
 
 # - Call the upstream configure OTel script
