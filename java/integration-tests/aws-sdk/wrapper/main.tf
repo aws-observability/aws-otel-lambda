@@ -4,10 +4,10 @@ locals {
 
 resource "aws_lambda_layer_version" "sdk_layer" {
   layer_name          = var.sdk_layer_name
-  filename            = "${path.module}/../../../../opentelemetry-lambda/java/layer-wrapper/build/distributions/opentelemetry-java-wrapper.zip"
+  filename            = "${path.module}/../../../../opentelemetry-lambda/java/layer-wrapper/build/distributions/opentelemetry-javawrapper-layer.zip"
   compatible_runtimes = ["java8.al2", "java11", "java17"]
   license_info        = "Apache-2.0"
-  source_code_hash    = filebase64sha256("${path.module}/../../../../opentelemetry-lambda/java/layer-wrapper/build/distributions/opentelemetry-java-wrapper.zip")
+  source_code_hash    = filebase64sha256("${path.module}/../../../../opentelemetry-lambda/java/layer-wrapper/build/distributions/opentelemetry-javawrapper-layer.zip")
 }
 
 resource "aws_lambda_layer_version" "collector_layer" {

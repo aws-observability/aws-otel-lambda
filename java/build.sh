@@ -65,12 +65,12 @@ popd || exit
 
 # Combine Java Wrapper build and ADOT Collector
 pushd ./layer-wrapper/build/distributions || exit
-unzip -qo opentelemetry-java-wrapper.zip
-rm opentelemetry-java-wrapper.zip
+unzip -qo opentelemetry-javawrapper-layer.zip
+rm opentelemetry-javawrapper-layer.zip
 mv otel-handler otel-handler-upstream
 mv otel-stream-handler otel-stream-handler-upstream
 mv otel-proxy-handler otel-proxy-handler-upstream
 cp "$SOURCEDIR"/scripts/* .
 unzip -qo ${SOURCEDIR}/../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-$1.zip
-zip -qr opentelemetry-java-wrapper.zip *
+zip -qr opentelemetry-javawrapper-layer.zip *
 popd || exit

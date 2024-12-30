@@ -16,7 +16,7 @@ cd wrapper-adot || exit
 npm install || exit
 
 cd ../../opentelemetry-lambda/nodejs || exit
-npm install || exit
+npm install && npm run build|| exit
 
 mv ./packages/layer/build/workspace/otel-handler ./packages/layer/build/workspace/otel-handler-upstream
 cp "$SOURCEDIR"/scripts/otel-handler ./packages/layer/build/workspace/otel-handler

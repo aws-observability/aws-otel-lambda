@@ -39,7 +39,7 @@ func TestComponents(t *testing.T) {
 	assert.NotNil(t, exporters[component.MustNewType("awsxray")])
 	assert.NotNil(t, exporters[component.MustNewType("awsemf")])
 	// core exporters
-	assert.NotNil(t, exporters[component.MustNewType("logging")])
+	assert.NotNil(t, exporters[component.MustNewType("debug")])
 	assert.NotNil(t, exporters[component.MustNewType("otlp")])
 	assert.NotNil(t, exporters[component.MustNewType("otlphttp")])
 	// other exporters
