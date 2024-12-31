@@ -1,21 +1,14 @@
-name: Main Build
-
+name: NodeJS Layer Integration Test
 on:
-  push:
-    branches:
-      - main
-      - release/*
-    paths-ignore:
-      - '.github/**'
-      - '!.github/workflows/main-build.yml'
-      - '!.github/workflows/main-build-python.yml'
-      - '!.github/workflows/main-build-java.yml'
-      - '!.github/workflows/main-build-nodejs.yml'
-      - '**.md'
+  workflow_call:
+    inputs:
+      caller-workflow-name:
+        required: true
+        type: string
   workflow_dispatch:
 
 concurrency:
-  group: main-build-${{ github.ref_name }}
+  group: main-build-nodejs-${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -25,15 +18,12 @@ permissions:
 jobs:
   integration-test:
     runs-on: ubuntu-22.04
-    name: ${{ matrix.language }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}
+    name: nodejs-wrapper-${{ matrix.architecture }}
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        language: [ dotnet, go ]
-        sample-app: [ aws-sdk ]
-        instrumentation-type: [ wrapper ]
-
+        runtime: [nodejs16.x, nodejs18.x]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,20 +32,37 @@ jobs:
         with:
           go-version: '~1.21.10'
           check-latest: true
-      - uses: actions/setup-dotnet@v4
-        if: ${{ matrix.language == 'dotnet' }}
+      - uses: actions/setup-node@v4
         with:
-          dotnet-version: '6.0.405'
+          node-version: '16'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 7200
           aws-region: us-east-1
+      - name: Generate UUID
+        id: generate-uuid
+        run: |
+          UUID=$(uuidgen | cut -c1-4)
+          echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
+      - name: Login to Public ECR
+        uses: docker/login-action@v3
+        with:
+          registry: public.ecr.aws
       - name: Build layers / functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
-        working-directory: ${{ matrix.language }}
+        working-directory: nodejs
       - name: Get Lambda Layer amd64 architecture value
         if: ${{ matrix.architecture == 'amd64' }}
         run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
@@ -64,7 +71,7 @@ jobs:
         run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
       - name: Get terraform directory
         run: |
-          echo TERRAFORM_DIRECTORY=${{ matrix.language }}/integration-tests/${{ matrix.sample-app }}/${{ matrix.instrumentation-type }} |
+          echo TERRAFORM_DIRECTORY=nodejs/integration-tests/aws-sdk/wrapper |
           tee --append $GITHUB_ENV
       - uses: hashicorp/setup-terraform@v2
       - name: Initialize terraform
@@ -72,26 +79,25 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-nodejs-${{ matrix.architecture }}-${{ steps.generate-uuid.outputs.uuid }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: opentelemetry-${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}-${{ matrix.architecture }}-${{ github.run_id }}
+          TF_VAR_sdk_layer_name: otel-nodejs-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+          TF_VAR_runtime: ${{ matrix.runtime }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Extract SDK layer arn
         id: extract-sdk-layer-arn
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: terraform output -raw sdk_layer_arn
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Output annotations
-        if: ${{ matrix.language != 'dotnet' && matrix.language != 'go' }}
         run: |
           echo "::warning::Function: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}"
           echo "::warning::SDK Layer ARN: ${{ steps.extract-sdk-layer-arn.outputs.stdout }}"
@@ -104,7 +110,7 @@ jobs:
           path: test-framework
       - name: validate trace sample
         run: |
-          cp adot/utils/expected-templates/${{ matrix.language }}-${{ matrix.sample-app }}-${{ matrix.instrumentation-type }}.json \
+          cp adot/utils/expected-templates/nodejs-aws-sdk-wrapper.json \
              test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
           cd test-framework
           ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
@@ -114,44 +120,3 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
-
-  python-runtime-test:
-    concurrency:
-      group: python-runtime-test
-      cancel-in-progress: false
-    uses: ./.github/workflows/main-build-python.yml
-    secrets: inherit
-    with:
-      caller-workflow-name: 'main-build'
-
-  java-runtime-test:
-    concurrency:
-      group: java-runtime-test
-      cancel-in-progress: false
-    uses: ./.github/workflows/main-build-java.yml
-    secrets: inherit
-    with:
-      caller-workflow-name: 'main-build'
-
-  nodejs-runtime-test:
-    concurrency:
-      group: nodejs-runtime-test
-      cancel-in-progress: false
-    uses: ./.github/workflows/main-build-nodejs.yml
-    secrets: inherit
-    with:
-      caller-workflow-name: 'main-build'
-
-  publish-build-status:
-    needs: [integration-test, python-runtime-test, java-runtime-test, nodejs-runtime-test]
-    if: ${{ always() }}
-    uses: ./.github/workflows/publish-status.yml
-    with:
-      namespace: 'ADOT/GitHubActions'
-      repository: ${{ github.repository }}
-      branch: ${{ github.ref_name }}
-      workflow: main-build
-      success: ${{ needs.integration-test.result == 'success' && needs.python-runtime-test.result == 'success' && needs.java-runtime-test.result == 'success' && needs.nodejs-runtime-test == 'success' }}
-      region: us-west-2
-    secrets:
-      roleArn: ${{ secrets.METRICS_ROLE_ARN }}
