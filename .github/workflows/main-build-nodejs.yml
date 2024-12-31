@@ -85,7 +85,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_sdk_layer_name: otel-nodejs-aws-sdk-wrapper-${{ matrix.architecture }}
+          TF_VAR_sdk_layer_name: opentelemetry-nodejs-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
           TF_VAR_runtime: ${{ matrix.runtime }}
