@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        runtime: [nodejs16.x, nodejs18.x]
+        runtime: [nodejs18.x, node20.x]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           check-latest: true
       - uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
       - name: Cache (NodeJS)
         uses: actions/cache@v4
         with:
