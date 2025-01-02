@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        runtime: [nodejs18.x, node20.x, nodejs22.x]
+        runtime: [nodejs18.x, nodejs20.x, nodejs22.x]
     steps:
       - uses: actions/checkout@v4
         with:
