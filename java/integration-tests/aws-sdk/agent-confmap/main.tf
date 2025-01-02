@@ -16,7 +16,7 @@ resource "aws_lambda_layer_version" "collector_layer" {
   count               = var.enable_collector_layer ? 1 : 0
   layer_name          = var.collector_layer_name
   filename            = "${path.module}/../../../../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-${local.architecture}.zip"
-  compatible_runtimes = ["nodejs14.x", "nodejs16.x", "nodejs18.x"]
+  compatible_runtimes =  ["nodejs16.x", "nodejs18.x", "nodejs20.x", "nodejs22.x"]
   license_info        = "Apache-2.0"
   source_code_hash    = filebase64sha256("${path.module}/../../../../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-${local.architecture}.zip")
 }
@@ -82,7 +82,7 @@ receivers:
       http:
         endpoint: "localhost:4318"
 exporters:
-  logging:
+  debug:
   awsxray:
   prometheusremotewrite: $${${module.remote_configuration.configuration_uri}}
 
@@ -95,7 +95,7 @@ service:
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging, prometheusremotewrite]
+      exporters: [debug, prometheusremotewrite]
   telemetry:
     metrics:
       address: localhost:8888
