@@ -105,7 +105,7 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.LAYER_NAME }}
+          name: ${{ env.LAYER_NAME }}-${{matrix.architecture}}-${{matrix.aws_region}}
           path: ${{ env.LAYER_NAME }}/${{ matrix.aws_region }}
       - name: clean s3
         if: always()
@@ -128,8 +128,9 @@ jobs:
       - name: download layerARNs
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.LAYER_NAME }}
+          pattern: ${{ env.LAYER_NAME }}-*
           path: ${{ env.LAYER_NAME }}
+          merge-multiple: true
       - name: show layerARNs
         run: |
           for file in ${{ env.LAYER_NAME }}/*
