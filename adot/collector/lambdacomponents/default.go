@@ -18,18 +18,15 @@ package lambdacomponents
 //github.com/aws-observability/aws-otel-lambda/adot/collector/lambdacomponents
 
 import (
-	"log"
-
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension"
 	"go.opentelemetry.io/collector/exporter"
-	"go.opentelemetry.io/collector/exporter/loggingexporter"
+	"go.opentelemetry.io/collector/exporter/debugexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
 	"go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	"go.opentelemetry.io/collector/extension"
-	"go.opentelemetry.io/collector/featuregate"
 	"go.opentelemetry.io/collector/otelcol"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
@@ -62,7 +59,7 @@ func Components() (
 		awsxrayexporter.NewFactory(),
 		awsemfexporter.NewFactory(),
 		prometheusremotewriteexporter.NewFactory(),
-		loggingexporter.NewFactory(),
+		debugexporter.NewFactory(),
 		otlpexporter.NewFactory(),
 		otlphttpexporter.NewFactory(),
 	)
@@ -75,14 +72,6 @@ func Components() (
 		Receivers:  receivers,
 		Exporters:  exporters,
 	}
-
-	// TODO: remove after ADOT Collector v0.30.0 is released
-	if err := featuregate.GlobalRegistry().Set("pkg.translator.prometheus.NormalizeName", false); err != nil {
-		return otelcol.Factories{}, err
-	}
-	log.Printf("attn: users of the prometheusremotewrite exporter please refer to " +
-		"https://github.com/aws-observability/aws-otel-collector/issues/2043 in regards to an ADOT Collector v0.31.0 " +
-		"breaking change")
 
 	return factories, errs
 }

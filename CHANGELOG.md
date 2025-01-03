@@ -1,6 +1,36 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2024-05-16 Release
+
+**AWS Distro For OpenTelemetry Lambda now supports AMD64 and ARM64 Architectures**
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-24-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.24.0` and ADOT Collector for Lambda `v0.39.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-18-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.18.1` with AWS Lambda Instrumentation `v0.41.0` and ADOT Collector for Lambda `v0.39.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.32.0` and ADOT Collector for Lambda `v0.39.0`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.32.0` and ADOT Collector for Lambda `v0.39.0`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-98-0** contains ADOT Collector for Lambda `v0.39.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Layers are built from Git commit `6f7a13c44b3738cca5d127c4db9644fd1f7a966b` at https://github.com/aws-observability/aws-otel-lambda/commit/6f7a13c44b3738cca5d127c4db9644fd1f7a966b
+
+## 2023-12-28 Release
+
+**AWS Distro For OpenTelemetry Lambda now supports AMD64 and ARM64 Architectures**
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-21-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.21.0` and ADOT Collector for Lambda `v0.36.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-18-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.18.1` with AWS Lambda Instrumentation `v0.37.3` and ADOT Collector for Lambda `v0.36.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.32.0` and ADOT Collector for Lambda `v0.36.0`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.32.0` and ADOT Collector for Lambda `v0.36.0`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-90-1** contains ADOT Collector for Lambda `v0.36.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Layers are built from Git commit `b00475323dc3f1964151770dbea82d308d6924e3` at https://github.com/aws-observability/aws-otel-lambda/commit/b00475323dc3f1964151770dbea82d308d6924e3
+
+## 2023-11-03 Release
+
+**AWS Distro For OpenTelemetry Lambda now supports AMD64 and ARM64 Architectures**
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-20-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.20.0` and ADOT Collector for Lambda `v0.35.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-17-1**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.17.1` with AWS Lambda Instrumentation `v0.37.1` and ADOT Collector for Lambda `v0.35.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-31-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.31.0` and ADOT Collector for Lambda `v0.35.0`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-31-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.31.0` and ADOT Collector for Lambda `v0.35.0`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-88-0** contains ADOT Collector for Lambda `v0.35.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Layers are built from Git commit `078c4e106703cc96571b587c78262484e532351c` at https://github.com/aws-observability/aws-otel-lambda/commit/078c4e106703cc96571b587c78262484e532351c
+
 
 ## 2023-10-11 Release
 

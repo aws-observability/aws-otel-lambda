@@ -1,32 +1,25 @@
 diff --git a/collector/internal/collector/collector.go b/collector/internal/collector/collector.go
-index 7cdea69..553e649 100644
+index 5f9ea03..500a430 100644
 --- a/collector/internal/collector/collector.go
 +++ b/collector/internal/collector/collector.go
-@@ -26,6 +26,7 @@ import (
+@@ -20,7 +20,6 @@ import (
+ 	"os"
+ 
+ 	"github.com/open-telemetry/opentelemetry-collector-contrib/confmap/provider/s3provider"
+-	"github.com/open-telemetry/opentelemetry-collector-contrib/confmap/provider/secretsmanagerprovider"
+ 	"go.opentelemetry.io/collector/component"
+ 	"go.opentelemetry.io/collector/confmap"
  	"go.opentelemetry.io/collector/confmap/provider/envprovider"
- 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
- 	"go.opentelemetry.io/collector/confmap/provider/httpprovider"
-+	"go.opentelemetry.io/collector/confmap/provider/httpsprovider"
- 	"go.opentelemetry.io/collector/confmap/provider/yamlprovider"
- 	"go.opentelemetry.io/collector/otelcol"
- 	"go.uber.org/zap"
-@@ -57,7 +58,14 @@ func getConfig(logger *zap.Logger) string {
-
- func NewCollector(logger *zap.Logger, factories otelcol.Factories, version string) *Collector {
- 	l := logger.Named("NewCollector")
--	providers := []confmap.Provider{fileprovider.New(), envprovider.New(), yamlprovider.New(), httpprovider.New(), s3provider.New()}
-+	providers := []confmap.Provider{
-+		fileprovider.New(),
-+		envprovider.New(),
-+		yamlprovider.New(),
-+		httpprovider.New(),
-+		s3provider.New(),
-+		httpsprovider.New(),
-+	}
- 	mapProvider := make(map[string]confmap.Provider, len(providers))
-
- 	for _, provider := range providers {
-@@ -89,8 +97,8 @@ func NewCollector(logger *zap.Logger, factories otelcol.Factories, version strin
+@@ -74,7 +73,7 @@ func NewCollector(logger *zap.Logger, factories otelcol.Factories, version strin
+ 	cfgSet := otelcol.ConfigProviderSettings{
+ 		ResolverSettings: confmap.ResolverSettings{
+ 			URIs:              []string{getConfig(l)},
+-			ProviderFactories: []confmap.ProviderFactory{fileprovider.NewFactory(), envprovider.NewFactory(), yamlprovider.NewFactory(), httpsprovider.NewFactory(), httpprovider.NewFactory(), s3provider.NewFactory(), secretsmanagerprovider.NewFactory()},
++			ProviderFactories: []confmap.ProviderFactory{fileprovider.NewFactory(), envprovider.NewFactory(), yamlprovider.NewFactory(), httpsprovider.NewFactory(), httpprovider.NewFactory(), s3provider.NewFactory()},
+ 			ConverterFactories: []confmap.ConverterFactory{
+ 				confmap.NewConverterFactory(func(set confmap.ConverterSettings) confmap.Converter {
+ 					return disablequeuedretryconverter.New()
+@@ -95,8 +94,8 @@ func NewCollector(logger *zap.Logger, factories otelcol.Factories, version strin
  func (c *Collector) Start(ctx context.Context) error {
  	params := otelcol.CollectorSettings{
  		BuildInfo: component.BuildInfo{
@@ -36,4 +29,4 @@ index 7cdea69..553e649 100644
 +			Description: "ADOT Lambda Collector",
  			Version:     c.version,
  		},
- 		ConfigProvider: c.configProvider,
+ 		ConfigProviderSettings: c.cfgProSet,

@@ -34,3 +34,8 @@ variable "enable_collector_layer" {
   default     = false
 }
 
+variable "runtime" {
+  type        = string
+  description = "NodeJS runtime version used for sample Lambda Function"
+  default     = "nodejs18.x"
+}

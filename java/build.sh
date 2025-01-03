@@ -4,8 +4,8 @@ SOURCEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
 ## revert https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7970
-OTEL_VERSION="1.31.0"
-ADOT_VERSION="1.31.0"
+OTEL_VERSION="1.32.0"
+ADOT_VERSION="1.32.0"
 
 git clone https://github.com/open-telemetry/opentelemetry-java-instrumentation.git
 pushd opentelemetry-java-instrumentation
@@ -65,12 +65,12 @@ popd || exit
 
 # Combine Java Wrapper build and ADOT Collector
 pushd ./layer-wrapper/build/distributions || exit
-unzip -qo opentelemetry-java-wrapper.zip
-rm opentelemetry-java-wrapper.zip
+unzip -qo opentelemetry-javawrapper-layer.zip
+rm opentelemetry-javawrapper-layer.zip
 mv otel-handler otel-handler-upstream
 mv otel-stream-handler otel-stream-handler-upstream
 mv otel-proxy-handler otel-proxy-handler-upstream
 cp "$SOURCEDIR"/scripts/* .
 unzip -qo ${SOURCEDIR}/../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-$1.zip
-zip -qr opentelemetry-java-wrapper.zip *
+zip -qr opentelemetry-javawrapper-layer.zip *
 popd || exit

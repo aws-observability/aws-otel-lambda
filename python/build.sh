@@ -21,7 +21,7 @@ popd || exit
 cd ./build || exit
 
 # Add AWS X-Ray dependencies
-pip install opentelemetry-sdk-extension-aws -t python/
+python3 -m pip install opentelemetry-sdk-extension-aws -t python/
 
 # Combine the layers
 unzip -qo opentelemetry-python-layer.zip

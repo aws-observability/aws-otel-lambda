@@ -32,20 +32,20 @@ permissions:
 
 jobs:
   validate-inputs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Validate `layer_name_keyword` (${{ github.event.inputs.layer_name_keyword }})
         run: |
           grep -Eq "aws-otel-(collector|java-agent|java-wrapper|nodejs|python)-<ARCHITECTURE>-ver-[0-9]+-[0-9]+-[0-9]+" <<< "${{ github.event.inputs.layer_name_keyword }}"
   publish-prod:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: validate-inputs
     strategy:
       matrix:
         architecture: ${{ fromJson(github.event.inputs.architecture) }}
         aws_region: ${{ fromJson(github.event.inputs.aws_region) }}
     steps:
-      - uses: aws-actions/configure-aws-credentials@v4.0.1
+      - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 1200
@@ -64,7 +64,7 @@ jobs:
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ env.LAYER_ARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
       # switch to prod
-      - uses: aws-actions/configure-aws-credentials@v4.0.1
+      - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.PROD_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 1200
@@ -103,7 +103,7 @@ jobs:
             --action lambda:GetLayerVersion
       - name: upload layer arn artifact
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.LAYER_NAME }}
           path: ${{ env.LAYER_NAME }}/${{ matrix.aws_region }}
@@ -112,7 +112,7 @@ jobs:
         run: |
           aws s3 rb --force s3://${{ env.BUCKET_NAME }}
   generate-note:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: publish-prod
     strategy:
       matrix:
@@ -126,7 +126,7 @@ jobs:
         run: |
           echo LAYER_KIND=$(echo "${{ github.event.inputs.layer_name_keyword }}" | cut -d - -f 3) | tee --append $GITHUB_ENV
       - name: download layerARNs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.LAYER_NAME }}
           path: ${{ env.LAYER_NAME }}
@@ -170,14 +170,14 @@ jobs:
           terraform fmt layer.tf
           cat layer.tf
       - name: upload layer tf file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: layer_${{ matrix.architecture }}.tf
           path: layer.tf
   smoke-test:
     name: Smoke Test - (${{ matrix.aws_region }} - ${{ github.event.inputs.layer_name_keyword }} - ${{ matrix.architecture }})
     needs: generate-note
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         architecture: ${{ fromJson(github.event.inputs.architecture) }}
@@ -214,13 +214,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           distribution: corretto
           java-version: '17'
       - name: Cache (Java)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'java' }}
         with:
           path: |
@@ -233,9 +233,9 @@ jobs:
       - uses: actions/setup-node@v4
         if: ${{ env.TEST_LANGUAGE == 'nodejs' }}
         with:
-          node-version: '14'
+          node-version: '16'
       - name: Cache (NodeJS)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'nodejs' }}
         with:
           path: |
@@ -244,12 +244,12 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         if: ${{ env.TEST_LANGUAGE == 'python' }}
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ env.TEST_LANGUAGE == 'python' }}
         with:
           path: |
@@ -266,16 +266,16 @@ jobs:
       #   with:
       #     dotnet-version: '3.1.x'
       - name: Use Go Language
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         # NOTE: (enowell) In case the languages below need to build the
         # collector, and because building the collector requires go 1.18 and
         # above, always setup go 1.18.
         # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
-          go-version: '~1.21.3'
+          go-version: '~1.23.4'
           check-latest: true
       - name: download layer tf file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: layer_${{ matrix.architecture }}.tf
       - name: Get terraform directory
@@ -295,7 +295,7 @@ jobs:
       - name: Build functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: ${{ env.TEST_LANGUAGE }}
-      - uses: aws-actions/configure-aws-credentials@v4.0.1
+      - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 1200

@@ -2,4 +2,8 @@
 
 export NODE_OPTIONS="--require /opt/adot-extension.js ${NODE_OPTIONS}"
 
+if [[ -z "$OTEL_PROPAGATORS" ]]; then
+  export OTEL_PROPAGATORS="tracecontext,baggage,xray-lambda"
+fi
+
 source /opt/otel-handler-upstream

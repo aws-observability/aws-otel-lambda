@@ -1,45 +1,42 @@
-name: Python38 Layer Integration Test
-# This workflow is for verifying python3.9 layer in Lambda python3.8 environment
+name: Python Layer Integration Test
 on:
-  push:
-    branches: 
-      - main 
-      - release/*
-    paths-ignore:
-      - '.github/**'
-      - '!.github/workflows/main-build-python39.yml'
-      - '**.md'
+  workflow_call:
+    inputs:
+      caller-workflow-name:
+        required: true
+        type: string
   workflow_dispatch:
 
 concurrency:
-  group: main-build-python39-${{ github.ref_name }}
+  group: main-build-python-${{ github.ref_name }}
   cancel-in-progress: true
-
 
 permissions:
   id-token: write
+  contents: read
 
 jobs:
   integration-test:
-    runs-on: ubuntu-20.04
-    name: Python39-${{ matrix.architecture }}-IntegrationTest
+    runs-on: ubuntu-22.04
+    name: python-wrapper-${{ matrix.architecture }}
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
+        runtime: [python3.9, python3.10, python3.11]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: '~1.21.3'
+          go-version: '~1.23.4'
           check-latest: true
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Cache (Python)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/go/pkg/mod
@@ -47,11 +44,16 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - uses: aws-actions/configure-aws-credentials@v4.0.1
+      - uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 7200
           aws-region: us-east-1
+      - name: Generate UUID
+        id: generate-uuid
+        run: |
+          UUID=$(uuidgen | cut -c1-4)
+          echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
       - name: Login to Public ECR
@@ -77,7 +79,7 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Get terraform Lambda function name
         run: |
-          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-python-${{ matrix.architecture }}-${{ github.run_id }} |
+          echo TERRAFORM_LAMBDA_FUNCTION_NAME=lambda-python-${{ matrix.architecture }}-${{ steps.generate-uuid.outputs.uuid }} |
           tee --append $GITHUB_ENV
       - name: Apply terraform
         run: terraform apply -auto-approve
@@ -86,7 +88,7 @@ jobs:
           TF_VAR_sdk_layer_name: opentelemetry-python-aws-sdk-wrapper-${{ matrix.architecture }}
           TF_VAR_function_name: ${{ env.TERRAFORM_LAMBDA_FUNCTION_NAME }}
           TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
-          TF_VAR_runtime: 'python3.9'
+          TF_VAR_runtime: ${{ matrix.runtime }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url

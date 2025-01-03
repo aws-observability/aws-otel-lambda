@@ -12,6 +12,7 @@ module "app" {
 
   name                       = var.function_name
   collector_layer_arn        = null
+  runtime                    = var.runtime
   sdk_layer_arn              = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   collector_config_layer_arn = length(aws_lambda_layer_version.collector_config_layer) > 0 ? aws_lambda_layer_version.collector_config_layer[0].arn : null
   tracing_mode               = "Active"
@@ -55,6 +56,7 @@ exporters:
   awsxray:
   prometheusremotewrite:
     endpoint: "${aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint}api/v1/remote_write"
+    add_metric_suffixes: false
     auth:
       authenticator: sigv4auth
 
@@ -79,6 +81,6 @@ resource "aws_lambda_layer_version" "collector_config_layer" {
   depends_on          = [data.archive_file.init]
   layer_name          = "custom-config-layer"
   filename            = "${path.module}/build/custom-config-layer.zip"
-  compatible_runtimes = ["java8", "java8.al2", "java11"]
+  compatible_runtimes = ["java8.al2", "java11", "java17"]
   license_info        = "Apache-2.0"
 }

@@ -168,7 +168,7 @@ new file mode 100644
 index 0000000000..72d4f9253b
 --- /dev/null
 +++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractor.java
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,91 @@
 +/*
 + * Copyright The OpenTelemetry Authors
 + * SPDX-License-Identifier: Apache-2.0
@@ -194,10 +194,11 @@ index 0000000000..72d4f9253b
 +public final class ParentContextExtractor {
 +
 +  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
++  private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
 +
 +  static Context extract(Map<String, String> headers, AwsLambdaFunctionInstrumenter instrumenter) {
 +    Context parentContext = null;
-+    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
++    String parentTraceHeader = getTraceHeader();
 +    if (parentTraceHeader != null) {
 +      parentContext = fromXrayHeader(parentTraceHeader);
 +    }
@@ -206,6 +207,15 @@ index 0000000000..72d4f9253b
 +      parentContext = fromHttpHeaders(headers, instrumenter);
 +    }
 +    return parentContext;
++  }
++
++  private static String getTraceHeader() {
++    // Lambda propagates trace header by system property instead of environment variable from java17
++    String traceHeader = System.getProperty(AWS_TRACE_HEADER_PROP);
++    if (traceHeader == null || traceHeader.isEmpty()) {
++      return System.getenv(AWS_TRACE_HEADER_ENV_KEY);
++    }
++    return traceHeader;
 +  }
 +
 +  private static boolean isValidAndSampled(Context context) {
@@ -389,7 +399,7 @@ new file mode 100644
 index 0000000000..1fa0b6e536
 --- /dev/null
 +++ b/instrumentation/aws-lambda/aws-lambda-core-1.0/library/src/test/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/internal/ParentContextExtractorTest.java
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,135 @@
 +/*
 + * Copyright The OpenTelemetry Authors
 + * SPDX-License-Identifier: Apache-2.0
@@ -412,6 +422,7 @@ index 0000000000..1fa0b6e536
 +import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 +import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 +import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
++import uk.org.webcompere.systemstubs.properties.SystemProperties;
 +
 +/**
 + * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -501,6 +512,27 @@ index 0000000000..1fa0b6e536
 +    assertThat(spanContext.isValid()).isTrue();
 +    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
 +    assertThat(spanContext.getTraceId()).isEqualTo("4fd0b6131f19f39af59518d127b0cafe");
++  }
++
++  @Test
++  void shouldPreferSystemPropertyOverEnvVariable() {
++    // given
++    systemProperties.set(
++        "com.amazonaws.xray.traceHeader",
++        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa7;Parent=0000000000000789;Sampled=0");
++    environmentVariables.set(
++        "_X_AMZN_TRACE_ID",
++        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
++
++    // when
++    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
++    // then
++    Span span = Span.fromContext(context);
++    SpanContext spanContext = span.getSpanContext();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.isValid()).isTrue();
++    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000789");
++    assertThat(spanContext.getTraceId()).isEqualTo("d188f8fa79d48a391a778fa7");
 +  }
 +}
 diff --git a/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java b/instrumentation/aws-lambda/aws-lambda-core-1.0/testing/src/main/java/io/opentelemetry/instrumentation/awslambdacore/v1_0/AbstractAwsLambdaTest.java
@@ -604,10 +636,10 @@ index cc1414c0bf..db8a59b046 100644
 --- a/version.gradle.kts
 +++ b/version.gradle.kts
 @@ -1,5 +1,5 @@
--val stableVersion = "1.31.0"
--val alphaVersion = "1.31.0-alpha"
-+val stableVersion = "1.31.0-adot-lambda1"
-+val alphaVersion = "1.31.0-adot-lambda1-alpha"
+-val stableVersion = "1.32.0"
+-val alphaVersion = "1.32.0-alpha"
++val stableVersion = "1.32.0-adot-lambda1"
++val alphaVersion = "1.32.0-adot-lambda1-alpha"
  
  allprojects {
    if (findProperty("otel.stable") != "true") {
