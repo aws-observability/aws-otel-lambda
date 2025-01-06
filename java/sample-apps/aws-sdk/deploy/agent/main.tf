@@ -52,7 +52,7 @@ receivers:
       http:
 
 exporters:
-  logging:
+  debug:
   awsxray:
   prometheusremotewrite:
     endpoint: "${aws_prometheus_workspace.test_amp_workspace[0].prometheus_endpoint}api/v1/remote_write"
@@ -68,7 +68,7 @@ service:
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
-      exporters: [logging, prometheusremotewrite]
+      exporters: [debug, prometheusremotewrite]
 EOT
     filename = "config.yaml"
   }

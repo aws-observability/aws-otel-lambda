@@ -14,6 +14,7 @@ module "app" {
   collector_layer_arn = null
   sdk_layer_arn       = local.architecture_to_arns_mapping[var.architecture][data.aws_region.current.name]
   tracing_mode        = "Active"
+  runtime             = var.runtime
   architecture        = var.architecture
 }
 
