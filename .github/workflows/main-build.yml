@@ -151,7 +151,7 @@ jobs:
       repository: ${{ github.repository }}
       branch: ${{ github.ref_name }}
       workflow: main-build
-      success: ${{ needs.integration-test.result == 'success' && needs.python-runtime-test.result == 'success' && needs.java-runtime-test.result == 'success' && needs.nodejs-runtime-test == 'success' }}
+      success: ${{ needs.integration-test.result == 'success' && needs.python-runtime-test.result == 'success' && needs.java-runtime-test.result == 'success' && needs.nodejs-runtime-test.result == 'success' }}
       region: us-west-2
     secrets:
       roleArn: ${{ secrets.METRICS_ROLE_ARN }}
