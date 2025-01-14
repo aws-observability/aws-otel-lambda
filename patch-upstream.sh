@@ -22,7 +22,12 @@ CURRENT_DIR=$PWD
 
 # Move to the upstream OTel Lambda Collector folder where we will build a
 # collector used in each Lambda layer
-cd opentelemetry-lambda/collector
+cd opentelemetry-lambda
+
+# patch lambda terraform module to v7.19.0
+patch -p1 < ../terraformversion.patch
+
+cd collector
 
 # patch otel version on collector/go.mod
 PATCH_OTEL_VERSION="../../OTEL_Version.patch"
