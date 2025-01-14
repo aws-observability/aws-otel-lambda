@@ -9,6 +9,7 @@ locals {
 
 module "test-function" {
   source  = "terraform-aws-modules/lambda/aws"
+  version = "7.19.0"
 
   architectures = compact([var.architecture])
   function_name = var.function_name
