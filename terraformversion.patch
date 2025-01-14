@@ -1,0 +1,108 @@
+diff --git a/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf b/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index d154f09..d35a47d 100644
+--- a/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/go/sample-apps/aws-sdk/deploy/wrapper/main.tf b/go/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index f62c6ba..5d11bce 100644
+--- a/go/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/go/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/java/sample-apps/aws-sdk/deploy/agent/main.tf b/java/sample-apps/aws-sdk/deploy/agent/main.tf
+index a9515cd..3c267a9 100644
+--- a/java/sample-apps/aws-sdk/deploy/agent/main.tf
++++ b/java/sample-apps/aws-sdk/deploy/agent/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/java/sample-apps/aws-sdk/deploy/wrapper/main.tf b/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index 28b2b88..2e9e522 100644
+--- a/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/java/sample-apps/okhttp/deploy/wrapper/main.tf b/java/sample-apps/okhttp/deploy/wrapper/main.tf
+index f1d6918..cfcae0e 100644
+--- a/java/sample-apps/okhttp/deploy/wrapper/main.tf
++++ b/java/sample-apps/okhttp/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/java/sample-apps/sqs/deploy/agent/main.tf b/java/sample-apps/sqs/deploy/agent/main.tf
+index c898457..56b63b8 100644
+--- a/java/sample-apps/sqs/deploy/agent/main.tf
++++ b/java/sample-apps/sqs/deploy/agent/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/java/sample-apps/sqs/deploy/wrapper/main.tf b/java/sample-apps/sqs/deploy/wrapper/main.tf
+index 354fa72..c8bae2c 100644
+--- a/java/sample-apps/sqs/deploy/wrapper/main.tf
++++ b/java/sample-apps/sqs/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/nodejs/sample-apps/aws-sdk/deploy/wrapper/main.tf b/nodejs/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index 17ede9f..cb20e1b 100644
+--- a/nodejs/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/nodejs/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
+diff --git a/python/sample-apps/aws-sdk/deploy/wrapper/main.tf b/python/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index 0470841..ad7e325 100644
+--- a/python/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/python/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -1,6 +1,6 @@
+ module "hello-lambda-function" {
+   source  = "terraform-aws-modules/lambda/aws"
+-  version = ">= 2.24.0"
++  version = "7.19.0"
+ 
+   architectures = compact([var.architecture])
+   function_name = var.name
