@@ -44,7 +44,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: aws-actions/configure-aws-credentials@v4.0.2
+      - uses: aws-actions/configure-aws-credentials@v4.0.3
         with:
           role-to-assume: ${{ secrets.INTEG_TEST_LAMBDA_ROLE_ARN }}
           role-duration-seconds: 7200
