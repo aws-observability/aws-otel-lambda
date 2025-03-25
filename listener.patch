@@ -1,5 +1,5 @@
 diff --git a/collector/internal/telemetryapi/listener.go b/collector/internal/telemetryapi/listener.go
-index 8499d4e..93ff0dc 100644
+index 8499d4e..62a6461 100644
 --- a/collector/internal/telemetryapi/listener.go
 +++ b/collector/internal/telemetryapi/listener.go
 @@ -17,18 +17,32 @@ package telemetryapi
@@ -37,12 +37,12 @@ index 8499d4e..93ff0dc 100644
  
  // Listener is used to listen to the Telemetry API
  type Listener struct {
-@@ -46,21 +60,44 @@ func NewListener(logger *zap.Logger) *Listener {
+@@ -46,26 +60,48 @@ func NewListener(logger *zap.Logger) *Listener {
  	}
  }
  
 -func listenOnAddress() string {
-+func (s *Listener) tryBindPort() (string, error) {
++func (s *Listener) tryBindPort() (net.Listener, string, error) {
 +	for i := 0; i < maxRetries; i++ {
 +		port := getRandomPort()
 +		address := listenOnAddress(port)
@@ -54,13 +54,12 @@ index 8499d4e..93ff0dc 100644
 +					zap.String("address", address))
 +				continue
 +			}
-+			return "", err
++			return nil, "", err
 +		}
-+		l.Close()
-+		return address, nil
++		return l, address, nil
 +	}
 +
-+	return "", fmt.Errorf("failed to find available port after %d attempts", maxRetries)
++	return nil, "", fmt.Errorf("failed to find available port after %d attempts", maxRetries)
 +}
 +
 +func listenOnAddress(port string) string {
@@ -80,10 +79,16 @@ index 8499d4e..93ff0dc 100644
  // Start the server in a goroutine where the log events will be sent
  func (s *Listener) Start() (string, error) {
 -	address := listenOnAddress()
-+	address, err := s.tryBindPort()
++	listener, address, err := s.tryBindPort()
 +	if err != nil {
 +		return "", fmt.Errorf("failed to find available port: %w", err)
 +	}
  	s.logger.Info("Listening for requests", zap.String("address", address))
  	s.httpServer = &http.Server{Addr: address}
  	http.HandleFunc("/", s.httpHandler)
+ 	go func() {
+-		err := s.httpServer.ListenAndServe()
++		err := s.httpServer.Serve(listener)
+ 		if err != http.ErrServerClosed {
+ 			s.logger.Error("Unexpected stop on HTTP Server", zap.Error(err))
+ 			s.Shutdown()
