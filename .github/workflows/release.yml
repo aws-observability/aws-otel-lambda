@@ -293,6 +293,8 @@ jobs:
         # layer. But we only use the sample app build in the release workflow.
         # Also, we NEED the architecture value because some apps (like .NET and
         # Go) depend on this architecture value.
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
       - name: Build functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: ${{ env.TEST_LANGUAGE }}
