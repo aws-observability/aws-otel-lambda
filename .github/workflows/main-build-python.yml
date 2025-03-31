@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        runtime: [python3.9, python3.10, python3.11]
+        runtime: [python3.9, python3.10, python3.11, python3.12]
     steps:
       - uses: actions/checkout@v4
         with:
