@@ -36,15 +36,11 @@ if [ -f $PATCH_OTEL_VERSION ]; then
     patch -p2 < $PATCH_OTEL_VERSION;
 fi
 
-# patch collector startup to add httpsprovider
+# patch collector startup to remove secretsmanagerprovider
 patch -p2 < ../../collector.patch
 
 # patch manager.go to remove lambdacomponents attribute
 patch -p2 < ../../manager.patch
-
-
-# patch listener.go to patch port usage
-patch -p2 < ../../listener.patch
 
 # Replace OTel Collector with ADOT Collector
 go mod edit -replace github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents=${CURRENT_DIR}/adot/collector/lambdacomponents
