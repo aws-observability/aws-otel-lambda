@@ -12,52 +12,27 @@ index 7693c66..d3941ac 100644
          }
  
 diff --git a/java/dependencyManagement/build.gradle.kts b/java/dependencyManagement/build.gradle.kts
-index 12f34ec..9ad35ed 100644
+index 7b07f56..ab62739 100644
 --- a/java/dependencyManagement/build.gradle.kts
 +++ b/java/dependencyManagement/build.gradle.kts
 @@ -9,7 +9,7 @@ plugins {
  data class DependencySet(val group: String, val version: String, val modules: List<String>)
  
  val DEPENDENCY_BOMS = listOf(
--    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.10.0-alpha",
-+    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.32.0-adot-lambda1-alpha",
+-    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.16.0-alpha",
++    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.10.0-alpha",
      "org.apache.logging.log4j:log4j-bom:2.24.3",
-     "software.amazon.awssdk:bom:2.29.39"
+     "software.amazon.awssdk:bom:2.31.45"
  )
-@@ -18,9 +18,7 @@ val DEPENDENCIES = listOf(
+@@ -18,9 +18,9 @@ val DEPENDENCIES = listOf(
      "com.amazonaws:aws-lambda-java-core:1.2.3",
-     "com.amazonaws:aws-lambda-java-events:3.14.0",
+     "com.amazonaws:aws-lambda-java-events:3.15.0",
      "com.squareup.okhttp3:okhttp:4.12.0",
--    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.10.0",
--    "io.opentelemetry:opentelemetry-sdk-extension-aws:1.19.0",
--    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.42.0-alpha",
-+    "io.opentelemetry.javaagent:opentelemetry-javaagent:1.32.0-adot-lambda1",
+-    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.16.0",
++    "io.opentelemetry.javaagent:opentelemetry-javaagent:2.10.0",
+     "io.opentelemetry:opentelemetry-sdk-extension-aws:1.19.0",
+-    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.46.0-alpha",
++    "io.opentelemetry.contrib:opentelemetry-aws-resources:1.42.0-alpha",
  )
  
  javaPlatform {
-diff --git a/java/layer-wrapper/build.gradle.kts b/java/layer-wrapper/build.gradle.kts
-index 232d096..0d7f190 100644
---- a/java/layer-wrapper/build.gradle.kts
-+++ b/java/layer-wrapper/build.gradle.kts
-@@ -10,7 +10,7 @@ dependencies {
-     runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
-     runtimeOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
-     runtimeOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
--    runtimeOnly("io.opentelemetry.contrib:opentelemetry-aws-resources")
-+    runtimeOnly("io.opentelemetry:opentelemetry-sdk-extension-aws")
- }
- 
- tasks {
-diff --git a/java/sample-apps/aws-sdk/deploy/wrapper/main.tf b/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
-index 28b2b88..f4f91b3 100644
---- a/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
-+++ b/java/sample-apps/aws-sdk/deploy/wrapper/main.tf
-@@ -11,7 +11,7 @@ module "hello-lambda-function" {
-   local_existing_package = "${path.module}/../../build/libs/aws-sdk-all.jar"
- 
-   memory_size = 384
--  timeout     = 20
-+  timeout     = 30
- 
-   layers = compact([
-     var.collector_layer_arn,

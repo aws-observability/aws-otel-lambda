@@ -26,22 +26,22 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@types/node": "20.12.7",
-    "@typescript-eslint/eslint-plugin": "6.14.0",
-    "@typescript-eslint/parser": "6.19.0",
+    "@types/node": "22.15.19",
+    "@typescript-eslint/eslint-plugin": "8.29.0",
+    "@typescript-eslint/parser": "8.29.0",
     "eslint": "8.57.0",
     "eslint-plugin-header": "3.1.1",
-    "eslint-plugin-import": "2.29.1",
-    "gts": "5.3.0",
-    "rimraf": "5.0.5",
-    "typescript": "5.3.3"
+    "eslint-plugin-import": "2.31.0",
+    "gts": "6.0.2",
+    "rimraf": "6.0.1",
+    "typescript": "5.8.3"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.30.0",
-    "@opentelemetry/id-generator-aws-xray": "^1.2.2",
-    "@opentelemetry/sdk-trace-node": "^1.30.0",
-    "@opentelemetry/propagator-aws-xray": "^1.26.0",
-    "@opentelemetry/propagator-b3": "^1.30.0",
-    "@opentelemetry/sdk-trace-base": "^1.30.0"
+    "@opentelemetry/core": "^2.0.0",
+    "@opentelemetry/id-generator-aws-xray": "^2.0.0",
+    "@opentelemetry/sdk-trace-node": "^2.0.0",
+    "@opentelemetry/propagator-aws-xray": "^2.0.0",
+    "@opentelemetry/propagator-b3": "^2.0.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0"
   }
 }
