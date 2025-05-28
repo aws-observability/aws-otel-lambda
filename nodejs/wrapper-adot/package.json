@@ -37,11 +37,11 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@opentelemetry/core": "^2.0.0",
-    "@opentelemetry/id-generator-aws-xray": "^2.0.0",
-    "@opentelemetry/sdk-trace-node": "^2.0.0",
-    "@opentelemetry/propagator-aws-xray": "^2.0.0",
-    "@opentelemetry/propagator-b3": "^2.0.0",
-    "@opentelemetry/sdk-trace-base": "^2.0.0"
+    "@opentelemetry/core": "^1.30.0",
+    "@opentelemetry/id-generator-aws-xray": "^1.2.3",
+    "@opentelemetry/sdk-trace-node": "^1.30.0",
+    "@opentelemetry/propagator-aws-xray": "^1.26.2",
+    "@opentelemetry/propagator-b3": "^1.30.0",
+    "@opentelemetry/sdk-trace-base": "^1.30.0"
   }
 }
