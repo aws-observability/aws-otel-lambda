@@ -273,7 +273,7 @@ jobs:
         # above, always setup go 1.18.
         # if: ${{ env.TEST_LANGUAGE == 'go' }}
         with:
-          go-version: '~1.23.4'
+          go-version: '~1.24.3'
           check-latest: true
       - name: download layer tf file
         uses: actions/download-artifact@v4
@@ -293,6 +293,8 @@ jobs:
         # layer. But we only use the sample app build in the release workflow.
         # Also, we NEED the architecture value because some apps (like .NET and
         # Go) depend on this architecture value.
+      - name: Patch ADOT
+        run: ./patch-upstream.sh
       - name: Build functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: ${{ env.TEST_LANGUAGE }}
