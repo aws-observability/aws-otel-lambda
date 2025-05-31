@@ -49,6 +49,56 @@ This table represents the components that the ADOT Lambda Layer will support and
 |                | otlpexporter                  |                             |
 |                | otlphttpexporter              |                             |
 
+## Building the Lambda Layer
+
+The ADOT Lambda layer is not available in all AWS regions and partitions today. In order to use the layer in these cases, you can build and pulbish the layer from source. In order to build the layer from source, perform the following steps.
+
+1. Clone the repository locally
+
+   ```
+   git clone --recurse-submodules https://github.com/aws-observability/aws-otel-lambda.git
+   ```
+
+2. Run the `patch-upstream.sh` script to patch upstream OpenTelemetry submodules with layer configurations:
+
+   ```sh
+   ./patch-upstream.sh
+   ```
+
+3. Go to the language folder, such as `python`, `java`:
+
+   ```sh
+   cd python/
+   ```
+
+4. Run the `build.sh` script with your desired architecture (`amd64` or `arm64`):
+
+   ```sh
+   GOARCH=amd64 ./build.sh amd64
+   ```
+
+5. Publish the output zipfile as a Lambda layer. The output zipfile name, runtime, and architecture will change depending on your language and use case.
+
+   ```sh
+   aws lambda publish-layer-version \
+       --layer-name opentelemetry-javaagent-layer-amd64-java17 \
+       --description "AWS Distro for Open Telemetry Lambda Layer for Java including auto-instrumentation agent" \
+       --zip-file "fileb://opentelemetry-lambda/java/layer-javaagent/build/distributions/opentelemetry-javaagent-layer.zip" \
+       --compatible-runtimes java17 \
+       --compatible-architectures "x86_64"
+   ```
+
+   | Language         | Use Case                                     | File name                                                                                         |
+   |------------------|----------------------------------------------|---------------------------------------------------------------------------------------------------|
+   | `java`           | Auto instrumentation agent + SDK + collector | `opentelemetry-lambda/java/layer-javaagent/build/distributions/opentelemetry-javaagent-layer.zip` |
+   | `java`           | SDK + collector                              | `opentelemetry-lambda/java/layer-wrapper/build/distributions/opentelemetry-javawrapper-layer.zip` |
+   | `nodejs`         | SDK + collector                              | `opentelemetry-lambda/nodejs/packages/layer/build/layer.zip`                                      |
+   | `python`         | SDK + collector                              | `opentelemetry-lambda/python/src/build/layer.zip`                                                 |
+   | `collector`      | ADOT collector only                          | `opentelemetry-lambda/collector/build/opentelemetry-collector-layer-{architecture}.zip`           |
+
+
+
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
