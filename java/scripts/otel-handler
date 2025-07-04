@@ -2,7 +2,7 @@
 
 export OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_SPAN_ATTRIBUTES=true
 
-export OTEL_PROPAGATORS="${OTEL_PROPAGATORS:xray-lambda,tracecontext,b3,b3multi}"
+export OTEL_PROPAGATORS="${OTEL_PROPAGATORS:-xray,tracecontext,b3,b3multi}"
 
 # Temporarily set OTEL_SERVICE_NAME variable to work around but in javaagent not handling
 # OTEL_RESOURCE_ATTRIBUTES as set in otel-handler-upstream. It doesn't hurt to apply this
