@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import java.io.InputStream;
@@ -63,8 +65,23 @@ public class AutoconfiguredTracingExecutionInterceptor implements ExecutionInter
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    // Prints iff the interceptor is actually attached to the SDK client and invoked per call.
-    System.out.println("[ADOT-DEBUG] beforeExecution fired for an AWS SDK request");
+    // Dump the active span context. If invalid/unsampled here, the SDK span has no parent to
+    // attach to and becomes an orphaned root trace (context-propagation failure) that never
+    // shows up under the Lambda's X-Ray trace.
+    SpanContext sc = Span.current().getSpanContext();
+    System.out.println(
+        "[ADOT-DEBUG] beforeExecution fired; activeSpan valid="
+            + sc.isValid()
+            + " sampled="
+            + sc.isSampled()
+            + " remote="
+            + sc.isRemote()
+            + " traceId="
+            + sc.getTraceId()
+            + " spanId="
+            + sc.getSpanId()
+            + " xrayEnv="
+            + System.getenv("_X_AMZN_TRACE_ID"));
     delegate.beforeExecution(context, executionAttributes);
   }
 
