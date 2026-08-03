@@ -79,9 +79,6 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [debug, prometheusremotewrite]
-  telemetry:
-    metrics:
-      address: localhost:8888
 EOT
     filename = "config.yaml"
   }

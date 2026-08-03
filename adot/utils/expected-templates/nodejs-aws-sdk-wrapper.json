@@ -12,6 +12,11 @@
     "name": "lambda-nodejs.*"
   },
   {
-    "name": "s3"
+    "name": "STS",
+    "origin": "AWS::STS",
+    "inferred": true,
+    "aws": {
+      "operation": "GetCallerIdentity"
+    }
   }
 ]

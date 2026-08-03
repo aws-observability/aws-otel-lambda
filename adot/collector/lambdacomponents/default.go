@@ -27,6 +27,7 @@ import (
 	"go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	"go.opentelemetry.io/collector/otelcol"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
+	"go.opentelemetry.io/collector/service/telemetry/otelconftelemetry"
 	"go.uber.org/multierr"
 )
 
@@ -68,6 +69,7 @@ func Components() (
 		Extensions: extensions,
 		Receivers:  receivers,
 		Exporters:  exporters,
+		Telemetry:  otelconftelemetry.NewFactory(),
 	}
 
 	return factories, errs

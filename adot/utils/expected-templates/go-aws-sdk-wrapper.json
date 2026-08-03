@@ -9,18 +9,14 @@
     "name":"lambda-go.*"
   },
   {
+    "name":"S3.ListBuckets",
+    "inferred":true
+  },
+  {
     "name":"lambda-go.*"
   },
   {
-    "name":"S3",
-    "origin":"AWS::S3",
-    "inferred":true,
-    "aws":{
-      "operation":"ListBuckets"
-    }
-  },
-  {
-    "name":"api.github.com",
+    "name":"HTTP GET",
     "inferred":true,
     "http":{
       "request":{
