@@ -1,6 +1,27 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2026-08-11 Release (CVE Remediation)
+
+**Security update:** Updated ADOT Collector from v0.43.0 to v0.48.0 (OTel Collector v0.151.0, Go 1.26.2) to address 27 CVEs including 2 critical (CVE-2025-68121, CVE-2026-33186).
+
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.32.0` and ADOT Collector for Lambda `v0.48.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-30-2**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.30.0` with AWS Lambda Instrumentation `v0.50.3` and ADOT Collector for Lambda `v0.48.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.32.0` and ADOT Collector for Lambda `v0.48.0`
+  - Fixed trace-linking regression: wrapper spans now correctly link to the invocation X-Ray trace via traceHeader system property.
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.32.0` and ADOT Collector for Lambda `v0.48.0`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-151-0** contains ADOT Collector for Lambda `v0.48.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Layers are built from Git commit `61a0419b4ba7da2053fa1e46ff0187de343d95f6` at https://github.com/aws-observability/aws-otel-lambda/commit/61a0419b4ba7da2053fa1e46ff0187de343d95f6
+
+### Key dependency upgrades
+| Component | Previous | New |
+|-----------|----------|-----|
+| OTel Collector | v0.138.0 | v0.151.0 |
+| Go | 1.24.0 | 1.26.2 |
+| google.golang.org/grpc | v1.76.0 | v1.80.0 |
+| golang.org/x/net | v0.44.0 | v0.53.0 |
+| golang.org/x/crypto | v0.42.0 | v0.50.0 |
+
 ## 2025-05-30 Release
 
 - Python layer [**aws-otel-python-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.32.0` and ADOT Collector for Lambda `v0.43.0`
