@@ -9,11 +9,11 @@
     "name":"lambda-go.*"
   },
   {
-    "name":"S3.ListBuckets",
-    "inferred":true
+    "name":"lambda-go.*"
   },
   {
-    "name":"lambda-go.*"
+    "name":"S3.ListBuckets",
+    "inferred":true
   },
   {
     "name":"HTTP GET",
