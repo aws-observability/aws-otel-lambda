@@ -12,6 +12,13 @@
     "name":"lambda-java.*"
   },
   {
-    "name":"aws.amazon.com"
+    "name":"GET",
+    "inferred":true,
+    "http":{
+      "request":{
+        "url":"https://aws.amazon.com/",
+        "method":"GET"
+      }
+    }
   }
 ]

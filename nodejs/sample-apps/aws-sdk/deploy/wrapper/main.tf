@@ -17,7 +17,7 @@ module "test-function" {
   runtime       = var.runtime
 
   create_package         = false
-  local_existing_package = "${path.module}/../../build/function.zip"
+  local_existing_package = "${path.module}/../../../../../opentelemetry-lambda/nodejs/sample-apps/aws-sdk/build/function.zip"
 
   memory_size = 384
   timeout     = 20
