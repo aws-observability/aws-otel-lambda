@@ -1,6 +1,30 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2026-08-25 Release (CVE Remediation)
+
+**Security update:** Updated ADOT Collector from v0.48.0 to v0.49.0 (OTel Collector v0.156.0, Go 1.26.4) to address 34 CVEs (8 critical, 13 high, 12 medium, 1 low) reported against the previously published ver-0-151-0 collector layer.
+
+- Python layer [**aws-otel-python-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-python) contains OpenTelemetry Python `v1.32.0` and ADOT Collector for Lambda `v0.49.0`
+- Nodejs layer [**aws-otel-nodejs-<amd64|arm64>-ver-1-30-2**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-js) contains OpenTelemetry JavaScript Core `v1.30.0` with AWS Lambda Instrumentation `v0.50.3` and ADOT Collector for Lambda `v0.49.0`
+- Java-Wrapper layer [**aws-otel-java-wrapper-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java) contains OpenTelemetry Java `v1.32.0` and ADOT Collector for Lambda `v0.49.0`
+- Java-Agent layer [**aws-otel-java-agent-<amd64|arm64>-ver-1-32-0**](https://aws-otel.github.io/docs/getting-started/lambda/lambda-java-auto-instr) contains AWS Distro for OpenTelemetry Java Instrumentation `v1.32.0` and ADOT Collector for Lambda `v0.49.0`
+- Collector layer **aws-otel-collector-<amd64|arm64>-ver-0-156-0** contains ADOT Collector for Lambda `v0.49.0`. Compatible with [.NET](https://aws-otel.github.io/docs/getting-started/lambda/lambda-dotnet) and [Go](https://aws-otel.github.io/docs/getting-started/lambda/lambda-go) runtimes.
+- Layers are built from Git commit `f906c6eeb37b71d9ae7604ae64fbf3e769f04526` at https://github.com/aws-observability/aws-otel-lambda/commit/f906c6eeb37b71d9ae7604ae64fbf3e769f04526
+
+### Key dependency upgrades
+| Component | Previous | New |
+|-----------|----------|-----|
+| OTel Collector | v0.151.0 | v0.156.0 |
+| Go | 1.26.2 | 1.26.4 |
+| google.golang.org/grpc | v1.80.0 | v1.82.0 |
+| golang.org/x/net | v0.53.0 | v0.56.0 |
+| golang.org/x/crypto | v0.50.0 | v0.53.0 |
+| golang.org/x/text | v0.36.0 | v0.38.0 |
+| golang.org/x/sys | v0.43.0 | v0.46.0 |
+| go.opentelemetry.io/otel | v1.43.0 | v1.44.0 |
+| github.com/prometheus/prometheus | v0.311.2 | v0.312.0 |
+
 ## 2026-08-11 Release (CVE Remediation)
 
 **Security update:** Updated ADOT Collector from v0.43.0 to v0.48.0 (OTel Collector v0.151.0, Go 1.26.2) to address 27 CVEs including 2 critical (CVE-2025-68121, CVE-2026-33186).
