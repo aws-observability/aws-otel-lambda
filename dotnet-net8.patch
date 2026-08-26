@@ -1,0 +1,49 @@
+diff --git a/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf b/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
+index 0e3791a..587acfd 100644
+--- a/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
++++ b/dotnet/sample-apps/aws-sdk/deploy/wrapper/main.tf
+@@ -5,7 +5,7 @@ module "hello-lambda-function" {
+   architectures = compact([var.architecture])
+   function_name = var.name
+   handler       = "AwsSdkSample::AwsSdkSample.Function::TracingFunctionHandler"
+-  runtime       = "dotnet6"
++  runtime       = "dotnet8"
+ 
+   create_package         = false
+   local_existing_package = "${path.module}/../../wrapper/SampleApps/build/function.zip"
+@@ -13,6 +13,10 @@ module "hello-lambda-function" {
+   memory_size = 384
+   timeout     = 20
+ 
++  environment_variables = {
++    OTEL_SERVICE_NAME = var.name
++  }
++
+   layers = compact([
+     var.collector_layer_arn
+   ])
+diff --git a/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/AwsSdkSample/AwsSdkSample.csproj b/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/AwsSdkSample/AwsSdkSample.csproj
+index 74e8658..cef583c 100644
+--- a/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/AwsSdkSample/AwsSdkSample.csproj
++++ b/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/AwsSdkSample/AwsSdkSample.csproj
+@@ -1,6 +1,6 @@
+ <Project Sdk="Microsoft.NET.Sdk">
+   <PropertyGroup>
+-    <TargetFramework>net6.0</TargetFramework>
++    <TargetFramework>net8.0</TargetFramework>
+     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+     <AWSProjectType>Lambda</AWSProjectType>
+ 
+diff --git a/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/build.sh b/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/build.sh
+index 1056d35..54cfbf9 100755
+--- a/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/build.sh
++++ b/dotnet/sample-apps/aws-sdk/wrapper/SampleApps/build.sh
+@@ -18,7 +18,7 @@ mkdir -p build/dotnet
+ dotnet publish \
+     --output "./build/dotnet" \
+     --configuration "Release" \
+-    --framework "net6.0" /p:GenerateRuntimeConfigurationFiles=true \
++    --framework "net8.0" /p:GenerateRuntimeConfigurationFiles=true \
+     --runtime linux-$DOTNET_LINUX_ARCH \
+     --self-contained false
+ cd build/dotnet

@@ -24,6 +24,10 @@ CURRENT_DIR=$PWD
 # collector used in each Lambda layer
 cd opentelemetry-lambda
 
+# patch dotnet sample to net8.0 runtime + set OTEL_SERVICE_NAME
+# TODO(remove once upstream opentelemetry-lambda dotnet sample targets net8): fix upstream, then delete dotnet-net8.patch and this line
+patch -p1 < ../dotnet-net8.patch
+
 # patch lambda terraform module to v7.19.0
 patch -p1 < ../terraformversion.patch
 
