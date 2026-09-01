@@ -56,6 +56,11 @@ jobs:
           echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
+      - name: Pin Node.js Sample app only for test-compatibility
+        run: |
+          cd opentelemetry-lambda
+          git fetch --unshallow
+          git checkout 5cc158009047d6c5cdc9fad69b4a28e75c7c92f7 -- nodejs/
       - name: Login to Public ECR
         uses: docker/login-action@v3
         with:

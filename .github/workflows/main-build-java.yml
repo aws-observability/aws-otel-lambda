@@ -114,6 +114,11 @@ jobs:
           echo "uuid=$UUID" >> $GITHUB_OUTPUT
       - name: Patch ADOT
         run: ./patch-upstream.sh
+      - name: Pin Java Sample app only for test-compatibility
+        run: |
+          cd opentelemetry-lambda
+          git fetch --unshallow
+          git checkout 5cc158009047d6c5cdc9fad69b4a28e75c7c92f7 -- java/
       - name: Build layers / functions
         run: GOARCH=${{ matrix.architecture }} ./build.sh ${{ matrix.architecture }}
         working-directory: java
